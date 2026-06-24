@@ -1,0 +1,124 @@
+<div align=center>
+
+<h1> Fading to Grow: Growing Preference Ratios via Preference Fading Discrete Diffusion for Recommendation</h1>
+
+<img src="https://img.shields.io/badge/License-MIT-blue" alt="license">
+
+<div>
+      <a href="https://Hugo-Chinn.github.io//" target="_blank">Guoqing Hu</a><sup>1</sup>,
+      <a href="https://anzhang314.github.io/" target="_blank">An Zhang</a><sup>1&#8224</sup>,
+      Shuchang Liu<sup>2</sup>,
+      <a href="https://github.com/maowenyu-11" target="_blank">Wenyu Mao</a><sup>1</sup>,
+      <a href="https://wujcan.github.io/" target="_blank">Jiancan Wu<sup>1</sup>,
+      <a href="https://ftttank.github.io/author/xun-yang/" target="_blank">Xun Yang</a><sup>1</sup>,
+      Xiang Li<sup>2</sup>,
+      Lantao Hu<sup>2</sup>,
+      Kun Gai<sup>2</sup>,
+      <a href="https://xiangwang1223.github.io./" target="_blank">Xiang Wang</a><sup>1</sup>,
+
+<div>
+  <sup>1</sup>University of Science and Technology of China, <sup>2</sup>Independent Researcher
+       </div>   
+<div>
+<sup>+</sup> Corresponding author. 
+   </div>
+
+</div>
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![PyTorch 1.13](https://img.shields.io/badge/PyTorch-1.13-EE4C2C.svg)](https://pytorch.org/get-started/previous-versions/)
+[![CUDA 11.7](https://img.shields.io/badge/CUDA-11.7-76B900.svg)](https://developer.nvidia.com/cuda-11-7-0-download-archive)
+[![cuDNN 8.5](https://img.shields.io/badge/cuDNN-8.5-76B900.svg)](https://developer.nvidia.com/rdp/cudnn-archive)
+[![OS Linux](https://img.shields.io/badge/OS-Linux-informational.svg)](https://www.kernel.org/)
+
+
+</div>
+
+## discrete diffusion-based recommender system
+
+![overall_framework](./assets/framework.png)
+
+In this paper, building upon recent advances in discrete diffusion, we propose \textbf{PreferGrow}, a discrete diffusion-based recommender system that models preference ratios by fading and growing user preferences over the discrete item corpus.
+PreferGrow differs from existing diffusion-based recommenders in three core aspects:
+- **Discrete modeling of preference ratios:**
+PreferGrow models relative preference ratios between item pairs, rather than operating in the item representation or raw score simplex.
+This formulation aligns naturally with the discrete and ranking-oriented nature of recommendation tasks.
+- **Perturbing via preference fading:**
+Instead of injecting continuous noise, PreferGrow fades user preferences by replacing the preferred item with alternatives---physically akin to negative sampling---thereby eliminating the need for any prior noise assumption.
+- **Preference reconstruction via growing:**
+PreferGrow reconstructs user preferences by iteratively growing the preference signals from the estimated ratios.
+
+PreferGrow offers a well-defined matrix-based formulation with theoretical guarantees on Markovianity and reversibility, and it demonstrates consistent performance gains over state-of-the-art diffusion-based recommenders across five benchmark datasets, highlighting both its theoretical soundness and empirical effectiveness.
+
+## 🐇 Getting Start
+
+### :zero: Environment
+
+We provide a packaged **Conda** environment for *diff4rec*.  
+- **Download (conda-pack archive):** [Google Drive link](https://drive.google.com/file/d/1flFK3TPTiLm6e7WzijVu9gwSi6pD526g/view?usp=drive_link)  
+- **Recreate from spec:** see `assets/environment.yml`
+
+> Quick start (either option):
+>
+> - **From archive:** unpack to your target path and run `conda-unpack`, then `conda activate /path/to/diff4rec`.
+> - **From YAML:** `conda env create -n diff4rec -f assets/environment.yml` → `conda activate diff4rec`.
+
+---
+
+### :one: Datasets
+
+Our datasets are available here:  
+- **Download:** [Google Drive link](https://drive.google.com/file/d/1fsQUa92UV9_MqcGKqDhK9Sh4JrlbblLZ/view?usp=drive_link)
+
+
+## :two: Guide for Running PreferGrow
+
+Create checkpoint directories (for both training artifacts and metadata):
+
+```sh
+# Create root folders
+mkdir -p checkpoints checkpoints-meta
+
+# Create per-dataset subfolders
+for d in Steam Beauty ASO ATG ATV ML1M; do
+  mkdir -p "checkpoints/$d" "checkpoints-meta/$d"
+done
+```
+
+### 🌕🐰🥮 Hybrid Settings
+
+```sh
+nohup python -u single_train.py cuda=0 random_seed=100 training.data="Steam" graph.type="hybrid" graph.gamma=0.99999 graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.1 optim.lr=0.001 model.score_flag=False loss_type="score_entropy" model.score_flag=True model.score_method="oricos" > ./log/Steam/RS2_ABest_PreferGrow_HybridW0.99999_dim256_lr1e-3_p0.1_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=0 random_seed=100 training.data="ML1M" graph.type="hybrid" graph.gamma=0.9999 graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.1 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=True model.score_method="oricos" > ./log/ML1M/RS2_ABest_PreferGrow_HybridW0.9999_dim256_lr1e-4_p0.1_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=4 random_seed=100 training.data="Beauty" graph.type="hybrid" graph.gamma=0.999 graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.1 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=True model.score_method="oricos" > ./log/Beauty/RS2_ABest_PreferGrow_HybridW0.999_dim256_lr1e-4_p0.1_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=4 random_seed=100 training.data="ATG" graph.type="hybrid" graph.gamma=0.9999 graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.2 optim.lr=0.001 model.score_flag=False loss_type="score_entropy" model.score_flag=True model.score_method="oricos" > ./log/ATG/RS2_ABest_PreferGrow_HybridW0.9999_dim256_lr1e-3_p0.2_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=5 random_seed=100 training.data="ASO" graph.type="hybrid" graph.gamma=0.9999 graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.2 optim.lr=0.001 model.score_flag=False loss_type="score_entropy" model.score_flag=True model.score_method="oricos" > ./log/ASO/RS2_ABest_PreferGrow_HybridW0.9999_dim256_lr1e-3_p0.2_SE_oricos 2>&1 &
+```
+### 🐇🥚🎉 Adaptive Settings
+```sh
+nohup python -u single_train.py cuda=6 random_seed=100 training.data="ML1M" graph.type="adaptive" graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.2 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=False model.score_method="oricos" > ./log/ML1M/UserProbs_PreferGrow_Adaptive+1_dim256_lr1e-4_p0.2_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=6 random_seed=100 training.data="Steam" graph.type="adaptive" graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.05 optim.lr=0.001 model.score_flag=False loss_type="score_entropy" model.score_flag=False model.score_method="oricos" > ./log/Steam/UserProbs_PreferGrow_Adaptive+1_dim256_lr1e-3_p0.05_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=3 random_seed=100 training.data="Beauty" graph.type="adaptive" graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.1 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=False model.score_method="oricos" > ./log/Beauty/UserProbs_PreferGrow_Adaptive+1_dim256_lr1e-4_p0.1_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=4 random_seed=100 training.data="ATG" graph.type="adaptive" graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.2 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=False model.score_method="oricos" > ./log/ATG/UserProbs_PreferGrow_Adaptive+1_dim256_lr1e-4_p0.2_SE_oricos 2>&1 &
+nohup python -u single_train.py cuda=5 random_seed=100 training.data="ASO" graph.type="adaptive" graph.is_disliked_item=True model.hidden_size=256 model.cond_dim=256 training.nonpreference_user_ratio=0.2 optim.lr=0.0001 model.score_flag=False loss_type="score_entropy" model.score_flag=False model.score_method="oricos" > ./log/ASO/UserProbs_PreferGrow_Adaptive+1_dim256_lr1e-4_p0.2_SE_oricos 2>&1 &
+```
+
+## ☎️ Contact
+
+Please contact the first author for any questions.
+
+- Guoqing Hu, HugoChinn@mail.ustc.edu.cn
+
+## 🌟 Citation
+
+If you find our work useful, please kindly consider citing our work as follows:
+
+```bibtex
+@article{preferGrow,
+  title={Fading to Grow: Growing Preference Ratios via Preference Fading Discrete Diffusion for Recommendation},
+  author={Guoqing Hu, An Zhang Liu, Wenyu Mao, Jiancan Wu, Xun Yang, Xiang Li, Lantao Hu, Han Li, Kun Gai, Xiang Wang},
+  journal={NeurIPS},
+  year={2025}
+}
+```
