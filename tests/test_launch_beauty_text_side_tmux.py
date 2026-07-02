@@ -20,7 +20,7 @@ class LaunchBeautyTextSideTmuxTests(unittest.TestCase):
         module = load_script_module()
         command = module.build_remote_beauty_command(
             remote_repo_root=Path("/data/Zijian/goal/RecDemo"),
-            dataset_dir=Path("/data/Zijian/goal/RecDemo/dataset/Beauty"),
+            dataset_dir=Path("/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty"),
             model_path=Path("/data/models/sentence-transformers/sentence-t5-xl"),
             python_bin=Path("/data/Zijian/goal/PreferGrow/.venv/bin/python3"),
             run_dir=Path("/data/Zijian/goal/RecDemoRuns/beauty_fallback_safe"),
@@ -29,24 +29,31 @@ class LaunchBeautyTextSideTmuxTests(unittest.TestCase):
 
         self.assertIn("cd /data/Zijian/goal/RecDemo", command)
         self.assertIn("scripts/build_text_side_embeddings.py", command)
-        self.assertIn("--dataset-dir /data/Zijian/goal/RecDemo/dataset/Beauty", command)
+        self.assertIn("--dataset-dir /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty", command)
         self.assertIn("--model-path /data/models/sentence-transformers/sentence-t5-xl", command)
         self.assertIn("scripts/build_agreement_null_curves.py", command)
         self.assertIn("single_train.py", command)
         self.assertIn("cuda=1", command)
         self.assertIn("training.data=Beauty", command)
-        self.assertIn("data.Beauty.path=/data/Zijian/goal/RecDemo/dataset/Beauty", command)
+        self.assertIn("data.Beauty.path=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty", command)
         self.assertIn("text_side.enabled=True", command)
         self.assertIn(
-            "text_side.embeddings_path=/data/Zijian/goal/RecDemo/dataset/Beauty/sentence_t5_xl_item_emb.pt",
+            "text_side.embeddings_path=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/sentence_t5_xl_item_emb.pt",
             command,
         )
         self.assertIn(
-            "text_side.agreement_null_curve_path=/data/Zijian/goal/RecDemo/dataset/Beauty/agreement_null_curves.json",
+            "text_side.agreement_null_curve_path=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
             command,
         )
         self.assertIn("text_side.kernel_version=v2", command)
         self.assertIn("work_dir=/data/Zijian/goal/RecDemoRuns/beauty_fallback_safe", command)
+
+    def test_default_dataset_dir_targets_remote_paper_raw_layout(self) -> None:
+        module = load_script_module()
+        self.assertEqual(
+            "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+            str(module.DEFAULT_DATASET_DIR),
+        )
 
     def test_build_tmux_ssh_command_wraps_remote_command(self) -> None:
         module = load_script_module()
@@ -62,6 +69,20 @@ class LaunchBeautyTextSideTmuxTests(unittest.TestCase):
         self.assertIn("tmux new-session -d -s beauty_fallback_safe", ssh_command)
         self.assertIn("tmux kill-session -t beauty_fallback_safe", ssh_command)
         self.assertIn(remote_command, ssh_command)
+
+    def test_build_ssh_argv_avoids_windows_shell_quoting(self) -> None:
+        module = load_script_module()
+        remote_command = "cd /data/Zijian/goal/RecDemo && python3 -u single_train.py training.data=Beauty"
+        argv = module.build_ssh_argv(
+            host="l20",
+            session_name="beauty_fallback_safe",
+            remote_command=remote_command,
+        )
+
+        self.assertEqual("ssh", argv[0])
+        self.assertEqual("l20", argv[1])
+        self.assertIn("tmux new-session -d -s beauty_fallback_safe", argv[2])
+        self.assertIn(remote_command, argv[2])
 
 
 if __name__ == "__main__":

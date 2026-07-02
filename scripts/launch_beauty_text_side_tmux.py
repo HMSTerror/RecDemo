@@ -10,7 +10,8 @@ import subprocess
 
 DEFAULT_HOST = "l20"
 DEFAULT_REMOTE_REPO_ROOT = PurePosixPath("/data/Zijian/goal/RecDemo")
-DEFAULT_DATASET_DIR = DEFAULT_REMOTE_REPO_ROOT / "dataset" / "Beauty"
+DEFAULT_REMOTE_DATASET_ROOT = DEFAULT_REMOTE_REPO_ROOT / "dataset" / "paper_raw_v1"
+DEFAULT_DATASET_DIR = DEFAULT_REMOTE_DATASET_ROOT / "Beauty"
 DEFAULT_MODEL_PATH = PurePosixPath("/data/models/sentence-transformers/sentence-t5-xl")
 DEFAULT_PYTHON_BIN = PurePosixPath("/data/Zijian/goal/PreferGrow/.venv/bin/python3")
 DEFAULT_RUN_DIR = PurePosixPath("/data/Zijian/goal/RecDemoRuns/beauty_fallback_safe")
@@ -106,14 +107,22 @@ def build_remote_beauty_command(
     )
 
 
-def build_tmux_ssh_command(host: str, session_name: str, remote_command: str) -> str:
+def build_tmux_shell_command(session_name: str, remote_command: str) -> str:
     quoted_remote_command = shlex.quote(remote_command)
-    tmux_shell_command = (
+    return (
         f"(tmux has-session -t {session_name} 2>/dev/null && tmux kill-session -t {session_name}) || true; "
         f"tmux new-session -d -s {session_name} bash -lc {quoted_remote_command}; "
         f"tmux list-sessions | grep {shlex.quote(session_name)} || true"
     )
+
+
+def build_tmux_ssh_command(host: str, session_name: str, remote_command: str) -> str:
+    tmux_shell_command = build_tmux_shell_command(session_name=session_name, remote_command=remote_command)
     return f"ssh {host} {shlex.quote(tmux_shell_command)}"
+
+
+def build_ssh_argv(host: str, session_name: str, remote_command: str) -> list[str]:
+    return ["ssh", host, build_tmux_shell_command(session_name=session_name, remote_command=remote_command)]
 
 
 def launch_remote_beauty(
@@ -139,7 +148,7 @@ def launch_remote_beauty(
     ssh_command = build_tmux_ssh_command(host=host, session_name=session_name, remote_command=remote_command)
     if print_only:
         return ssh_command
-    subprocess.run(ssh_command, shell=True, check=True)
+    subprocess.run(build_ssh_argv(host=host, session_name=session_name, remote_command=remote_command), check=True)
     return ssh_command
 
 
