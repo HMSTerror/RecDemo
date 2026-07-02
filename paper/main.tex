@@ -1,0 +1,692 @@
+%% =========================================================================
+%% Fallback-Safe Evidence Conditioning for Discrete Preference Diffusion
+%% AAAI-27 submission draft (generated 2026-07-02).
+%%
+%% HOW TO BUILD
+%%   1. Download the AAAI-27 author kit and place aaai27.sty (+ aaai27.bst)
+%%      next to this file. The draft falls back to a plain two-column
+%%      approximation when the kit is absent, so it compiles either way.
+%%   2. pdflatex main && bibtex main && pdflatex main && pdflatex main
+%%
+%% PLACEHOLDER POLICY (spec 4.6 / SPRINT-13)
+%%   Every experiment-dependent value is marked with \pending{...} or \pnum.
+%%   Placeholders may ONLY be replaced from dated artifacts under
+%%   docs/reports/data/ (cite the artifact in a % comment when filling).
+%%   Gate-2 exit decides the abstract/contribution wording tier; the
+%%   medium/weak downgrades are pre-written in comments where relevant.
+%% =========================================================================
+\documentclass[letterpaper]{article}
+
+\IfFileExists{aaai27.sty}{%
+  \usepackage{aaai27}%
+  \usepackage{times}%
+  \usepackage{helvet}%
+  \usepackage{courier}%
+}{%
+  % ---- fallback preamble (kit absent); harmless to delete once kit is in
+  \usepackage[margin=0.75in]{geometry}%
+  \usepackage{multicol}%
+  \usepackage{times}%
+}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{url}
+
+% ---------------- placeholder macros (must all be gone before submission)
+\newcommand{\pending}[1]{{\color{red}\textbf{[PENDING: #1]}}}
+\newcommand{\pnum}{{\color{red}$\boxdot$}}         % pending numeric cell
+\newcommand{\pfig}[1]{{\color{red}\fbox{\parbox{0.9\linewidth}{\centering\vspace{2em}FIGURE PENDING: #1\vspace{2em}}}}}
+
+% ---------------- notation
+\newcommand{\pcore}{p_{\mathrm{core}}}
+\newcommand{\pcorer}{\tilde{p}_{\mathrm{core}}}
+\newcommand{\ch}{c_{h}}
+\newcommand{\pu}{p_{u}}
+\newcommand{\ut}{\tilde{u}}
+\newcommand{\TV}{\mathrm{TV}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\newtheorem{corollary}{Corollary}
+
+\title{Fallback-Safe Evidence Conditioning for Discrete Preference Diffusion}
+% Alt title (spec 4.1 option 2):
+% Reliability-Gated Proposal Kernels for Discrete Preference Diffusion in Sequential Recommendation
+\author{Anonymous submission}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Discrete preference diffusion recommenders such as PreferGrow corrupt a
+user's preferred item by fading it toward a \emph{proposal distribution}
+and learn to grow the preference back. Existing personalization in this
+family acts entirely on the \emph{score} side---the transition kernel
+itself is shared by all users. We personalize the kernel: an explicit,
+history-only text-evidence reliability signal gates a convex interpolation
+between the host's learned global proposal and a frozen text-content
+anchor, so that a single user-conditioned proposal jointly shapes where
+preference fades and where it grows back. The design is
+\emph{fallback-safe}: the reliability signal is calibrated against a
+length-matched random-history null of the evidence space, the gate is zero
+at or below the null, and we prove that the resulting chain (i) retains
+Markovianity, detailed balance, and the closed-form analytic reversal of
+the host kernel, (ii) reduces \emph{exactly} to the host kernel when the
+gate closes, and (iii) deviates from it by at most the gate value in total
+variation. This turns dataset-level differences in evidence quality into a
+falsifiable prediction: gains where text evidence is informative, parity
+where it is not. Across four sequential-recommendation benchmarks the
+prediction is confirmed: \pending{one-sentence main-table summary from
+Gate-2 report; strong exit: gains on Steam/ATG/Beauty and parity on ML1M
+(delta test NDCG@10 $=$ \pnum)}. Controls (reliability shuffling, global
+proposals, ungated anchors) and text-corruption diagnostics show the gains
+require an \emph{aligned} per-user signal, and that the kernel backs off
+adaptively as evidence degrades.
+% GATE-2 medium exit: replace the empirical sentence with the
+% "safety without loss" wording frozen in SPRINT-12; forbid "gains" claims.
+\end{abstract}
+
+\section{Introduction}
+
+Diffusion-based recommenders replace the single-step prediction of a
+sequential recommender with an iterative corrupt-and-reconstruct process.
+The discrete instantiation of this idea---preference fading and growing
+over the item vocabulary~\cite{prefergrow}---is attractive because the
+corruption process is defined directly on the discrete object the system
+ranks: the forward kernel fades the preferred item into a proposal
+distribution over alternatives, and the reverse process grows the
+preference back under a learned score model.
+
+The proposal distribution is where this family encodes ``what replaces a
+faded preference.'' It determines the stationary distribution of the
+forward chain, the reference measure of its detailed balance, the weights
+of the score-entropy objective, and the analytic reverse ratio. Yet in
+existing discrete preference diffusion the proposal is \emph{global}: a
+single distribution---uniform, popularity, or learned---shared by every
+user. Personalization enters only through the score network and through
+inference-time guidance against a ``non-preference user''
+branch~\cite{prefergrow}, i.e., entirely on the score side.
+% One-line positioning (keep verbatim somewhere in intro):
+% PreferGrow personalizes the score; we personalize the kernel --- safely.
+
+We ask the complementary question: \emph{can the kernel itself be
+personalized---safely?} Side information such as item text suggests an
+answer: when a user's history is textually coherent, content similarity
+identifies plausible substitutes, and fading preference toward
+content-similar items should sharpen the learning signal. But side
+evidence is not uniformly trustworthy---across users \emph{and across
+datasets}. A movie catalog whose ``text'' is a title and a genre tag
+carries far less evidence than a product catalog with rich descriptions.
+A kernel that tilts toward text on every dataset will be at the mercy of
+the evidence quality it happens to receive; we show this failure mode is
+real and measurable.
+
+Our design principle is \emph{fallback-safe evidence conditioning}. An
+explicit, history-only reliability signal $\ut$ measures how far the
+user's behavior-text coherence exceeds what a \emph{random} history would
+score in the same evidence space (a length-matched null). A monotone gate
+$g(\ut)\in[0,g_{\max}]$, zero at or below the null, interpolates between
+the host's \emph{learned} global proposal and a frozen text anchor. The
+pseudo-item mass of the host kernel is left untouched. Conditional on the
+(fixed, history-derived) signal, all structural properties of the host
+chain survive; when the gate closes, the kernel \emph{is} the host kernel,
+exactly; and at any gate value the kernel is within $g(\ut)$ of the host
+in total variation. The theory is deliberately elementary---rank-one
+kernel algebra---but it buys a property that score-side or loss-side
+side-information injection cannot even express: a provable reduction to
+the host when evidence is uninformative.
+
+This yields a falsifiable prediction rather than a uniform-superiority
+claim. On datasets whose text evidence is informative (real histories
+score above the null), the gated kernel should help; on datasets whose
+text bank is statistically indistinguishable from its own null, the gate
+should close and performance should match the host. Our experiments
+across Steam, ML1M, Amazon Beauty, and ATG are designed around this
+prediction, with reliability-shuffle and ungated-anchor controls that
+separate \emph{aligned} per-user reliability from generic proposal biases.
+
+Our contributions:
+\begin{itemize}
+  \item \textbf{Kernel-side personalization.} The first discrete
+  preference-diffusion recommender whose transition kernel is conditioned
+  per user by an explicit, history-only evidence-reliability signal;
+  conditional Markovianity, the stationary proposal, detailed balance,
+  and the analytic reverse ratio of the host all carry over
+  (Props.~\ref{prop:validity}--\ref{prop:reverse}).
+  \item \textbf{Fallback safety.} An exact-reduction guarantee
+  (Prop.~\ref{prop:reduction}) and a total-variation bound
+  (Lemma~\ref{lem:tv}), enabled by anchoring the interpolation to the
+  host's learned proposal and freezing the pseudo-item mass; plus a
+  null-calibration procedure showing that \emph{uncalibrated} reliability
+  signals inherit dataset-level embedding geometry and produce spurious,
+  regime-dependent behavior.
+  \item \textbf{Mechanism evidence.} Controls (reliability shuffle,
+  global proposal, ungated anchor), corruption diagnostics, and
+  calibration bucketing that show the kernel genuinely uses aligned
+  reliability to reshape its proposal and to back off under degraded
+  evidence.
+  \item \textbf{A confirmed falsifiable prediction.} Across four
+  benchmarks, gains track measured evidence informativeness:
+  \pending{fill from Gate-2 report (strong exit: positive on
+  Steam/ATG/Beauty; parity on ML1M whose real-user $\ut$ concentrates at
+  the null)}.
+\end{itemize}
+
+\section{Preliminaries: Discrete Preference Diffusion}
+\label{sec:prelim}
+
+Let $\Omega=\{1,\dots,M\}$ be the item vocabulary; following
+PreferGrow~\cite{prefergrow}, an optional non-preference pseudo-item is
+appended as the last coordinate, giving $|\Omega|=M{+}1$ states. We use
+the row-vector convention: a distribution $\mu$ evolves as $\mu P$.
+
+Given a proposal distribution $p$ on $\Omega$, define the rank-one kernel
+$\Pi_p(i,j)=p(j)$ and the generator $Q_p=\Pi_p-I$. With noise scale
+$\sigma\ge 0$ and $\alpha_\sigma=e^{-\sigma}$, the forward transition is
+\begin{equation}
+  P_{\sigma,p} \;=\; e^{\sigma Q_p} \;=\; \alpha_\sigma I +
+  (1-\alpha_\sigma)\,\Pi_p ,
+  \label{eq:forward}
+\end{equation}
+so a preferred item survives with probability $\alpha_\sigma$ and is
+otherwise resampled from $p$: preference \emph{fades toward the
+proposal}. The score model $s_\Theta(x_t,t,u)$ (with $u$ a SASRec-style
+history encoding) is trained by denoising score entropy~\cite{sedd} and
+the reverse process uses the analytic stationary-reversal ratio in which
+the proposal appears in closed form (Appendix~\ref{app:proofs}). The host
+model learns its proposal: $\pcore=\mathrm{softmax}(p_1)$ with $p_1$ a
+free parameter vector, trained jointly. All of
+Sec.~\ref{sec:method} treats the host score model, objective, and
+schedule as fixed---we modify \emph{only} the proposal.
+
+\section{Method: Fallback-Safe Gated Proposals}
+\label{sec:method}
+
+\subsection{Evidence anchor}
+Each dataset has a frozen text bank: one text record per item (title,
+category, description where present), embedded once by an off-the-shelf
+text encoder and never fine-tuned. For a user history
+$h=(i_1,\dots,i_L)$ let $\bar e_h$ be the normalized mean of its item
+embeddings and define the \emph{content anchor}
+\begin{equation}
+  \ch(i) \;\propto\; \exp\!\big(\langle \bar e_h, e_i\rangle/\tau_0\big),
+  \label{eq:anchor}
+\end{equation}
+a distribution over real items, down-weighted for items with missing
+text. The anchor proposes \emph{content-plausible substitutes}; it never
+replaces the host's score representation.
+
+\subsection{Null-calibrated reliability}
+\label{sec:null}
+The raw coherence statistic
+$A_h=\frac{1}{L}\sum_{\ell}\tfrac{1}{2}\big(\langle e_{i_\ell},\bar
+e_h\rangle+1\big)$ has a high and \emph{dataset-dependent} floor: a
+random pseudo-history already scores
+\pending{production-bank medians from Gate-0 report; legacy-bank
+indication: $\approx0.81$ (ML1M), $0.77$ (Beauty), $0.87$ (Steam)}
+because the statistic inherits the global geometry of the embedding
+space. Consuming $A_h$ in absolute terms therefore couples the kernel's
+operating point to arbitrary dataset geometry---the source of spurious
+``regime-dependent'' behavior we document in Sec.~\ref{sec:calib}.
+
+We calibrate against the evidence-space null. For each dataset we draw
+random pseudo-histories of each observed length $L$ from the frozen bank
+and record $\mu_{\mathrm{null}}(L)$, $\sigma_{\mathrm{null}}(L)$; the
+\emph{calibrated reliability} of a real history is
+\begin{equation}
+  \ut \;=\; \frac{A_h-\mu_{\mathrm{null}}(L)}{k\,\sigma_{\mathrm{null}}(L)},
+  \qquad
+  g(\ut) \;=\; g_{\max}\cdot \mathrm{clip}(\ut,0,1).
+  \label{eq:gate}
+\end{equation}
+$\ut$ is history-only (no target, no diffusion state, no current model
+score) and fixed along the whole forward/reverse trajectory, as required
+by the theory. By construction $g=0$ for histories at or below the null:
+\emph{a dataset whose text bank carries no signal closes its own gate}.
+
+\subsection{The gated kernel}
+Let $\pcore=\mathrm{softmax}(p_1)$ be the host's learned proposal
+(including the pseudo-item coordinate) and $\pcorer$ its restriction to
+real items, renormalized. The user-conditioned proposal is
+\begin{equation}
+\begin{aligned}
+  \pu \;=\;& \pcore(\star)\, e_\star \\
+  &+ \big(1-\pcore(\star)\big)\Big[(1-g(\ut))\,\pcorer +
+  g(\ut)\,\ch\Big],
+\end{aligned}
+\label{eq:pu}
+\end{equation}
+where $\star$ is the pseudo-item ($\pu=(1-g)\pcore+g\,\ch$ when no
+pseudo-item is used). Three deliberate restrictions:
+(i) the \emph{pseudo-item mass is exactly the host's} and the gate never
+touches it; (ii) $g$ is the \emph{only} dial---no reliability-dependent
+temperature or popularity mixing; (iii) no new learnable modules: the
+only trained parameter in the proposal path is the host's own $p_1$,
+shared with the fallback branch. The proposal $\pu$ replaces the global
+proposal in every kernel-level object: forward corruption
+\eqref{eq:forward}, score-entropy weights, and the analytic reverse
+ratio (all call sites, not just negative sampling).
+
+\subsection{Theory}
+\label{sec:theory}
+Proofs are in Appendix~\ref{app:proofs}. Fix a user history $h$, hence
+$\ut$ and $\pu$, for the whole trajectory.
+
+\begin{proposition}[Kernel validity; informal summary of
+Props.~\ref{prop:forward-app}--\ref{prop:reverse-app}]
+\label{prop:validity}
+With $\pu$ in place of the global proposal, the forward corruption has
+the closed form
+$q_t(x_t{=}x \mid x_0,u)=\bar\alpha_t\mathbf{1}\{x{=}x_0\}
++(1-\bar\alpha_t)\pu(x)$; conditional on $\ut$ the chain is Markov; its
+stationary and limiting distribution is $\pu$; it satisfies detailed
+balance w.r.t.\ $\pu$; and the analytic stationary-reversal ratio is the
+host's formula with the proposal term replaced by $\pu$.
+\end{proposition}
+\begin{proposition}[Exact reduction / fallback safety]
+\label{prop:reduction}
+If $g(\ut)=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
+derived object---forward corruption, stationary distribution,
+score-entropy weights, analytic reverse ratio---coincides exactly with
+the host kernel's.
+\end{proposition}
+\begin{lemma}[Bounded deviation]
+\label{lem:tv}
+$\TV(\pu,\pcore)\le g(\ut)$, and each row of the forward transition
+satisfies
+$\TV\big(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot)\big)\le
+(1-\alpha_\sigma)\,g(\ut)$.
+\end{lemma}
+\begin{remark}[Why the kernel is the right injection site]
+\label{rem:site}
+Encoder- or loss-level injection of the same signal admits no analogue
+of Prop.~\ref{prop:reduction}: there is no sense in which ``the encoder
+with text features at reliability zero'' \emph{is} the host model. The
+reduction guarantee is expressible only where the conditioning enters
+the transition law itself. Our injection-site comparison
+(Sec.~\ref{sec:threeway}) is therefore an analysis of regimes, not the
+basis of the safety claim.
+\end{remark}
+The guarantee has teeth only under the stated scope: $\ut$ history-only
+and frozen per trajectory, self-resampling corruption, and the
+pseudo-item coordinate present in every kernel object
+(Appendix~\ref{app:boundary} lists the failure modes otherwise).
+
+\section{Experiments}
+\label{sec:exp}
+
+\paragraph{Setup.}
+We evaluate on four sequential-recommendation benchmarks---Steam, ML1M,
+Amazon Beauty, and ATG\pending{verify official dataset names/statistics
+table from regenerated protocol.json}---rebuilt from raw data under a
+frozen protocol (raw source, mapping, filtering, dedup, split rules
+recorded; all methods share the regenerated splits and frozen banks).
+Metrics are HR@10 and NDCG@10 with the production
+checkpoint selector \pending{selector description: val NDCG@10 at
+inference guidance $w$, per frozen baseline protocol}; seeds and
+mean$\pm$std from the 3-seed study \pending{SPRINT-11 artifact}.
+Baselines: PreferGrow (host, learned global
+proposal)~\cite{prefergrow}, a continuous diffusion anchor
+\pending{DreamRec or DiffuRec, per final run set}~\cite{dreamrec,diffurec},
+text-guided diffusion (iDreamRec~\cite{idreamrec}), and a text-side
+sequential recommender \pending{RecFormer or UniSRec}~\cite{recformer,unisrec}.
+Hyperparameters ($\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$ initial)
+and infrastructure details in Appendix~\ref{app:impl}.
+
+\subsection{Main results: the prediction test}
+\label{sec:main}
+
+Table~\ref{tab:main} reports the four-dataset comparison. The reading we
+pre-registered: datasets whose real-user $\ut$ distribution sits above
+the null (per Gate-0 diagnostics, Fig.~\ref{fig:null}) should gain;
+datasets at the null should match the host.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{HR@10} & \multicolumn{2}{c}{NDCG@10} \\
+Dataset & Host & Ours & Host & Ours \\
+\midrule
+Steam  & \pnum & \pnum & \pnum & \pnum \\
+ATG    & \pnum & \pnum & \pnum & \pnum \\
+Beauty & \pnum & \pnum & \pnum & \pnum \\
+ML1M   & \pnum & \pnum & \pnum & \pnum \\
+\bottomrule
+\end{tabular}
+\caption{Main results (mean$\pm$std over 3 seeds; baselines abbreviated,
+full table with all baselines in Appendix~\ref{app:results}).
+\pending{fill from SPRINT-05/11 compare artifacts; per spec 4.6 do NOT
+caption-claim uniform superiority; ML1M row is the parity prediction.}}
+\label{tab:main}
+\end{table}
+
+\pending{One paragraph: quantitative reading of Table~\ref{tab:main}
+against the prediction, frozen at Gate 2. Strong exit: positive deltas
+on Steam/ATG/Beauty, ML1M within $\pm0.01$ of host. Medium exit
+(safety-without-loss): parity everywhere with mechanism evidence
+carrying the paper. Do not write ``consistently outperforms''.}
+
+\subsection{Controls: aligned reliability, not generic bias}
+\label{sec:controls}
+
+Three controls run under identical splits and selectors
+(Table~\ref{tab:controls}): \emph{global-p} ($g\equiv 0$; must match the
+host---an in-training equivalence check of
+Prop.~\ref{prop:reduction}), \emph{anchor-only} ($g\equiv g_{\max}$, no
+reliability gating), and \emph{$\ut$-shuffle} (reliability permuted
+across users; if performance survives, the signal content is
+irrelevant---our claim would fail its own control).
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Variant & HR@10 & NDCG@10 \\
+\midrule
+Ours (gated)        & \pnum & \pnum \\
+anchor-only         & \pnum & \pnum \\
+$\ut$-shuffle       & \pnum & \pnum \\
+global-p ($g{=}0$)  & \pnum & \pnum \\
+Host                & \pnum & \pnum \\
+\bottomrule
+\end{tabular}
+\caption{Controls on Beauty and Steam
+\pending{fill from SPRINT-07; two dataset blocks or side-by-side}.}
+\label{tab:controls}
+\end{table}
+
+\subsection{Robustness under degraded text evidence}
+\label{sec:corruption}
+
+We corrupt the frozen bank (token dropout on item texts), retrain, and
+compare clean-vs-corrupted degradation (Table~\ref{tab:corruption}) and
+the kernel's internal response: the gate should close as evidence
+degrades, most strongly for users whose clean $\ut$ was highest.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Variant & clean$\to$corrupted $\Delta$HR@10 & $\Delta$NDCG@10 \\
+\midrule
+Ours (gated)  & \pnum & \pnum \\
+anchor-only   & \pnum & \pnum \\
+\bottomrule
+\end{tabular}
+\caption{Text-corruption robustness on Beauty
+\pending{fill from SPRINT-08; keep the v1-generation finding for context
+in text: ungated anchors degrade more}.}
+\label{tab:corruption}
+\end{table}
+
+\pfig{Backoff mechanism: clean-vs-corrupted shift of $g$ and $\ut$,
+bucketed by clean $\ut$ (SPRINT-08 diagnostics).}
+
+\subsection{Calibration analysis}
+\label{sec:calib}
+
+\pfig{Null-calibration figure: per-dataset distributions of raw
+coherence $A_h$ for real users vs.\ length-matched random-history null;
+ML1M concentrates at its null while Steam/Beauty separate---the
+one-figure explanation of why uncalibrated signals produce spurious
+regime dependence (Gate-0 artifact).}
+
+\pending{Paragraph: bucket users by $\ut$; show high-$\ut$ buckets are
+more content-tilted and low-$\ut$ buckets track the host proposal;
+relate proposal shift direction to hit-rate movement. Also report the
+proxy-vs-popularity correlation table (Appendix~\ref{app:results}) to
+preempt the ``you just up-weight popular, well-documented items''
+objection.}
+
+\subsection{Injection-site analysis}
+\label{sec:threeway}
+
+We inject the identical signal at three sites: encoder (feature
+fusion), loss (confidence weighting), and kernel (ours).
+\pending{Table from SPRINT-10 on Beauty+Steam.} Per
+Remark~\ref{rem:site}, the argument for the kernel site is not that it
+wins every regime---raw rankings are regime-dependent---but that it is
+the only site where the fallback guarantee is expressible, at no cost in
+\pending{summary consistent with the observed table}.
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Diffusion recommenders.}
+Continuous-diffusion recommenders inject Gaussian noise in a latent or
+embedding space~\cite{dreamrec,diffurec,preferdiff}; discrete
+formulations operate on the item vocabulary
+directly~\cite{prefergrow,llada-rec}. Our host is
+PreferGrow~\cite{prefergrow}, whose personalization is score-side
+(condition dropout plus inference-time guidance against a
+non-preference-user branch); its kernel is user-independent. We supply
+the complementary, kernel-side half, anchored to their learned proposal.
+
+\paragraph{Shaped transition kernels in discrete diffusion.}
+Structured (non-uniform) corruption matrices date to
+D3PM~\cite{d3pm}; in recommendation, CDRec~\cite{cdrec} shapes
+transition matrices with item popularity and TDPM~\cite{tdpm} modulates
+token diffusion with temporal preference structure. All are global or
+item-level signals; none condition the kernel per user on an explicit
+evidence-reliability signal, and none provide a reduction guarantee to a
+host kernel.
+
+\paragraph{Guidance and adaptivity.}
+Classifier-free guidance~\cite{cfg} and its recommendation
+uses~\cite{cfgrec} interpolate conditional and unconditional
+\emph{scores} with a global weight; adaptive guidance based on model
+confidence exists for language diffusion~\cite{acfg}. Our gate is the
+kernel-side analogue with the weight determined by measurable,
+history-only evidence reliability---and with the interpolation target
+being the host's learned proposal, which is what makes the safety
+property provable.
+
+\paragraph{Reliability and side information in recommendation.}
+Reliability-aware recommenders act at the representation, optimization,
+or decision level~\cite{ugr,truthsr}; text-side sequential recommenders
+fuse content into encoders~\cite{recformer,unisrec}. Neither line
+conditions a diffusion transition law; our text anchor is an
+instantiation of evidence, not the contribution itself.
+
+\section{Conclusion, Limitations}
+\label{sec:conclusion}
+
+We personalized the transition kernel of discrete preference diffusion
+with an explicit, null-calibrated, history-only evidence-reliability
+gate, anchored to the host's learned proposal so that the conditioning
+is fallback-safe: exact reduction when the gate closes, bounded
+deviation otherwise, and full inheritance of the host chain's structure.
+Empirically the design converts evidence quality from a hidden
+confounder into a falsifiable prediction: \pending{one-sentence frozen
+Gate-2 summary}.
+
+\emph{Limitations.} Gains are bounded by how much signal the evidence
+space actually carries---by design, a closed gate can only match the
+host, never beat it; the reliability signal is a single calibrated
+statistic and richer signals (and their calibration) are open; our
+metadata-sparsity diagnostic did not support the stronger hypothesis
+that sparsity bucketing alone predicts per-user gains
+(Appendix~\ref{app:results} reports this negative result); and the
+guarantee is specific to kernels with a stationary proposal---schedule-
+or mask-based discrete diffusions need their own analysis.
+
+% ======================= appendix =======================
+\clearpage
+\appendix
+
+\section{Proofs}
+\label{app:proofs}
+
+Throughout, fix the user history $h$, the calibrated signal $\ut$, the
+gate $g=g(\ut)$, and hence the proposal $\pu$ of Eq.~\eqref{eq:pu};
+$\pu$ is strictly positive whenever $\pcore$ and (on its support)
+$\ch$ are, which holds by softmax parameterization with the completeness
+down-weighting absorbed into logits. Row-vector convention; $\alpha_\sigma=e^{-\sigma}$.
+
+\begin{proposition}[Proposal-conditioned forward corruption]
+\label{prop:forward-app}
+Let $\Pi_u(i,j)=\pu(j)$ and $Q_u=\Pi_u-I$. Then
+$P_{\sigma,u}=e^{\sigma Q_u}=\alpha_\sigma I+(1-\alpha_\sigma)\Pi_u$,
+and for discrete steps with $\bar\alpha_t=\prod_{r\le t}\alpha_r$,
+\[
+  q_t(x_t{=}x\mid x_0,u)=\bar\alpha_t\,\mathbf{1}\{x{=}x_0\}
+  +(1-\bar\alpha_t)\,\pu(x).
+\]
+\end{proposition}
+\begin{proof}
+$\Pi_u$ is an idempotent projection: $\Pi_u^2(i,j)=\sum_k
+\pu(k)\pu(j)=\pu(j)=\Pi_u(i,j)$. Since $\Pi_u$ and $I$ commute,
+$e^{\sigma Q_u}=e^{-\sigma}e^{\sigma\Pi_u}
+=e^{-\sigma}\big(I+(e^{\sigma}-1)\Pi_u\big)
+=\alpha_\sigma I+(1-\alpha_\sigma)\Pi_u$.
+Products telescope by idempotence:
+$\prod_t\big(\alpha_t I+(1-\alpha_t)\Pi_u\big)
+=\bar\alpha_t I+(1-\bar\alpha_t)\Pi_u$; take row $x_0$, column $x$.
+\end{proof}
+
+\begin{proposition}[Conditional Markovianity]
+\label{prop:markov-app}
+Conditional on the fixed $\ut$, $(x_t)$ generated by
+$P_{\Delta\sigma_t,u}$ is a (time-inhomogeneous, per-step-size) Markov
+chain; under a fixed step size it is generated by the single generator
+$Q_u$, hence a homogeneous Markov semigroup.
+\end{proposition}
+\begin{proof}
+With $\ut$ fixed, $\pu$ and $Q_u$ are deterministic; each transition
+reads only $(x_t,\Delta\sigma_t)$, never earlier states, so the
+conditional law of $x_{t+1}$ given the past equals
+$P_{\Delta\sigma_t,u}(x_t,\cdot)$. Without conditioning on $\ut$, the
+mixture over users need not be a single Markov chain.
+\end{proof}
+
+\begin{proposition}[Stationary and limiting proposal]
+\label{prop:stationary-app}
+$\pu P_{\sigma,u}=\pu$ for all $\sigma\ge0$, and for any initial law
+$\mu$, $\mu P_{\sigma,u}=\alpha_\sigma\mu+(1-\alpha_\sigma)\pu\to\pu$
+as $\sigma\to\infty$. For finite $\sigma$ the marginal is the stated
+mixture, not $\pu$ itself.
+\end{proposition}
+\begin{proof}
+$\mu\Pi_u=\pu$ for any distribution $\mu$; substitute into
+$P_{\sigma,u}=\alpha_\sigma I+(1-\alpha_\sigma)\Pi_u$.
+\end{proof}
+
+\begin{proposition}[Detailed balance]
+\label{prop:balance-app}
+$\pu(i)P_{\sigma,u}(i,j)=\pu(j)P_{\sigma,u}(j,i)$ for all $i,j$.
+\end{proposition}
+\begin{proof}
+Diagonal terms are trivial; for $i\ne j$ both sides equal
+$(1-\alpha_\sigma)\pu(i)\pu(j)$.
+\end{proof}
+
+\begin{proposition}[Analytic reverse ratio replaces only the proposal]
+\label{prop:reverse-app}
+For $\delta<\infty$, $P_{\delta,u}$ is invertible with
+$P_{\delta,u}^{-1}=\alpha_\delta^{-1}I+(1-\alpha_\delta^{-1})\Pi_u$;
+hence for any row vector $r$,
+$rP_{\delta,u}^{-1}=e^{\delta}r+(1-e^{\delta})\langle
+r,\mathbf{1}\rangle\,\pu$. The host's stationary-reversal operator is
+recovered with $\pu$ in place of the global proposal; exact
+non-stationary reverse kernels additionally depend on the current
+marginal and remain the score model's job.
+\end{proposition}
+\begin{proof}
+Multiply the two matrices and use $\Pi_u^2=\Pi_u$:
+$[\alpha I+(1-\alpha)\Pi][\alpha^{-1}I+(1-\alpha^{-1})\Pi]=I$. The
+row-vector form follows from $r\Pi_u=\langle r,\mathbf{1}\rangle\pu$.
+\end{proof}
+
+\begin{proposition}[Exact reduction; Prop.~\ref{prop:reduction} in the
+main text]
+\label{prop:reduction-app}
+If $g=0$ then $\pu=\pcore(\star)e_\star
++(1-\pcore(\star))\pcorer=\pcore$, hence $\Pi_u=\Pi_{\pcore}$,
+$Q_u=Q_{\pcore}$, and every object in
+Props.~\ref{prop:forward-app}--\ref{prop:reverse-app}, as well as the
+score-entropy weights (which depend on the kernel only through $\pu$
+and the schedule), coincides with the host's.
+\end{proposition}
+\begin{proof}
+Immediate: $\pcorer$ renormalizes $\pcore$ off the pseudo-item, so
+recombining with mass $\pcore(\star)$ restores $\pcore$ exactly; all
+listed objects are functions of $(\pu,\text{schedule})$ alone.
+\end{proof}
+
+\begin{lemma}[TV bound; Lemma~\ref{lem:tv} in the main text]
+\label{lem:tv-app}
+$\TV(\pu,\pcore)\le g$ and
+$\TV\big(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot)\big)
+\le(1-\alpha_\sigma)\,g$.
+\end{lemma}
+\begin{proof}
+$\pu-\pcore=(1-\pcore(\star))\,g\,(\ch-\pcorer)$ on real coordinates
+and $0$ on $\star$, so
+$\TV(\pu,\pcore)=\tfrac12\|\pu-\pcore\|_1
+=(1-\pcore(\star))\,g\,\TV(\ch,\pcorer)\le g$.
+Rows of the transitions differ by $(1-\alpha_\sigma)(\pu-\pcore)$.
+\end{proof}
+
+\subsection{Scope and failure modes}
+\label{app:boundary}
+The guarantees require: (1) $\ut=f(h)$ history-only---no dependence on
+$x_t$, $t$, the target item, or current model scores; (2) $\ut$ fixed
+along each forward/reverse trajectory (per-step updates give a Markov
+chain on $(x_t,u_t)$ but not the same semigroup or balance structure);
+(3) the pseudo-item coordinate present consistently in $\pu$ and every
+kernel object; (4) self-resampling corruption---forced-replacement,
+top-$k$ truncation, or state-dependent masking break detailed balance
+and require new proofs; (5) hard-masked items restrict irreducibility
+claims to the support; (6) the reverse-ratio statement concerns the
+stationary-reversal analytic operator, not the exact non-stationary
+reverse kernel; (7) if $g$ or $\ut$ leak batch labels at training time,
+the certified object is a different, data-dependent kernel.
+
+\section{Null calibration details}
+\label{app:null}
+For each dataset and each observed history-length bin $L$: draw $R$
+pseudo-histories i.i.d.\ uniformly from the frozen bank
+\pending{R and binning per SPRINT-02 implementation}; compute $A_h$ for
+each; record $\mu_{\mathrm{null}}(L),\sigma_{\mathrm{null}}(L)$; freeze
+with the bank hash into the dataset protocol. Real-user $\ut$ then
+follows Eq.~\eqref{eq:gate}. The null is a property of the evidence
+space alone---no interaction data enters---so calibration cannot leak
+preferences. \pending{pseudo-code block + null-curve plots per dataset
+(Gate-0 artifacts).}
+
+\section{Implementation and reproducibility}
+\label{app:impl}
+Host architecture, schedule, and training protocol follow
+PreferGrow~\cite{prefergrow}; our change is confined to the proposal
+construction and its threading through the four kernel call sites
+(forward sampling, score-entropy weights, analytic reverse ratio,
+non-preference sampling). Initial hyperparameters: $\tau_0{=}0.2$,
+$g_{\max}{=}0.5$, $k{=}2.0$; text encoder \pending{sentence-t5-xl
+production bank details}; datasets rebuilt raw-first with frozen
+protocol files; a $g\equiv0$ equivalence suite verifies
+Prop.~\ref{prop:reduction-app} against the host implementation
+numerically before any training run. \pending{hyperparameter table,
+hardware, run times, code URL at camera-ready.}
+
+\section{Additional results}
+\label{app:results}
+\pending{Full main table with all baselines (SPRINT-05); u-composition
+ablation: calibrated-agreement-only vs +completeness vs
++history-reliability vs legacy full-u (SPRINT-09); 3-seed stability
+(SPRINT-11); proxy-vs-popularity correlation table; the negative
+metadata-sparsity result reported honestly per spec 4.6; guidance-$w$
+sensitivity.}
+
+\bibliography{references}
+\bibliographystyle{aaai27}
+% Fallback when the kit's bst is absent:
+% \bibliographystyle{plain}
+
+\end{document}
