@@ -479,3 +479,117 @@ ML1M 的关键中位数是：
 - [gate0_failure_diagnostic.json](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_failure_diagnostic.json:1)
 - [gate0_failure_component_summary.csv](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv:1)
 - [gate0_failure_diagnostic_zh.md](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_failure_diagnostic_zh.md:1)
+
+## 13. 2026-07-03 补充：Gate0 全局校准修复审计
+
+在上面那轮追因诊断之后，项目当时的下一步判断还是：
+
+- `recommended_next_path = calibration_repair_first`
+
+也就是先检查：如果只修 `null curve` 的 spread / scaling，全局校准能不能把 Gate0 拉回来。
+
+为回答这个问题，我又补了一轮正式 FOLLOWUP-02 审计。对应中文说明见：
+
+- [gate0_calibration_repair_audit_zh.md](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_calibration_repair_audit_zh.md:1)
+
+英文正式产物是：
+
+- [gate0_calibration_repair_audit.md](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_calibration_repair_audit.md:1)
+- [gate0_calibration_repair_audit.json](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_calibration_repair_audit.json:1)
+- [gate0_calibration_repair_candidates.csv](E:/PreferGrow/docs/reports/data/2026-07-02-gate0/gate0_calibration_repair_candidates.csv:1)
+
+### 13.1 这轮还是在 `l20` 上跑的
+
+这轮正式结果仍然来自服务器：
+
+- 服务器：`l20`
+- 正式归档目录：`/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0`
+
+我在本轮续做时再次核查远端目录，看到：
+
+- `gate0_calibration_repair_audit.md`：`Jul 3 02:03`
+- `gate0_calibration_repair_candidates.csv`：`Jul 3 02:03`
+
+所以这不是本地补写推断，而是服务器上真实运行并归档过的正式产物。
+
+### 13.2 为什么这轮最早先从 `/tmp` 起跑
+
+这轮有一个额外的服务器侧问题：`/data` 当时一度满盘，导致
+
+1. 正常同步不稳定；
+2. 远端 `/data` 下的 `build_gate0_utilde_report.py` 一度变成了 `0` 字节坏文件。
+
+因此 FOLLOWUP-02 一开始先在远端临时目录下做了最小运行：
+
+- 从 `/tmp` 起跑脚本；
+- 但读取的仍是 `/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/...` 下的正式数据与已有 Gate0 工件；
+- 等你清理完 `data` 盘以后，再把完整代码重新同步回 `/data/Zijian/goal/RecDemo`，并把产物回填到正式目录。
+
+所以这里变的是“执行落点的恢复方式”，不是“实验数据边界”。
+
+### 13.3 结果把之前的判断进一步收紧了
+
+这轮总共审计了 `96` 个全局候选，覆盖：
+
+- `agreement_k`
+- `sigma_scale`
+- `sigma_floor`
+
+最终结果是：
+
+- `candidate_count = 96`
+- `passing_candidate_count = 0`
+
+也就是说，没有任何一个全局 `k / sigma_scale / sigma_floor` 候选，能同时满足：
+
+1. `abs(median_u_tilde(ML1M)) < 0.5`
+2. `median_u_tilde(Steam) > median_u_tilde(ML1M)`
+3. `median_u_tilde(Beauty) > median_u_tilde(ML1M)`
+
+最好的候选是：
+
+- `k4_scale2_floor0`
+
+它能把：
+
+- `ML1M` 从 `1.427543` 拉到 `0.356886`
+
+但仍然只能得到：
+
+- `Steam = 0.026823`
+- `Beauty = 0.199542`
+
+所以排序门还是没翻过来，`SPRINT-05` 仍然不能开。
+
+### 13.4 这会改写前面文档里的“下一步”说法
+
+前面第 9 节和第 11 节写的“推荐下一步是 `calibration_repair_first`”，在 FOLLOWUP-01 那个时点是对的；但在 FOLLOWUP-02 审计完成后，需要进一步更新为：
+
+- `recommended_next_path = downgrade_claim_or_design_deeper_repair`
+
+更准确地说：
+
+1. 现在已经没有证据支持“简单全局 calibration repair 足够”；
+2. 如果还想回主路径，下一步必须是更深层的 repair 设计，而不是再调一次全局 `k / sigma`；
+3. 如果时间或风险不允许继续深修，就应该进入 claim downgrade 路径。
+
+因此，本文件中凡是把“calibration repair first”写成默认下一步的地方，都应理解为：
+
+- **那是 FOLLOWUP-01 后的中间判断**
+- **不是 FOLLOWUP-02 完成后的最终判断**
+
+### 13.5 这轮补充对整条 Gate0 线的最终含义
+
+到这一步，Gate0 相关链路已经形成了三层结论：
+
+1. `SPRINT-04`：正式 Gate0 在 `l20` 上失败，`SPRINT-05` 阻塞；
+2. `FOLLOWUP-01`：失败主驱动更像 `null_curve_spread_or_scaling_mismatch`；
+3. `FOLLOWUP-02`：简单全局 `k / sigma_scale / sigma_floor` 修复不够，下一步只能是 deeper repair 或 claim downgrade。
+
+所以当前这条链最准确的状态不是：
+
+- “先做一下 calibration repair，再看看”
+
+而是：
+
+- “简单 global calibration repair 已被正式审计否掉；主路径若继续，只能走更深层 repair；否则应降主张。”
