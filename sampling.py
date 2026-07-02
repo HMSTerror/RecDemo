@@ -41,7 +41,7 @@ class Predictor(abc.ABC):
         self.noise = noise
 
     @abc.abstractmethod
-    def update_fn(self, score_fn, x, t, step_size):
+    def update_fn(self, score_fn, x, t, step_size, proposal=None):
         """One update of the predictor.
 
         Args:
@@ -54,9 +54,16 @@ class Predictor(abc.ABC):
         """
         pass
 
+
+def _call_graph(graph, method_name, *args, proposal=None):
+    method = getattr(graph, method_name)
+    if proposal is None:
+        return method(*args)
+    return method(*args, proposal=proposal)
+
 @register_predictor(name="euler")
 class EulerPredictor(Predictor):
-    def update_fn(self, score_fn, h, x, t, step_size, denoise=False):
+    def update_fn(self, score_fn, h, x, t, step_size, denoise=False, proposal=None):
         sigma, dsigma = self.noise(t)
         score = score_fn(h, x, sigma)
 
@@ -68,13 +75,13 @@ class EulerPredictor(Predictor):
 
 @register_predictor(name="none")
 class NonePredictor(Predictor):
-    def update_fn(self, score_fn, h, x, t, step_size):
+    def update_fn(self, score_fn, h, x, t, step_size, proposal=None):
         return x
 
 
 @register_predictor(name="analytic")
 class AnalyticPredictor(Predictor):
-    def update_fn(self, score_fn, h, x, t, step_size, denoise=False, sample_method="hard"):
+    def update_fn(self, score_fn, h, x, t, step_size, denoise=False, sample_method="hard", proposal=None):
         curr_sigma = self.noise(t)[0]
         next_sigma = self.noise(t - step_size)[0]
         dsigma = curr_sigma - next_sigma
@@ -83,8 +90,8 @@ class AnalyticPredictor(Predictor):
 
         #print("Ranking_t", score)
 
-        stag_score = self.graph.reverse_prob_ratio(score, dsigma)
-        probs = stag_score * self.graph.prob_matrix_row(x, dsigma)
+        stag_score = _call_graph(self.graph, "reverse_prob_ratio", score, dsigma, proposal=proposal)
+        probs = stag_score * _call_graph(self.graph, "prob_matrix_row", x, dsigma, proposal=proposal)
         #print("Reverse probs", probs)
         if denoise:
             return probs
@@ -96,18 +103,18 @@ class Denoiser:
         self.graph = graph
         self.noise = noise
 
-    def update_fn(self, score_fn, h, x, t, denoise=False):
+    def update_fn(self, score_fn, h, x, t, denoise=False, proposal=None):
         sigma = self.noise(t)[0]
 
         score = score_fn(h, x, sigma)
         #print(score.size())
         #print(score.size())
-        stag_score = self.graph.reverse_prob_ratio(score, sigma)
+        stag_score = _call_graph(self.graph, "reverse_prob_ratio", score, sigma, proposal=proposal)
         #print(stag_score.size())
-        probs = stag_score * self.graph.prob_matrix_row(x, sigma)
+        probs = stag_score * _call_graph(self.graph, "prob_matrix_row", x, sigma, proposal=proposal)
         #print(probs.size())
         # truncate probabilities
-        if self.graph.is_disliked_item:
+        if getattr(self.graph, "is_disliked_item", False):
             probs = probs[..., :-1]
         if denoise:
             return probs
@@ -233,7 +240,12 @@ def get_pc_sampler(graph, noise, predictor, steps, personalization_strength, den
     @torch.no_grad()
     def pc_sampler(model, batch_dims, history):
         sampling_score_fn = mutils.get_score_fn(model, personalization_strength, train=False, sampling=True)
-        x = graph.sample_nonpreference(*batch_dims).to(device)
+        proposal = None
+        if hasattr(model, "encode_history_context"):
+            proposal = model.encode_history_context(history).get("proposal")
+            if proposal is not None:
+                proposal = proposal.to(device)
+        x = _call_graph(graph, "sample_nonpreference", *batch_dims, proposal=proposal).to(device)
         timesteps = torch.linspace(1, eps, steps + 1, device=device)
         dt = (1 - eps) / steps
 
@@ -241,13 +253,13 @@ def get_pc_sampler(graph, noise, predictor, steps, personalization_strength, den
             #print("Timestep", timesteps[i])
             t = timesteps[i] * torch.ones(x.shape[0], 1, device=device)
             x = projector(x)
-            x = predictor.update_fn(sampling_score_fn, history, x, t, dt, denoise=False, sample_method="hard")
+            x = predictor.update_fn(sampling_score_fn, history, x, t, dt, denoise=False, sample_method="hard", proposal=proposal)
 
         if denoise:
             # denoising step
             x = projector(x)
             t = timesteps[-1] * torch.ones(x.shape[0], 1, device=device)
-            logits = denoiser.update_fn(sampling_score_fn, history, x, t, denoise=True)
+            logits = denoiser.update_fn(sampling_score_fn, history, x, t, denoise=True, proposal=proposal)
             
         return logits
     
@@ -261,7 +273,12 @@ def get_full_sampler(graph, noise, predictor, steps, personalization_strength, d
     @torch.no_grad()
     def pc_sampler(model, batch_dims, history):
         sampling_score_fn = mutils.get_score_fn(model, personalization_strength, train=False, sampling=True)
-        x = graph.sample_nonpreference(*batch_dims).to(device)
+        proposal = None
+        if hasattr(model, "encode_history_context"):
+            proposal = model.encode_history_context(history).get("proposal")
+            if proposal is not None:
+                proposal = proposal.to(device)
+        x = _call_graph(graph, "sample_nonpreference", *batch_dims, proposal=proposal).to(device)
         timesteps = torch.linspace(1, eps, steps + 1, device=device)
         dt = (1 - eps) / steps
 
@@ -270,7 +287,7 @@ def get_full_sampler(graph, noise, predictor, steps, personalization_strength, d
             #print("Timestep", timesteps[i])
             t = timesteps[i] * torch.ones(x.shape[0], 1, device=device)
             x = projector(x)
-            probs = predictor.update_fn(sampling_score_fn, history, x, t, dt, denoise=True)
+            probs = predictor.update_fn(sampling_score_fn, history, x, t, dt, denoise=True, proposal=proposal)
             probs_full.append(probs.squeeze(1))
             x = sample_categorical(probs, method = 'hard')
 
@@ -278,7 +295,7 @@ def get_full_sampler(graph, noise, predictor, steps, personalization_strength, d
             # denoising step
             x = projector(x)
             t = timesteps[-1] * torch.ones(x.shape[0], 1, device=device)
-            logits = denoiser.update_fn(sampling_score_fn, history, x, t, denoise=True)
+            logits = denoiser.update_fn(sampling_score_fn, history, x, t, denoise=True, proposal=proposal)
         
         probs_full.append(logits.squeeze(1))
         # import pickle

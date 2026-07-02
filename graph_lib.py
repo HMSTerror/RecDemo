@@ -36,6 +36,8 @@ def get_graph(config, device):
         return HybridWise(item_num, config.graph.gamma)
     elif config.graph.type == "adaptive":
         return AdaptiveWise(item_num, config.graph.is_disliked_item)
+    elif config.graph.type == "proposal_adaptive":
+        return ProposalAdaptiveWise(item_num, config.graph.is_disliked_item)
     else:
         raise ValueError(f"Graph {config.graph.type} not valid")
 
@@ -1270,3 +1272,124 @@ class AdaptiveWise(PreferGrow, nn.Module):
         #  torch.gather(sexp, -1, x[..., None]).squeeze(-1)
         pos_term = (sexp.sum(dim=-1) - 1.) * hate_probs[x]
         return (pos_term - neg_term + const)
+
+
+class ProposalAdaptiveWise(PreferGrow, nn.Module):
+    def __init__(self, dim, is_disliked_item=True):
+        PreferGrow.__init__(self)
+        nn.Module.__init__(self)
+        self._dim = dim
+        self._is_disliked_item = is_disliked_item
+
+    @property
+    def is_disliked_item(self):
+        return self._is_disliked_item
+
+    @property
+    def dim(self):
+        return self._dim + (1 if self.is_disliked_item else 0)
+
+    def _expand_proposal(self, proposal, target):
+        if proposal is None:
+            raise ValueError("proposal_adaptive graph requires explicit proposal")
+
+        proposal = proposal.to(target.device, dtype=torch.float32)
+        if proposal.dim() == 2:
+            prefix_shape = target.shape[1:]
+            if target.dim() > 2 and target.shape[-1] == 1:
+                prefix_shape = target.shape[1:-1]
+            view_shape = (proposal.shape[0], *((1,) * len(prefix_shape)), proposal.shape[-1])
+            expand_shape = (proposal.shape[0], *prefix_shape, proposal.shape[-1])
+            return proposal.view(view_shape).expand(expand_shape)
+        if proposal.dim() == 3:
+            return proposal.to(target.device, dtype=torch.float32)
+        raise ValueError(f"proposal must be rank-2 or rank-3, got shape {tuple(proposal.shape)}")
+
+    def rate_matrix_col(self, i, proposal=None):
+        proposal_full = self._expand_proposal(proposal, i)
+        return proposal_full.scatter_add(-1, i.unsqueeze(-1), -torch.ones_like(proposal_full[..., :1]))
+
+    def rate_matrix_row(self, i, proposal=None):
+        proposal_full = self._expand_proposal(proposal, i)
+        proposal_i = torch.gather(proposal_full, -1, i.unsqueeze(-1))
+        row = proposal_i.expand(*proposal_full.shape)
+        return row.scatter_add(-1, i.unsqueeze(-1), -torch.ones_like(proposal_full[..., :1]))
+
+    def prob_matrix_col(self, i, int_beta, proposal=None):
+        proposal_full = self._expand_proposal(proposal, i)
+        alpha = (-int_beta[..., None]).exp()
+        trans = (1 - alpha) * proposal_full
+        trans = trans.scatter_add(-1, i.unsqueeze(-1), alpha)
+        return trans
+
+    def prob_matrix_row(self, i, int_beta, proposal=None):
+        proposal_full = self._expand_proposal(proposal, i)
+        alpha = (-int_beta[..., None]).exp()
+        proposal_i = torch.gather(proposal_full, -1, i.unsqueeze(-1))
+        trans = (1 - alpha) * proposal_i.expand(*proposal_full.shape)
+        trans = trans.scatter_add(-1, i.unsqueeze(-1), alpha)
+        return trans
+
+    def sample_prob(self, i, int_beta, proposal=None):
+        move_chance = 1.0 - (-int_beta).exp()
+        move_indices = torch.rand(*i.shape, device=i.device) < move_chance
+        proposal_full = self._expand_proposal(proposal, i)
+        samples = sample_categorical(proposal_full, method="hard")
+        return torch.where(move_indices, samples, i)
+
+    @torch.no_grad()
+    def reverse_prob_ratio(self, exp_score, minus_beta, proposal=None):
+        inverse_alpha = minus_beta.exp()
+        proposal_full = self._expand_proposal(proposal, exp_score[..., :1])
+        extra_const = (1 - inverse_alpha) * exp_score.sum(dim=-1)
+        return inverse_alpha.unsqueeze(-1) * exp_score + extra_const.unsqueeze(-1) * proposal_full
+
+    def sample_nonpreference(self, *batch_dims, proposal=None):
+        if len(batch_dims) != 2:
+            raise ValueError(f"expected batch dims (B, L), got {batch_dims}")
+        if proposal is None:
+            raise ValueError("proposal_adaptive graph requires explicit proposal")
+        dummy = torch.zeros(batch_dims, dtype=torch.long, device=proposal.device)
+        proposal_full = self._expand_proposal(proposal, dummy)
+        return sample_categorical(proposal_full, method="hard")
+
+    def score_entropy(self, score, int_beta, x, x0, proposal=None):
+        proposal_full = self._expand_proposal(proposal, x)
+        x0 = x0.unsqueeze(-1)
+        esigm1 = torch.where(
+            int_beta < 0.5,
+            torch.expm1(int_beta),
+            torch.exp(int_beta) - 1,
+        )
+        ratio_base0 = 1.0 / esigm1
+        proposal_x = torch.gather(proposal_full, -1, x.unsqueeze(-1)).squeeze(-1)
+        proposal_x0 = torch.gather(proposal_full, -1, x0.unsqueeze(-1)).squeeze(-1)
+        ratio_base1 = esigm1 * proposal_x
+        ratio_base2 = 1 - 1.0 / (1.0 + ratio_base1)
+
+        neg_term_base = (score * proposal_full).sum(dim=-1)
+        neg_term = torch.where(
+            x == x0,
+            ratio_base2 * neg_term_base,
+            neg_term_base + torch.gather(score, -1, x0.unsqueeze(-1)).squeeze(-1) * ratio_base0,
+        )
+
+        proposal_safe = proposal_full.clamp_min(1e-12)
+        const_base = (proposal_full * proposal_safe.log()).sum(dim=-1)
+        const = torch.where(
+            x == x0,
+            ratio_base2
+            * (
+                const_base
+                + proposal_x * proposal_x.clamp_min(1e-12).log()
+                + (proposal_x - 1.0) * ((ratio_base1 + 1.0).log() + ratio_base0.log() - 1.0)
+            ),
+            const_base
+            + proposal_x
+            + (proposal_x0 + ratio_base0) * ((esigm1 * proposal_x0 + 1.0).log() + ratio_base0.log())
+            - (1.0 + ratio_base0) * (proposal_x.clamp_min(1e-12).log() + 1.0),
+        )
+
+        sexp = score.exp()
+        pos_term = (sexp.sum(dim=-1) - 1.0) * proposal_x
+        return pos_term - neg_term + const

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,6 +11,7 @@ import math
 # from flash_attn.ops.fused_dense import FusedMLP, FusedDense
 # from huggingface_hub import PyTorchModelHubMixin
 from omegaconf import OmegaConf
+from .text_side import TextSideProposalBuilder
 
 # from . import rotary
 from .fused_add_dropout_scale import (
@@ -595,6 +598,7 @@ class SEDD4REC(nn.Module):
             config = OmegaConf.create(config)
 
         self.config = config
+        dataset_cfg = getattr(config.data, config.training.data)
 
         self.is_disliked_item = config.graph.is_disliked_item
         if config.training.data == "ATV":
@@ -649,6 +653,49 @@ class SEDD4REC(nn.Module):
         else:
             self.output_layer = DDitFinalLayer4Rec(config.model.hidden_size, vocab_size, config.model.cond_dim + config.model.hidden_size)
         self.scale_by_sigma = config.model.scale_by_sigma
+        self.text_side_builder = None
+        self.text_side_injection_mode = "kernel"
+        self.text_side_encoder_scale = 1.0
+        self.text_side_encoder_projection = None
+        self._cached_text_side_context = None
+        text_side_cfg = getattr(config, "text_side", None)
+        if text_side_cfg is not None and bool(text_side_cfg.get("enabled", False)):
+            dataset_dir = Path(text_side_cfg.get("dataset_dir") or dataset_cfg.path)
+            embeddings_path = text_side_cfg.get("embeddings_path")
+            text_bank_path = text_side_cfg.get("text_bank_path")
+            self.text_side_injection_mode = str(text_side_cfg.get("injection_mode", "kernel"))
+            self.text_side_encoder_scale = float(text_side_cfg.get("encoder_context_scale", 1.0))
+            self.text_side_builder = TextSideProposalBuilder.from_files(
+                dataset_dir=dataset_dir,
+                item_num=item_num,
+                is_disliked_item=self.is_disliked_item,
+                embeddings_path=Path(embeddings_path) if embeddings_path else None,
+                text_bank_path=Path(text_bank_path) if text_bank_path else None,
+                temperature=float(text_side_cfg.get("temperature", 0.2)),
+                min_pseudo_mass=float(text_side_cfg.get("min_pseudo_mass", 0.05)),
+                kernel_version=str(text_side_cfg.get("kernel_version", "v1")),
+                g_max=float(text_side_cfg.get("g_max", 0.5)),
+                agreement_null_curve_path=Path(text_side_cfg.get("agreement_null_curve_path")) if text_side_cfg.get("agreement_null_curve_path") else None,
+                agreement_k=float(text_side_cfg.get("agreement_k", 2.0)),
+                agreement_weight=float(text_side_cfg.get("agreement_weight", 0.45)),
+                completeness_weight=float(text_side_cfg.get("completeness_weight", 0.15)),
+                history_reliability_weight=float(text_side_cfg.get("history_reliability_weight", 0.40)),
+                ess_weight=float(text_side_cfg.get("ess_weight", 0.20)),
+                recency_weight=float(text_side_cfg.get("recency_weight", 0.30)),
+                stability_weight=float(text_side_cfg.get("stability_weight", 0.50)),
+                max_temperature_scale=float(text_side_cfg.get("max_temperature_scale", 2.0)),
+                popularity_mix_scale=float(text_side_cfg.get("popularity_mix_scale", 1.0)),
+                popularity_mix_power=float(text_side_cfg.get("popularity_mix_power", 1.0)),
+                center_embeddings=bool(text_side_cfg.get("center_embeddings", False)),
+                pseudo_mass_scale=float(text_side_cfg.get("pseudo_mass_scale", 1.0)),
+                pseudo_mass_power=float(text_side_cfg.get("pseudo_mass_power", 1.0)),
+                ablation_mode=str(text_side_cfg.get("ablation_mode", "none")),
+                injection_mode=self.text_side_injection_mode,
+                loss_weight_scale=float(text_side_cfg.get("loss_weight_scale", 1.0)),
+            )
+            if self.text_side_injection_mode == "encoder":
+                encoder_input_dim = int(self.text_side_builder.semantic_embeddings.shape[-1]) + 1
+                self.text_side_encoder_projection = nn.Linear(encoder_input_dim, config.model.hidden_size, bias=True)
 
     
     def _get_bias_dropout_scale(self):
@@ -657,6 +704,33 @@ class SEDD4REC(nn.Module):
             if self.training
             else bias_dropout_add_scale_fused_inference
         )
+
+    def encode_history_context(self, history_indices):
+        if self.text_side_builder is None:
+            self._cached_text_side_context = None
+            return {}
+        context = self.text_side_builder.encode_history_context(history_indices)
+        self._cached_text_side_context = context
+        return context
+
+    def _apply_text_side_encoder_injection(self, history_state):
+        if self.text_side_injection_mode != "encoder" or self.text_side_encoder_projection is None:
+            return history_state
+        if not self._cached_text_side_context:
+            return history_state
+        history_repr = self._cached_text_side_context.get("history_repr")
+        u = self._cached_text_side_context.get("u")
+        if history_repr is None or u is None:
+            return history_state
+        encoder_input = torch.cat(
+            [
+                history_repr.to(history_state.device, dtype=history_state.dtype),
+                u.to(history_state.device, dtype=history_state.dtype).unsqueeze(-1),
+            ],
+            dim=-1,
+        )
+        encoder_bias = torch.tanh(self.text_side_encoder_projection(encoder_input))
+        return history_state + self.text_side_encoder_scale * encoder_bias
 
     def forward(self, history_indices, noisy_indices, sigma):
 
@@ -675,6 +749,7 @@ class SEDD4REC(nn.Module):
             B, D = c_h.shape
             mask = (torch.rand(B, 1, device=c_h.device) > self.nonpreference_user_ratio).float()
             c_h = c_h * mask + self.nonpreference_user(torch.zeros(1, dtype=torch.long, device=c_h.device)) * (1 - mask)
+        c_h = self._apply_text_side_encoder_injection(c_h)
 
         c = torch.cat((c_h, c_t), dim=-1) # B×d+B×d_c→B×(d+d_c) 
         x_u = self.output_layer(x, c) # concrete score
@@ -724,6 +799,7 @@ class SEDD4REC(nn.Module):
             #h = self.history_blocks[i](h, rotary_cos_sin, seqlens=None, interleaved=True) # B×L×d→B×L×d
             h = self.history_blocks[i](h) # B×L×d→B×L×d
         c_h = h[:,-1,:] # B×L×d→B×d
+        c_h = self._apply_text_side_encoder_injection(c_h)
         c_ht = torch.cat((c_h, c_t), dim=-1) # B×d+B×d_c→B×(d+d_c) 
 
         nonprefer_u = self.nonpreference_user(torch.tensor([0]).to(c_h.device))

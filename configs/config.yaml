@@ -1,7 +1,6 @@
 defaults:
   - _self_
   - model: small
-  - override hydra/launcher: submitit_slurm
 
 ngpus: 0
 cuda: 0
@@ -22,30 +21,35 @@ training:
   snapshot_sampling: True
   ema: 0.9999
   nonpreference_user_ratio: 0.1
+  early_stop_patience: 0
+  early_stop_min_step: 0
+  early_stop_metric: ndcg10
+  early_stop_strength: p2
+  early_stop_min_delta: 0.0
 
 data:
   Steam:
-    path: ../../ours_DiT/data/steam
+    path: dataset/steam
     seq_len: 10
     item_num: 9265
   Beauty:
-    path: ../../ours_DiT/data/Beauty
+    path: dataset/Beauty
     seq_len: 10
     item_num: 12101
   ASO:
-    path: ../../ours_DiT/data/ASO
+    path: dataset/ASO
     seq_len: 10
     item_num: 18357
   ATG: 
-    path: ../../ours_DiT/data/ATG
+    path: dataset/ATG
     seq_len: 10
     item_num: 11924
   ATV: 
-    path: ../../ours_DiT/data/ATV
+    path: dataset/ATV
     seq_len: 10
     item_num: 44014
   ML1M:
-    path: ../../ours_DiT/data/ML1M
+    path: dataset/ML1M
     seq_len: 10
     item_num: 3883
 
@@ -69,6 +73,34 @@ sampling:
   noise_removal: True
   personalization_strength: 2
 
+text_side:
+  enabled: False
+  dataset_dir: null
+  text_bank_path: null
+  embeddings_path: null
+  temperature: 0.2
+  min_pseudo_mass: 0.05
+  kernel_version: v1
+  g_max: 0.5
+  agreement_null_curve_path: null
+  agreement_k: 2.0
+  agreement_weight: 0.45
+  completeness_weight: 0.15
+  history_reliability_weight: 0.40
+  ess_weight: 0.20
+  recency_weight: 0.30
+  stability_weight: 0.50
+  max_temperature_scale: 2.0
+  popularity_mix_scale: 1.0
+  popularity_mix_power: 1.0
+  center_embeddings: False
+  pseudo_mass_scale: 1.0
+  pseudo_mass_power: 1.0
+  ablation_mode: none
+  injection_mode: kernel
+  encoder_context_scale: 1.0
+  loss_weight_scale: 1.0
+
 eval:
   batch_size: 256
   perplexity: True
@@ -85,12 +117,8 @@ optim:
   grad_clip: 1.
 
 hydra:
-  launcher:
-    max_num_timeout: 100000
-    # timeout_min: 10079
-    partition: g40x
-    account: stanford
-    mem_gb: 96
-    cpus_per_task: 40
-    gpus_per_node: ${ngpus}
-    constraint: null
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

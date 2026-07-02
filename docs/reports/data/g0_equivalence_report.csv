@@ -1,0 +1,7 @@
+check,status,max_abs_diff,detail
+proposal,pass,2.98e-08,"TextSideProposalBuilder(kernel_version=v2, ablation_mode=global_p) reproduces core softmax(p1)."
+prob_matrix_row,pass,1.49e-08,Forward corruption transition rows match under identical p1 and shared pseudo coordinate.
+score_entropy,pass,2.384e-07,score_entropy matches on the real AdaptiveWise and ProposalAdaptiveWise implementations.
+reverse_prob_ratio,pass,2.384e-07,reverse_prob_ratio matches on the analytic reverse path used by sampling.
+sample_prob,pass,0.0,sample_prob draws match exactly in a deterministic g==0 core-proposal regime.
+sample_nonpreference,pass,0.0,sample_nonpreference draws match exactly in the same deterministic regime.

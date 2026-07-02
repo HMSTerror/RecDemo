@@ -8,6 +8,12 @@ from model import utils as mutils
 
 def get_loss_fn(noise, graph, train, loss_type="score_entropy", sampling_eps=1e-3, lv=False):
 
+    def call_graph(method_name, *args, proposal=None):
+        method = getattr(graph, method_name)
+        if proposal is None:
+            return method(*args)
+        return method(*args, proposal=proposal)
+
     def loss_fn(model, batch, steps, cond=None, t=None, perturbed_target=None):
         """
         seq shape: [B, L] 
@@ -16,6 +22,12 @@ def get_loss_fn(noise, graph, train, loss_type="score_entropy", sampling_eps=1e-
         history = batch["seq"]
         len_seq = batch["len_seq"]
         target = batch["next"]
+        proposal = None
+        loss_weight = None
+        if hasattr(model, "encode_history_context"):
+            context = model.encode_history_context(history)
+            proposal = context.get("proposal")
+            loss_weight = context.get("loss_weight")
 
         if t is None:
             if lv:
@@ -30,9 +42,9 @@ def get_loss_fn(noise, graph, train, loss_type="score_entropy", sampling_eps=1e-
         
         if perturbed_target is None:
             if len(target.size()) == 1:
-                perturbed_target = graph.sample_prob(target[:,None], sigma[:, None])
+                perturbed_target = call_graph("sample_prob", target[:,None], sigma[:, None], proposal=proposal)
             elif len(target.size()) == 2:
-                perturbed_target = graph.sample_prob(target, sigma[:, None])
+                perturbed_target = call_graph("sample_prob", target, sigma[:, None], proposal=proposal)
 
         log_score_fn = mutils.get_score_fn(model, None, train=True, sampling=False)
         
@@ -42,10 +54,10 @@ def get_loss_fn(noise, graph, train, loss_type="score_entropy", sampling_eps=1e-
             #print(sigma[:, None].shape)
             #print(perturbed_target.shape)
             #print(target.shape)
-            loss = graph.score_entropy(log_score, sigma[:, None], perturbed_target, target)
+            loss = call_graph("score_entropy", log_score, sigma[:, None], perturbed_target, target, proposal=proposal)
             loss = (dsigma[:, None] * loss).mean(dim=-1)
         elif loss_type == "score_entropy_raw":
-            loss = graph.score_entropy(log_score, sigma[:, None], perturbed_target, target)
+            loss = call_graph("score_entropy", log_score, sigma[:, None], perturbed_target, target, proposal=proposal)
             loss = loss.mean(dim=-1)
         elif loss_type == "score_mse":
             loss = graph.score_mse(log_score, sigma[:, None], perturbed_target, target)
@@ -53,6 +65,12 @@ def get_loss_fn(noise, graph, train, loss_type="score_entropy", sampling_eps=1e-
         elif loss_type == "score_se":
             loss = graph.score_mse(log_score, sigma[:, None], perturbed_target, target)
             loss = loss.sum(dim=-1)
+
+        if loss_weight is not None:
+            loss_weight = loss_weight.to(loss.device, dtype=loss.dtype)
+            while loss_weight.dim() < loss.dim():
+                loss_weight = loss_weight.unsqueeze(-1)
+            loss = loss * loss_weight
 
         return loss
 
