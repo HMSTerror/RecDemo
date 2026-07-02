@@ -36,6 +36,7 @@ DEFAULT_SYNC_REL_PATHS = (
     "model/transformer.py",
     "model/utils.py",
     "scripts/build_agreement_null_curves.py",
+    "scripts/build_gate0_failure_diagnostic.py",
     "scripts/build_gate0_utilde_report.py",
     "scripts/build_text_side_embeddings.py",
     "scripts/launch_beauty_text_side_tmux.py",
