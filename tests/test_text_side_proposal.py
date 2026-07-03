@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import importlib.util
 import json
+import hashlib
 
 import pandas as pd
 import torch
@@ -259,6 +260,221 @@ class TextSideProposalTests(unittest.TestCase):
             context = builder.encode_history_context(torch.tensor([[0, 0, 3]], dtype=torch.long))
             self.assertAlmostEqual(0.0, float(context["u_tilde"][0]), places=6)
             self.assertAlmostEqual(0.0, float(context["g"][0]), places=6)
+
+    def test_v2_from_files_scales_g_with_frozen_utility_factor(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dataset_dir = Path(tmpdir) / "ToySet"
+            dataset_dir.mkdir()
+            pd.DataFrame(
+                [
+                    {
+                        "item_id": 0,
+                        "source_id": "a0",
+                        "title": "Alpha",
+                        "brand": "",
+                        "categories": "",
+                        "description": "",
+                        "text": "Alpha",
+                    },
+                    {
+                        "item_id": 1,
+                        "source_id": "a1",
+                        "title": "Beta",
+                        "brand": "",
+                        "categories": "",
+                        "description": "",
+                        "text": "Beta",
+                    },
+                    {
+                        "item_id": 2,
+                        "source_id": "a2",
+                        "title": "Gamma",
+                        "brand": "",
+                        "categories": "",
+                        "description": "",
+                        "text": "Gamma",
+                    },
+                ]
+            ).to_csv(dataset_dir / "item_metadata.csv", index=False)
+            text_bank_path = module.ensure_text_bank(dataset_dir)
+            torch.save(
+                {
+                    "item_ids": [0, 1, 2],
+                    "embeddings": torch.tensor(
+                        [
+                            [1.0, 0.0],
+                            [1.0, 0.0],
+                            [0.0, 1.0],
+                        ],
+                        dtype=torch.float32,
+                    ),
+                    "field_coverage": torch.tensor([1.0, 1.0, 1.0], dtype=torch.float32),
+                },
+                dataset_dir / "sentence_t5_xl_item_emb.pt",
+            )
+            (dataset_dir / "agreement_null_curves.json").write_text(
+                json.dumps(
+                    {
+                        "protocol": {
+                            "agreement_k": 2.0,
+                        },
+                        "length_bins": {
+                            "2": {
+                                "mu": 0.5,
+                                "sigma": 0.25,
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            bank_digest = hashlib.sha256()
+            for path in (text_bank_path, dataset_dir / "sentence_t5_xl_item_emb.pt"):
+                bank_digest.update(path.name.encode("utf-8"))
+                bank_digest.update(path.read_bytes())
+            utility_report_path = dataset_dir / "gate0_text_utility_report.json"
+            utility_report_path.write_text(
+                json.dumps(
+                    {
+                        "datasets": [
+                            {
+                                "dataset": dataset_dir.name,
+                                "bank_hash": bank_digest.hexdigest(),
+                                "u_ds_popularity": 0.65,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            base_builder = module.TextSideProposalBuilder.from_files(
+                dataset_dir=dataset_dir,
+                item_num=3,
+                is_disliked_item=False,
+                embeddings_path=dataset_dir / "sentence_t5_xl_item_emb.pt",
+                kernel_version="v2",
+                agreement_null_curve_path=dataset_dir / "agreement_null_curves.json",
+                agreement_k=2.0,
+                g_max=0.5,
+            )
+            scaled_builder = module.TextSideProposalBuilder.from_files(
+                dataset_dir=dataset_dir,
+                item_num=3,
+                is_disliked_item=False,
+                embeddings_path=dataset_dir / "sentence_t5_xl_item_emb.pt",
+                kernel_version="v2",
+                agreement_null_curve_path=dataset_dir / "agreement_null_curves.json",
+                text_utility_report_path=utility_report_path,
+                agreement_k=2.0,
+                g_max=0.5,
+            )
+
+            history = torch.tensor([[0, 0, 3]], dtype=torch.long)
+            base_context = base_builder.encode_history_context(history)
+            scaled_context = scaled_builder.encode_history_context(history)
+
+            self.assertAlmostEqual(1.0, float(base_context["u_tilde"][0]), places=6)
+            self.assertAlmostEqual(float(base_context["u_tilde"][0]), float(scaled_context["u_tilde"][0]), places=6)
+            self.assertAlmostEqual(0.5, float(base_context["g"][0]), places=6)
+            self.assertAlmostEqual(0.25, float(scaled_context["g"][0]), places=6)
+            self.assertAlmostEqual(0.5, float(scaled_context["gate_dataset_scale"][0]), places=6)
+
+    def test_v2_from_files_rejects_text_utility_bank_hash_mismatch(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dataset_dir = Path(tmpdir) / "ToySet"
+            dataset_dir.mkdir()
+            pd.DataFrame(
+                [
+                    {
+                        "item_id": 0,
+                        "source_id": "a0",
+                        "title": "Alpha",
+                        "brand": "",
+                        "categories": "",
+                        "description": "",
+                        "text": "Alpha",
+                    },
+                    {
+                        "item_id": 1,
+                        "source_id": "a1",
+                        "title": "Beta",
+                        "brand": "",
+                        "categories": "",
+                        "description": "",
+                        "text": "Beta",
+                    },
+                ]
+            ).to_csv(dataset_dir / "item_metadata.csv", index=False)
+            module.ensure_text_bank(dataset_dir)
+            torch.save(
+                {
+                    "item_ids": [0, 1],
+                    "embeddings": torch.tensor([[1.0, 0.0], [1.0, 0.0]], dtype=torch.float32),
+                    "field_coverage": torch.tensor([1.0, 1.0], dtype=torch.float32),
+                },
+                dataset_dir / "sentence_t5_xl_item_emb.pt",
+            )
+            utility_report_path = dataset_dir / "gate0_text_utility_report.json"
+            utility_report_path.write_text(
+                json.dumps(
+                    {
+                        "datasets": [
+                            {
+                                "dataset": dataset_dir.name,
+                                "bank_hash": "not-the-real-bank-hash",
+                                "u_ds_popularity": 0.65,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "bank hash"):
+                module.TextSideProposalBuilder.from_files(
+                    dataset_dir=dataset_dir,
+                    item_num=2,
+                    is_disliked_item=False,
+                    embeddings_path=dataset_dir / "sentence_t5_xl_item_emb.pt",
+                    kernel_version="v2",
+                    text_utility_report_path=utility_report_path,
+                )
+
+    def test_text_anchor_only_ablation_still_forces_full_gate_under_dataset_scaling(self) -> None:
+        module = load_module()
+        builder = module.TextSideProposalBuilder(
+            item_embeddings=torch.tensor(
+                [
+                    [1.0, 0.0],
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+                dtype=torch.float32,
+            ),
+            item_completeness=torch.tensor([1.0, 1.0, 1.0], dtype=torch.float32),
+            item_num=3,
+            is_disliked_item=False,
+            kernel_version="v2",
+            agreement_null_stats={2: (0.5, 0.25)},
+            agreement_k=2.0,
+            g_max=0.5,
+            gate_dataset_scale=0.25,
+            ablation_mode="text_anchor_only",
+        )
+
+        history = torch.tensor([[0, 0, 3]], dtype=torch.long)
+        context = builder.encode_history_context(history)
+
+        self.assertAlmostEqual(1.0, float(context["u_tilde"][0]), places=6)
+        self.assertAlmostEqual(1.0, float(context["gate_user_factor"][0]), places=6)
+        self.assertAlmostEqual(1.0, float(context["gate_dataset_scale"][0]), places=6)
+        self.assertAlmostEqual(0.5, float(context["g"][0]), places=6)
 
     def test_context_exposes_reliability_components_and_reliability_controls_pseudo_mass(self) -> None:
         module = load_module()

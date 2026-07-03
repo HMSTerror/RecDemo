@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 from pathlib import Path
 import json
 
@@ -14,9 +15,12 @@ import torch.nn.functional as F
 TEXT_BANK_FILENAME = "text_bank.csv"
 DEFAULT_EMBEDDING_FILENAME = "sentence_t5_xl_item_emb.pt"
 DEFAULT_NULL_CURVE_FILENAME = "agreement_null_curves.json"
+DEFAULT_TEXT_UTILITY_REPORT_REL_PATH = Path("docs") / "reports" / "data" / "2026-07-02-gate0" / "gate0_text_utility_report.json"
 ABLATION_MODES = {"none", "global_p", "text_anchor_only", "u_shuffle"}
 INJECTION_MODES = {"kernel", "encoder", "loss"}
 KERNEL_VERSIONS = {"v1", "v2"}
+UTILITY_GATE_U_UPPER = 0.70
+UTILITY_GATE_U_WIDTH = 0.10
 
 
 def _clean_text(value: object) -> str:
@@ -97,6 +101,14 @@ def _renormalize_rows(weights: torch.Tensor, fallback: torch.Tensor) -> torch.Te
     return torch.where(totals > 0, normalized, fallback)
 
 
+def _sha256_paths(*paths: Path) -> str:
+    digest = hashlib.sha256()
+    for path in paths:
+        digest.update(path.name.encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def load_agreement_null_stats(path: Path) -> dict[int, tuple[float, float]]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     stats = payload.get("length_bins", {})
@@ -105,6 +117,38 @@ def load_agreement_null_stats(path: Path) -> dict[int, tuple[float, float]]:
         length = int(raw_length)
         parsed[length] = (float(values["mu"]), float(values["sigma"]))
     return parsed
+
+
+def phi_from_text_utility(utility_value: float) -> float:
+    return max(0.0, min(1.0, (UTILITY_GATE_U_UPPER - float(utility_value)) / UTILITY_GATE_U_WIDTH))
+
+
+def load_text_utility_gate(path: Path, *, dataset_name: str, bank_hash: str) -> tuple[float, float]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    dataset_rows = payload.get("datasets", [])
+    dataset_row = next((row for row in dataset_rows if str(row.get("dataset")) == dataset_name), None)
+    if dataset_row is None:
+        raise ValueError(f"dataset {dataset_name!r} missing from text utility report: {path}")
+
+    report_bank_hash = dataset_row.get("bank_hash")
+    if report_bank_hash is not None and str(report_bank_hash) != str(bank_hash):
+        raise ValueError(
+            f"text utility report bank hash mismatch for {dataset_name}: expected {bank_hash}, got {report_bank_hash}"
+        )
+
+    utility_value = float(dataset_row["u_ds_popularity"])
+    return utility_value, phi_from_text_utility(utility_value)
+
+
+def default_text_utility_report_path(dataset_dir: Path) -> Path | None:
+    dataset_dir = Path(dataset_dir).resolve()
+    if dataset_dir.parent.name != "paper_raw_v1":
+        return None
+    dataset_root = dataset_dir.parent.parent
+    if dataset_root.name != "dataset":
+        return None
+    repo_root = dataset_root.parent
+    return repo_root / DEFAULT_TEXT_UTILITY_REPORT_REL_PATH
 
 
 @dataclass
@@ -143,6 +187,8 @@ class TextSideProposalBuilder(nn.Module):
         ablation_mode: str = "none",
         injection_mode: str = "kernel",
         loss_weight_scale: float = 1.0,
+        text_utility_u_ds: float | None = None,
+        gate_dataset_scale: float = 1.0,
     ) -> None:
         super().__init__()
         if item_embeddings.shape[0] != item_num:
@@ -187,6 +233,8 @@ class TextSideProposalBuilder(nn.Module):
         if self.injection_mode not in INJECTION_MODES:
             raise ValueError(f"unsupported injection_mode: {self.injection_mode}")
         self.loss_weight_scale = float(loss_weight_scale)
+        self.text_utility_u_ds = None if text_utility_u_ds is None else float(text_utility_u_ds)
+        self.gate_dataset_scale = float(gate_dataset_scale)
         self.component_weight_sum = max(
             self.agreement_weight + self.completeness_weight + self.history_reliability_weight,
             1e-6,
@@ -243,6 +291,7 @@ class TextSideProposalBuilder(nn.Module):
         ablation_mode: str = "none",
         injection_mode: str = "kernel",
         loss_weight_scale: float = 1.0,
+        text_utility_report_path: Path | None = None,
     ) -> "TextSideProposalBuilder":
         dataset_dir = Path(dataset_dir)
         if text_bank_path is None:
@@ -275,6 +324,24 @@ class TextSideProposalBuilder(nn.Module):
         if agreement_null_curve_path is not None and Path(agreement_null_curve_path).exists():
             agreement_null_stats = load_agreement_null_stats(Path(agreement_null_curve_path))
 
+        resolved_text_utility_report_path = None
+        if text_utility_report_path is not None:
+            resolved_text_utility_report_path = Path(text_utility_report_path)
+        else:
+            candidate_path = default_text_utility_report_path(dataset_dir)
+            if candidate_path is not None and candidate_path.exists():
+                resolved_text_utility_report_path = candidate_path
+
+        text_utility_u_ds = None
+        gate_dataset_scale = 1.0
+        if resolved_text_utility_report_path is not None:
+            bank_hash = _sha256_paths(Path(text_bank_path), Path(embeddings_path))
+            text_utility_u_ds, gate_dataset_scale = load_text_utility_gate(
+                resolved_text_utility_report_path,
+                dataset_name=dataset_dir.name,
+                bank_hash=bank_hash,
+            )
+
         return cls(
             item_embeddings=torch.as_tensor(embeddings, dtype=torch.float32),
             item_completeness=torch.as_tensor(completeness, dtype=torch.float32),
@@ -302,6 +369,8 @@ class TextSideProposalBuilder(nn.Module):
             ablation_mode=ablation_mode,
             injection_mode=injection_mode,
             loss_weight_scale=loss_weight_scale,
+            text_utility_u_ds=text_utility_u_ds,
+            gate_dataset_scale=gate_dataset_scale,
         )
 
     def _build_v1_context(
@@ -454,11 +523,16 @@ class TextSideProposalBuilder(nn.Module):
             u_tilde = u_tilde[shuffle_index]
 
         if self.ablation_mode == "global_p":
-            g = torch.zeros_like(u_tilde)
+            gate_user_factor = torch.zeros_like(u_tilde)
+            gate_dataset_scale = torch.full_like(gate_user_factor, self.gate_dataset_scale)
         elif self.ablation_mode == "text_anchor_only":
-            g = torch.full_like(u_tilde, self.g_max)
+            gate_user_factor = torch.ones_like(u_tilde)
+            gate_dataset_scale = torch.ones_like(gate_user_factor)
         else:
-            g = self.g_max * u_tilde.clamp(0.0, 1.0)
+            gate_user_factor = u_tilde.clamp(0.0, 1.0)
+            gate_dataset_scale = torch.full_like(gate_user_factor, self.gate_dataset_scale)
+
+        g = self.g_max * gate_dataset_scale * gate_user_factor
 
         p_core_full = torch.softmax(self.p1, dim=-1).unsqueeze(0).expand(raw_content_probs.shape[0], -1)
         if self.is_disliked_item:
@@ -503,6 +577,8 @@ class TextSideProposalBuilder(nn.Module):
             "u_tilde": u_tilde,
             "u": u_tilde.clamp(0.0, 1.0),
             "g": g,
+            "gate_dataset_scale": gate_dataset_scale,
+            "gate_user_factor": gate_user_factor,
             "p_core": p_core_full,
             "content_anchor": content_anchor,
             "proposal": proposal,

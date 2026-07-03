@@ -127,26 +127,30 @@ real and measurable.
 Our design principle is \emph{fallback-safe evidence conditioning}. An
 explicit, history-only reliability signal $\ut$ measures how far the
 user's behavior-text coherence exceeds what a \emph{random} history would
-score in the same evidence space (a length-matched null). A monotone gate
-$g(\ut)\in[0,g_{\max}]$, zero at or below the null, interpolates between
-the host's \emph{learned} global proposal and a frozen text anchor. The
-pseudo-item mass of the host kernel is left untouched. Conditional on the
-(fixed, history-derived) signal, all structural properties of the host
+score in the same evidence space (a length-matched null). A low-capacity
+gate $g(\ut,U_{ds})=g_{\max}\,\phi(U_{ds})\,\mathrm{clip}(\ut,0,1)$,
+zero at or below the null and damped by a frozen dataset-level utility
+factor $\phi(U_{ds})$, interpolates between the host's \emph{learned}
+global proposal and a frozen text anchor. The pseudo-item mass of the
+host kernel is left untouched. Conditional on the fixed, history-derived
+signal and frozen dataset factor, all structural properties of the host
 chain survive; when the gate closes, the kernel \emph{is} the host kernel,
-exactly; and at any gate value the kernel is within $g(\ut)$ of the host
-in total variation. The theory is deliberately elementary---rank-one
+exactly; and at any gate value the kernel is within $g(\ut,U_{ds})$ of
+the host in total variation. The theory is deliberately elementary---rank-one
 kernel algebra---but it buys a property that score-side or loss-side
 side-information injection cannot even express: a provable reduction to
-the host when evidence is uninformative.
+the host when evidence is uninformative or misleading.
 
 This yields a falsifiable prediction rather than a uniform-superiority
-claim. On datasets whose text evidence is informative (real histories
-score above the null), the gated kernel should help; on datasets whose
-text bank is statistically indistinguishable from its own null, the gate
-should close and performance should match the host. Our experiments
-across Steam, ML1M, Amazon Beauty, and ATG are designed around this
-prediction, with reliability-shuffle and ungated-anchor controls that
-separate \emph{aligned} per-user reliability from generic proposal biases.
+claim. When dataset-level text utility is low but aligned user histories
+still rise above the null, text tilt should contribute informative
+\emph{hard negative} pressure; when the same text space is so predictive
+that tilting the corruption proposal targets likely positives, it creates
+\emph{false negative} pressure and the frozen $\phi(U_{ds})$ factor should
+close the gate. Our experiments across Steam, ML1M, Amazon Beauty, and
+ATG are designed around this prediction, with reliability-shuffle and
+ungated-anchor controls that separate \emph{aligned} per-user reliability
+from generic proposal biases.
 
 Our contributions:
 \begin{itemize}
@@ -234,18 +238,24 @@ operating point to arbitrary dataset geometry---the source of spurious
 
 We calibrate against the evidence-space null. For each dataset we draw
 random pseudo-histories of each observed length $L$ from the frozen bank
-and record $\mu_{\mathrm{null}}(L)$, $\sigma_{\mathrm{null}}(L)$; the
-\emph{calibrated reliability} of a real history is
+and record $\mu_{\mathrm{null}}(L)$, $\sigma_{\mathrm{null}}(L)$; in
+parallel we freeze a train-only dataset utility statistic $U_{ds}$ from
+next-item text discrimination. The \emph{calibrated reliability} of a
+real history is
 \begin{equation}
   \ut \;=\; \frac{A_h-\mu_{\mathrm{null}}(L)}{k\,\sigma_{\mathrm{null}}(L)},
   \qquad
-  g(\ut) \;=\; g_{\max}\cdot \mathrm{clip}(\ut,0,1).
+  g(\ut,U_{ds}) \;=\; g_{\max}\cdot \phi(U_{ds})\cdot \mathrm{clip}(\ut,0,1),
+  \qquad
+  \phi(U_{ds}) \;=\; \mathrm{clip}\!\left(\frac{0.70-U_{ds}}{0.10},0,1\right).
   \label{eq:gate}
 \end{equation}
 $\ut$ is history-only (no target, no diffusion state, no current model
 score) and fixed along the whole forward/reverse trajectory, as required
-by the theory. By construction $g=0$ for histories at or below the null:
-\emph{a dataset whose text bank carries no signal closes its own gate}.
+by the theory. By construction $g=0$ for histories at or below the null,
+and datasets with overly predictive text receive $\phi(U_{ds})\approx 0$:
+\emph{the gate closes both when a user's evidence is unaligned and when
+dataset-level text tilt would create false negatives}.
 
 \subsection{The gated kernel}
 Let $\pcore=\mathrm{softmax}(p_1)$ be the host's learned proposal
@@ -254,8 +264,8 @@ real items, renormalized. The user-conditioned proposal is
 \begin{equation}
 \begin{aligned}
   \pu \;=\;& \pcore(\star)\, e_\star \\
-  &+ \big(1-\pcore(\star)\big)\Big[(1-g(\ut))\,\pcorer +
-  g(\ut)\,\ch\Big],
+  &+ \big(1-\pcore(\star)\big)\Big[(1-g(\ut,U_{ds}))\,\pcorer +
+  g(\ut,U_{ds})\,\ch\Big],
 \end{aligned}
 \label{eq:pu}
 \end{equation}
@@ -288,17 +298,17 @@ host's formula with the proposal term replaced by $\pu$.
 \end{proposition}
 \begin{proposition}[Exact reduction / fallback safety]
 \label{prop:reduction}
-If $g(\ut)=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
+If $g(\ut,U_{ds})=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
 derived object---forward corruption, stationary distribution,
 score-entropy weights, analytic reverse ratio---coincides exactly with
 the host kernel's.
 \end{proposition}
 \begin{lemma}[Bounded deviation]
 \label{lem:tv}
-$\TV(\pu,\pcore)\le g(\ut)$, and each row of the forward transition
+$\TV(\pu,\pcore)\le g(\ut,U_{ds})$, and each row of the forward transition
 satisfies
 $\TV\big(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot)\big)\le
-(1-\alpha_\sigma)\,g(\ut)$.
+(1-\alpha_\sigma)\,g(\ut,U_{ds})$.
 \end{lemma}
 \begin{remark}[Why the kernel is the right injection site]
 \label{rem:site}
@@ -339,10 +349,11 @@ and infrastructure details in Appendix~\ref{app:impl}.
 \subsection{Main results: the prediction test}
 \label{sec:main}
 
-Table~\ref{tab:main} reports the four-dataset comparison. The reading we
-pre-registered: datasets whose real-user $\ut$ distribution sits above
-the null (per Gate-0 diagnostics, Fig.~\ref{fig:null}) should gain;
-datasets at the null should match the host.
+Table~\ref{tab:main} reports the four-dataset comparison. The amended
+reading we pre-registered after Gate 0: datasets with low $U_{ds}$ should
+benefit once real-user $\ut$ rises above the null because text tilt acts
+as informative hard negatives; datasets with high $U_{ds}$ should match
+the host because $\phi(U_{ds})$ suppresses false-negative corruption.
 
 \begin{table}[t]
 \centering
@@ -500,10 +511,11 @@ instantiation of evidence, not the contribution itself.
 
 We personalized the transition kernel of discrete preference diffusion
 with an explicit, null-calibrated, history-only evidence-reliability
-gate, anchored to the host's learned proposal so that the conditioning
-is fallback-safe: exact reduction when the gate closes, bounded
-deviation otherwise, and full inheritance of the host chain's structure.
-Empirically the design converts evidence quality from a hidden
+gate modulated by a frozen dataset-level utility factor, anchored to the
+host's learned proposal so that the conditioning is fallback-safe: exact
+reduction when the gate closes, bounded deviation otherwise, and full
+inheritance of the host chain's structure. Empirically the design
+converts evidence quality from a hidden
 confounder into a falsifiable prediction: \pending{one-sentence frozen
 Gate-2 summary}.
 
@@ -525,7 +537,8 @@ or mask-based discrete diffusions need their own analysis.
 \label{app:proofs}
 
 Throughout, fix the user history $h$, the calibrated signal $\ut$, the
-gate $g=g(\ut)$, and hence the proposal $\pu$ of Eq.~\eqref{eq:pu};
+frozen dataset factor $\phi(U_{ds})$, the gate $g=g(\ut,U_{ds})$, and
+hence the proposal $\pu$ of Eq.~\eqref{eq:pu};
 $\pu$ is strictly positive whenever $\pcore$ and (on its support)
 $\ch$ are, which holds by softmax parameterization with the completeness
 down-weighting absorbed into logits. Row-vector convention; $\alpha_\sigma=e^{-\sigma}$.

@@ -676,6 +676,7 @@ class SEDD4REC(nn.Module):
                 kernel_version=str(text_side_cfg.get("kernel_version", "v1")),
                 g_max=float(text_side_cfg.get("g_max", 0.5)),
                 agreement_null_curve_path=Path(text_side_cfg.get("agreement_null_curve_path")) if text_side_cfg.get("agreement_null_curve_path") else None,
+                text_utility_report_path=Path(text_side_cfg.get("text_utility_report_path")) if text_side_cfg.get("text_utility_report_path") else None,
                 agreement_k=float(text_side_cfg.get("agreement_k", 2.0)),
                 agreement_weight=float(text_side_cfg.get("agreement_weight", 0.45)),
                 completeness_weight=float(text_side_cfg.get("completeness_weight", 0.15)),
