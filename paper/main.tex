@@ -419,6 +419,43 @@ negative variant gives the same ordering
 ($0.799/0.692/0.717/0.565$ for ML1M/ATG/Beauty/Steam).
 % artifact: gate0_text_utility_summary.csv (u_ds_uniform column)
 
+The false-negative channel can be stated exactly rather than
+narratively:
+\begin{proposition}[Target collision grows with anchor utility]
+\label{prop:collision}
+Fix a user with history $h$ and realized next item $y$. Under the
+gated kernel, the probability that forward corruption relocates a
+faded preference onto $y$ itself is
+$\Pr[x_t{=}y \mid x_0{\ne}y] = (1-\bar\alpha_t)\,\pu(y)$ with
+\[
+\pu(y) \;=\; \big(1-\pcore(\star)\big)\big[(1-g)\,\pcorer(y) +
+g\,\ch(y)\big],
+\]
+affine and strictly increasing in $g$ whenever $\ch(y)>\pcorer(y)$;
+averaged over users the slope is
+$\mathbb{E}_h\!\big[\ch(y_h)-\pcorer(y_h)\big]$, the mass-form analogue
+of the rank statistic $\Uds$ (proof in Appendix~\ref{app:proofs}).
+\end{proposition}
+Opening the gate on a high-utility bank therefore linearly increases
+the rate at which training treats the user's actual next item as
+faded-to noise---in the corruption samples, the score-entropy weights,
+and the reverse reference alike. Collision mass is a channel, not by
+itself a proof of end-metric harm (the score model can partially
+compensate); Table~\ref{tab:inversion} is the empirical arbitration.
+
+\paragraph{Hinge robustness.}
+Sweeping the hinge over $U_{hi}\in[0.60,0.82]$ and width
+$\in\{0.05,0.10,0.15,0.20\}$ ($92$ grid points), $65\%$ of the grid
+preserves both frozen qualitative conclusions (ML1M closed at
+$\phi\le0.2$, Steam open at $\phi\ge0.5$); the pre-registered point
+$(0.70,0.10)$ lies inside this plateau and admits \emph{all} of the
+observed first-generation gain ($0.0066$ summed
+$\phi$-weighted) and \emph{none} of the observed harm. Leave-one-out,
+the inversion holds in all four cases ($\rho=-1$; each three-point
+test is individually weak, exact $p=1/6$).
+% artifact: docs/reports/data/2026-07-04-phi-sensitivity-grid.csv
+%           docs/reports/data/2026-07-04-phi-sensitivity-summary.md
+
 \pending{FOLLOWUP-09 per-user analysis: within-dataset correlation of
 per-user text utility with per-user first-generation delta (thousands
 of users); include if it lands---upgrades the $n{=}4$ cross-dataset
@@ -585,6 +622,18 @@ conditions a diffusion transition law, and the hard-negative vs.\
 false-negative distinction our gate encodes has no analogue at those
 injection sites.
 
+\paragraph{False negatives in negative sampling.}
+That over-informative similarity turns sampled negatives into false
+negatives is documented in contrastive representation
+learning~\cite{debiased} and in negative sampling for implicit
+collaborative filtering~\cite{srns}, where hard-negative miners must
+avoid future positives. Our inversion transports this failure mode to
+diffusion \emph{kernels}---where the ``negative sampler'' is the
+transition law itself, entangled with the stationary distribution,
+detailed balance, and the training objective
+(Prop.~\ref{prop:collision})---and supplies a train-only statistic,
+$\Uds$, that prices the risk before any training run.
+
 \section{Conclusion and Limitations}
 \label{sec:conclusion}
 
@@ -605,8 +654,11 @@ not gains, and the gains column of the validation rests on the
 open-gate datasets. The mechanism evidence comes from the
 first-generation user-factor instantiation whose parameterization
 differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
-thresholds, while pre-registered, are a coarse hinge on limited
-evidence; and the guarantees are specific to kernels with a stationary
+thresholds, while pre-registered and robust across $65\%$ of a
+post-hoc reporting-only sweep, remain a coarse hinge on limited
+evidence; the ML1M bank enters with a single fixed-window history
+length, so its null calibration reduces to one length bin; and the
+guarantees are specific to kernels with a stationary
 proposal---mask- or schedule-based discrete diffusions need their own
 analysis. An earlier metadata-sparsity hypothesis was not supported and
 is reported as a negative result in Appendix~\ref{app:results}.
@@ -725,6 +777,23 @@ and $0$ on $\star$, so
 $\TV(\pu,\pcore)=\tfrac12\|\pu-\pcore\|_1
 =(1-\pcore(\star))\,g\,\TV(\ch,\pcorer)\le g$.
 Rows of the transitions differ by $(1-\alpha_\sigma)(\pu-\pcore)$.
+\end{proof}
+
+\begin{proposition}[Target collision; Prop.~\ref{prop:collision} in
+the main text]
+\label{prop:collision-app}
+$\Pr[x_t{=}y\mid x_0{\ne}y]=(1-\bar\alpha_t)\pu(y)$, and $\pu(y)$ is
+affine in $g$ with slope
+$(1-\pcore(\star))(\ch(y)-\pcorer(y))$.
+\end{proposition}
+\begin{proof}
+By Prop.~\ref{prop:forward-app},
+$q_t(x_t{=}y\mid x_0,u)=\bar\alpha_t\mathbf{1}\{y{=}x_0\}
++(1-\bar\alpha_t)\pu(y)$; with $x_0\ne y$ the indicator vanishes.
+Substituting Eq.~\eqref{eq:pu} at coordinate $y\ne\star$ gives
+$\pu(y)=(1-\pcore(\star))[(1-g)\pcorer(y)+g\,\ch(y)]$, which is affine
+in $g$ with the stated slope; it is increasing iff
+$\ch(y)>\pcorer(y)$.
 \end{proof}
 
 \subsection{Scope and failure modes}
