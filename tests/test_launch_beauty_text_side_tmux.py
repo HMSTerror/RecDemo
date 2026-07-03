@@ -28,6 +28,8 @@ class LaunchBeautyTextSideTmuxTests(unittest.TestCase):
         )
 
         self.assertIn("cd /data/Zijian/goal/RecDemo", command)
+        self.assertIn("mkdir -p /data/Zijian/goal/RecDemo/.tmp", command)
+        self.assertIn("export TMPDIR=/data/Zijian/goal/RecDemo/.tmp", command)
         self.assertIn("scripts/build_text_side_embeddings.py", command)
         self.assertIn("--dataset-dir /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty", command)
         self.assertIn("--model-path /data/models/sentence-transformers/sentence-t5-xl", command)

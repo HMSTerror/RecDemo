@@ -38,9 +38,11 @@ DEFAULT_SYNC_REL_PATHS = (
     "scripts/build_agreement_null_curves.py",
     "scripts/build_gate0_calibration_repair_audit.py",
     "scripts/build_gate0_failure_diagnostic.py",
+    "scripts/build_gate0_text_utility_report.py",
     "scripts/build_gate0_utilde_report.py",
     "scripts/build_text_side_embeddings.py",
     "scripts/launch_beauty_text_side_tmux.py",
+    "scripts/launch_gate0_text_utility_tmux.py",
     "scripts/launch_gate0_tmux.py",
 )
 

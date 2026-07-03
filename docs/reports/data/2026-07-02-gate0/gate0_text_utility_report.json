@@ -1,0 +1,261 @@
+{
+  "coherence_quartiles": [
+    {
+      "coherence_bucket": "Q1",
+      "coherence_max": 0.8755449056625366,
+      "coherence_mean": 0.8684445809721947,
+      "coherence_min": 0.8411152958869934,
+      "dataset": "ML1M",
+      "row_count": 1000,
+      "u_ds_popularity": 0.617805,
+      "u_ds_uniform": 0.683855
+    },
+    {
+      "coherence_bucket": "Q2",
+      "coherence_max": 0.8848905563354492,
+      "coherence_mean": 0.8803451485037803,
+      "coherence_min": 0.8755456805229187,
+      "dataset": "ML1M",
+      "row_count": 1000,
+      "u_ds_popularity": 0.7151750000000001,
+      "u_ds_uniform": 0.764325
+    },
+    {
+      "coherence_bucket": "Q3",
+      "coherence_max": 0.8949558138847351,
+      "coherence_mean": 0.8898049515485763,
+      "coherence_min": 0.8848927617073059,
+      "dataset": "ML1M",
+      "row_count": 1000,
+      "u_ds_popularity": 0.81169,
+      "u_ds_uniform": 0.8449900000000001
+    },
+    {
+      "coherence_bucket": "Q4",
+      "coherence_max": 0.9405888319015503,
+      "coherence_mean": 0.9024114199876785,
+      "coherence_min": 0.8949742317199707,
+      "dataset": "ML1M",
+      "row_count": 1000,
+      "u_ds_popularity": 0.8694850000000001,
+      "u_ds_uniform": 0.9009349999999999
+    },
+    {
+      "coherence_bucket": "Q1",
+      "coherence_max": 0.8784058690071106,
+      "coherence_mean": 0.871278526365757,
+      "coherence_min": 0.84095299243927,
+      "dataset": "Steam",
+      "row_count": 1000,
+      "u_ds_popularity": 0.5388200000000001,
+      "u_ds_uniform": 0.554995
+    },
+    {
+      "coherence_bucket": "Q2",
+      "coherence_max": 0.8864330053329468,
+      "coherence_mean": 0.8825186168551445,
+      "coherence_min": 0.8784090280532837,
+      "dataset": "Steam",
+      "row_count": 1000,
+      "u_ds_popularity": 0.5412049999999999,
+      "u_ds_uniform": 0.55151
+    },
+    {
+      "coherence_bucket": "Q3",
+      "coherence_max": 0.8958488702774048,
+      "coherence_mean": 0.8908132324814797,
+      "coherence_min": 0.8864344358444214,
+      "dataset": "Steam",
+      "row_count": 1000,
+      "u_ds_popularity": 0.567145,
+      "u_ds_uniform": 0.5638599999999999
+    },
+    {
+      "coherence_bucket": "Q4",
+      "coherence_max": 0.9407804608345032,
+      "coherence_mean": 0.9056387778520584,
+      "coherence_min": 0.8958556056022644,
+      "dataset": "Steam",
+      "row_count": 1000,
+      "u_ds_popularity": 0.6310950000000001,
+      "u_ds_uniform": 0.5899500000000001
+    },
+    {
+      "coherence_bucket": "Q1",
+      "coherence_max": 0.8844394683837891,
+      "coherence_mean": 0.8771362318992615,
+      "coherence_min": 0.8584358096122742,
+      "dataset": "Beauty",
+      "row_count": 1000,
+      "u_ds_popularity": 0.6450450000000001,
+      "u_ds_uniform": 0.6523
+    },
+    {
+      "coherence_bucket": "Q2",
+      "coherence_max": 0.8953811526298523,
+      "coherence_mean": 0.8898352665901184,
+      "coherence_min": 0.8844582438468933,
+      "dataset": "Beauty",
+      "row_count": 1000,
+      "u_ds_popularity": 0.67786,
+      "u_ds_uniform": 0.6779499999999999
+    },
+    {
+      "coherence_bucket": "Q3",
+      "coherence_max": 0.9099677205085754,
+      "coherence_mean": 0.9021472673416138,
+      "coherence_min": 0.8954051733016968,
+      "dataset": "Beauty",
+      "row_count": 1000,
+      "u_ds_popularity": 0.728625,
+      "u_ds_uniform": 0.735595
+    },
+    {
+      "coherence_bucket": "Q4",
+      "coherence_max": 0.9811277389526367,
+      "coherence_mean": 0.9263843477368355,
+      "coherence_min": 0.909975528717041,
+      "dataset": "Beauty",
+      "row_count": 1000,
+      "u_ds_popularity": 0.79818,
+      "u_ds_uniform": 0.8029700000000001
+    },
+    {
+      "coherence_bucket": "Q1",
+      "coherence_max": 0.8903482556343079,
+      "coherence_mean": 0.882898126423359,
+      "coherence_min": 0.8614416122436523,
+      "dataset": "ATG",
+      "row_count": 1000,
+      "u_ds_popularity": 0.6274,
+      "u_ds_uniform": 0.63425
+    },
+    {
+      "coherence_bucket": "Q2",
+      "coherence_max": 0.9010838270187378,
+      "coherence_mean": 0.895733252286911,
+      "coherence_min": 0.8903520703315735,
+      "dataset": "ATG",
+      "row_count": 1000,
+      "u_ds_popularity": 0.6592899999999999,
+      "u_ds_uniform": 0.663965
+    },
+    {
+      "coherence_bucket": "Q3",
+      "coherence_max": 0.9144212007522583,
+      "coherence_mean": 0.9071221311688423,
+      "coherence_min": 0.9011055827140808,
+      "dataset": "ATG",
+      "row_count": 1000,
+      "u_ds_popularity": 0.686615,
+      "u_ds_uniform": 0.69149
+    },
+    {
+      "coherence_bucket": "Q4",
+      "coherence_max": 0.9891563653945923,
+      "coherence_mean": 0.9311526603698731,
+      "coherence_min": 0.9144420623779297,
+      "dataset": "ATG",
+      "row_count": 1000,
+      "u_ds_popularity": 0.779745,
+      "u_ds_uniform": 0.7783450000000001
+    }
+  ],
+  "criterion_inputs": {
+    "interpretation_note": "FOLLOWUP-07 owns the frozen Gate 0-v2 pass/fail decision.",
+    "ml1m_phi": 0.0,
+    "ml1m_rank_by_u_ds": 1,
+    "ml1m_u_ds": 0.75353875,
+    "non_ml1m_phi_ge_0_5_count": 1,
+    "u_ds_popularity_ranking_desc": [
+      "ML1M",
+      "Beauty",
+      "ATG",
+      "Steam"
+    ]
+  },
+  "datasets": [
+    {
+      "bank_hash": "76fcfc25668145bfbaba194f2f0f652acda0c424363f689f35bb653eb525497d",
+      "coherence_mean": 0.8852515252530575,
+      "coherence_median": 0.8848916590213776,
+      "dataset": "ML1M",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M",
+      "history_length_mean": 10.0,
+      "history_length_median": 10.0,
+      "negative_count": 100,
+      "phi_u_ds": 0.0,
+      "sampled_row_count": 4000,
+      "skipped_row_count": 0,
+      "split_hash": "7895e743467fd60060127264894250a0502d94028e84441400aa14dfd9118576",
+      "train_row_count": 755782,
+      "u_ds_popularity": 0.75353875,
+      "u_ds_uniform": 0.7985262500000001,
+      "usable_row_count": 4000
+    },
+    {
+      "bank_hash": "78fed57c4afba29031624357ad7b8e543aa20a0b06b3373e69525625e6e78023",
+      "coherence_mean": 0.8875622883886098,
+      "coherence_median": 0.8864337205886841,
+      "dataset": "Steam",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "history_length_mean": 10.0,
+      "history_length_median": 10.0,
+      "negative_count": 100,
+      "phi_u_ds": 1.0,
+      "sampled_row_count": 4000,
+      "skipped_row_count": 0,
+      "split_hash": "a0e0a7e03cb0823386da7f0832f595253633014dd50f64fc63c2d431d0f84006",
+      "train_row_count": 988517,
+      "u_ds_popularity": 0.5695662499999999,
+      "u_ds_uniform": 0.56507875,
+      "usable_row_count": 4000
+    },
+    {
+      "bank_hash": "591e4f4ee24160becd190f2b5279a48a351004ff6fd09f228473188a182b5d9b",
+      "coherence_mean": 0.8988757783919573,
+      "coherence_median": 0.8953931629657745,
+      "dataset": "Beauty",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "history_length_mean": 6.38125,
+      "history_length_median": 6.0,
+      "negative_count": 100,
+      "phi_u_ds": 0.0,
+      "sampled_row_count": 4000,
+      "skipped_row_count": 0,
+      "split_hash": "ab2863e37b13290aa216ae4c83c725a852e2a7fdd9325afb1d501e0141e3f2b6",
+      "train_row_count": 17890,
+      "u_ds_popularity": 0.7124275,
+      "u_ds_uniform": 0.71720375,
+      "usable_row_count": 4000
+    },
+    {
+      "bank_hash": "90ac91f8d54a19cf5f0c70a304b0a6ddf63d5803e45f0a85e293377642b9812f",
+      "coherence_mean": 0.9042265425622463,
+      "coherence_median": 0.9010947048664093,
+      "dataset": "ATG",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG",
+      "history_length_mean": 6.24925,
+      "history_length_median": 5.0,
+      "negative_count": 100,
+      "phi_u_ds": 0.11737499999999956,
+      "sampled_row_count": 4000,
+      "skipped_row_count": 0,
+      "split_hash": "33315c196f7a377a223f2a20705d3557e827c39c547baf16b69645f2e43db0ec",
+      "train_row_count": 15529,
+      "u_ds_popularity": 0.6882625,
+      "u_ds_uniform": 0.6920125,
+      "usable_row_count": 4000
+    }
+  ],
+  "generated_at": "2026-07-03T13:58:17+08:00",
+  "protocol": {
+    "coherence_breakdown": "ranked coherence quartiles over sampled train transitions",
+    "diagnostic_statistic": "U_ds_uniform = P(sim(h,next) > sim(h,neg_uniform)) with 100 uniform negatives",
+    "history_vector": "normalized mean of valid history item embeddings from the production t5-xl bank",
+    "negative_count": 100,
+    "primary_statistic": "U_ds_popularity = P(sim(h,next) > sim(h,neg_pop)) with 100 train-next-popularity negatives",
+    "sample_size": 4000,
+    "seed": 7
+  }
+}

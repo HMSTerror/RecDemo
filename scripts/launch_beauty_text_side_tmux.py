@@ -11,6 +11,7 @@ import subprocess
 DEFAULT_HOST = "l20"
 DEFAULT_REMOTE_REPO_ROOT = PurePosixPath("/data/Zijian/goal/RecDemo")
 DEFAULT_REMOTE_DATASET_ROOT = DEFAULT_REMOTE_REPO_ROOT / "dataset" / "paper_raw_v1"
+DEFAULT_REMOTE_TMP_DIR = DEFAULT_REMOTE_REPO_ROOT / ".tmp"
 DEFAULT_DATASET_DIR = DEFAULT_REMOTE_DATASET_ROOT / "Beauty"
 DEFAULT_MODEL_PATH = PurePosixPath("/data/models/sentence-transformers/sentence-t5-xl")
 DEFAULT_PYTHON_BIN = PurePosixPath("/data/Zijian/goal/PreferGrow/.venv/bin/python3")
@@ -54,6 +55,7 @@ def build_remote_beauty_command(
     model_path = _to_posix_path(model_path)
     python_bin = _to_posix_path(python_bin)
     run_dir = _to_posix_path(run_dir)
+    tmp_dir = _to_posix_path(DEFAULT_REMOTE_TMP_DIR)
 
     item_metadata_path = dataset_dir / "item_metadata.csv"
     embeddings_path = dataset_dir / "sentence_t5_xl_item_emb.pt"
@@ -61,6 +63,8 @@ def build_remote_beauty_command(
 
     return (
         f"cd {_q(remote_repo_root)} && "
+        f"mkdir -p {_q(tmp_dir)} && "
+        f"export TMPDIR={_q(tmp_dir)} && "
         f"if [ ! -f {_q(item_metadata_path)} ]; then echo 'missing dataset metadata: {item_metadata_path}' >&2; exit 1; fi && "
         f"if [ ! -d {_q(model_path)} ]; then echo 'missing sentence-t5 model: {model_path}' >&2; exit 1; fi && "
         f"if [ ! -f {_q(embeddings_path)} ]; then "

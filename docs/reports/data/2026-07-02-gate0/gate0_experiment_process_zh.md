@@ -593,3 +593,174 @@ ML1M 的关键中位数是：
 而是：
 
 - “简单 global calibration repair 已被正式审计否掉；主路径若继续，只能走更深层 repair；否则应降主张。”
+
+## 14. FOLLOWUP-05：生产 bank 文本效用 `U_ds` 诊断（2026-07-03）
+
+### 14.1 这一步的边界为什么改了
+
+按新的冲刺文档 §7，Gate0 失败后的下一步不再是继续做 Family A 的 `sigma_null(L)` 局部修补，而是先验证一个更根本的构念判断：
+
+- 当前 gate 失败，究竟是 spread 标度错了；
+- 还是 gate 本身测到的是“文本效用 / false-negative 风险”而不是“文本证据贫富”。
+
+因此 `FOLLOWUP-05` 被改写为：
+
+- 在 `l20` 的生产 `t5-xl` bank 上，冻结四数据集的 train-only 文本效用统计量 `U_ds`
+
+并把这份 frozen inputs 交给后续 `FOLLOWUP-06` / `FOLLOWUP-07`。
+
+### 14.2 本轮新增的代码与本地验证
+
+本轮新增：
+
+- `scripts/build_gate0_text_utility_report.py`
+- `scripts/launch_gate0_text_utility_tmux.py`
+- `tests/test_build_gate0_text_utility_report.py`
+- `tests/test_launch_gate0_text_utility_tmux.py`
+
+同时为了让远端 torch 在清盘后仍能启动，又补了 launcher 级环境修复：
+
+- `launch_gate0_text_utility_tmux.py`
+- `launch_gate0_tmux.py`
+- `launch_beauty_text_side_tmux.py`
+
+都会在远端先创建：
+
+- `/data/Zijian/goal/RecDemo/.tmp`
+
+并固定：
+
+- `TMPDIR=/data/Zijian/goal/RecDemo/.tmp`
+
+本地验证命令：
+
+```powershell
+& 'E:/anaco/python.exe' -m unittest `
+  tests.test_build_gate0_text_utility_report `
+  tests.test_launch_gate0_tmux `
+  tests.test_launch_gate0_text_utility_tmux `
+  tests.test_launch_beauty_text_side_tmux `
+  tests.test_sync_remote_recdemo_code `
+  tests.test_build_gate0_utilde_report `
+  tests.test_build_gate0_failure_diagnostic
+```
+
+结果：
+
+- `25 tests OK`
+
+### 14.3 服务器侧真实执行
+
+先确认服务器在线：
+
+```bash
+ssh l20 "hostname; date '+%F %T %z'; cd /data/Zijian/goal/RecDemo && pwd"
+```
+
+返回：
+
+- `ubuntu`
+- `2026-07-03 13:53:34 +0800`
+- `/data/Zijian/goal/RecDemo`
+
+随后同步代码：
+
+```powershell
+& 'E:/anaco/python.exe' scripts/sync_remote_recdemo_code.py `
+  --retries 2 `
+  --retry-delay-seconds 2 `
+  --connect-timeout 10
+```
+
+返回：
+
+- `synced 25 files to l20:/data/Zijian/goal/RecDemo`
+
+然后在 tmux 内启动正式诊断：
+
+```powershell
+& 'E:/anaco/python.exe' scripts/launch_gate0_text_utility_tmux.py
+```
+
+该命令在远端创建：
+
+- tmux session: `gate0_text_utility`
+
+实际远端执行的是：
+
+```bash
+mkdir -p /data/Zijian/goal/RecDemo/.tmp && \
+TMPDIR=/data/Zijian/goal/RecDemo/.tmp \
+python3 /data/Zijian/goal/RecDemo/scripts/build_gate0_text_utility_report.py \
+  --dataset ML1M=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M \
+  --dataset Steam=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam \
+  --dataset Beauty=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty \
+  --dataset ATG=/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG \
+  --output-dir /data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0
+```
+
+tmux 会话很快退出，不是失败，而是脚本已经跑完并正常结束。随后在服务器上确认新产物存在：
+
+- `gate0_text_utility_summary.csv`
+- `gate0_text_utility_coherence_quartiles.csv`
+- `gate0_text_utility_report.json`
+- `gate0_text_utility_report.md`
+
+时间戳都是：
+
+- `Jul 3 13:58`
+
+### 14.4 产物回填到本地
+
+本轮已经把上述四个文件从 `l20` 拉回本地：
+
+- `docs/reports/data/2026-07-02-gate0/gate0_text_utility_summary.csv`
+- `docs/reports/data/2026-07-02-gate0/gate0_text_utility_coherence_quartiles.csv`
+- `docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json`
+- `docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.md`
+
+并新增中文解释：
+
+- `docs/reports/data/2026-07-02-gate0/gate0_text_utility_report_zh.md`
+
+### 14.5 本轮的关键数字
+
+四数据集 `U_ds(popularity)` / `phi(U_ds)` 为：
+
+- `ML1M = 0.753539`, `phi = 0.000000`
+- `Steam = 0.569566`, `phi = 1.000000`
+- `Beauty = 0.712428`, `phi = 0.000000`
+- `ATG = 0.688262`, `phi = 0.117375`
+
+`gate0_text_utility_report.json` 中冻结的输入摘要是：
+
+- `U_ds` 排序：
+  `ML1M > Beauty > ATG > Steam`
+- `ML1M rank = 1`
+- `ML1M phi = 0.0`
+- 非 `ML1M` 中满足 `phi >= 0.5` 的数据集数：
+  `1`
+
+### 14.6 这说明了什么
+
+这一步最重要的含义有三条：
+
+1. **ML1M 的文本效用最高**  
+   这与修订文档的构念假说一致：对 ML1M，文本 gate 应该基本关闭。
+
+2. **Steam 的文本效用最低**  
+   也与修订文档一致：对 Steam，文本 gate 应该明显打开。
+
+3. **Beauty/ATG 没有一起落到“明显开门”区间**  
+   尤其 `Beauty` 仍然偏高，这说明新的 utility 路线虽然比 spread repair 更贴近构念，但它未必会自动满足 Gate0-v2 想要的全部三条冻结条件。
+
+注意：这里仍然**没有**正式宣布 Gate0-v2 pass/fail；正式裁决必须等 `FOLLOWUP-07`。
+
+### 14.7 本轮对主线的推进结果
+
+`FOLLOWUP-05` 到这一步已经完成了它自己的职责：
+
+1. 生产 bank `U_ds` 数字已冻结；
+2. bank hash / split hash 已归档；
+3. `FOLLOWUP-06` 可以开始把 `phi(U_ds)` 接进真实 gate；
+4. `FOLLOWUP-07` 已经具备正式裁决 Gate0-v2 的输入证据。
