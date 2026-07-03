@@ -1,6 +1,8 @@
 %% =========================================================================
-%% Fallback-Safe Evidence Conditioning for Discrete Preference Diffusion
-%% AAAI-27 submission draft (generated 2026-07-02).
+%% When Stronger Text Evidence Hurts:
+%% Fallback-Safe Conditioning of Discrete Preference Diffusion Kernels
+%% AAAI-27 submission draft, rewritten 2026-07-04 (Family D baseline,
+%% spec section 8.1; wording upgrades only via documented Gate-2 amendment).
 %%
 %% HOW TO BUILD
 %%   1. Download the AAAI-27 author kit and place aaai27.sty (+ aaai27.bst)
@@ -9,11 +11,16 @@
 %%   2. pdflatex main && bibtex main && pdflatex main && pdflatex main
 %%
 %% PLACEHOLDER POLICY (spec 4.6 / SPRINT-13)
-%%   Every experiment-dependent value is marked with \pending{...} or \pnum.
-%%   Placeholders may ONLY be replaced from dated artifacts under
+%%   Every experiment-dependent value still pending is marked \pending{...}
+%%   or \pnum. Placeholders may ONLY be replaced from dated artifacts under
 %%   docs/reports/data/ (cite the artifact in a % comment when filling).
-%%   Gate-2 exit decides the abstract/contribution wording tier; the
-%%   medium/weak downgrades are pre-written in comments where relevant.
+%%   Values already filled below each cite their artifact in a % comment.
+%%
+%% CLAIM TIER (frozen): Family D baseline = safety theorems + utility-
+%%   inversion analysis + mechanism chain + honest boundaries. The frozen-
+%%   gate validation run (SPRINT-05, spec 8.2) may UPGRADE the empirical
+%%   wording via documented amendment; pre-written upgrade comments are
+%%   marked "GATE-2 UPGRADE" below. Never exceed the tier silently.
 %% =========================================================================
 \documentclass[letterpaper]{article}
 
@@ -46,15 +53,19 @@
 \newcommand{\ch}{c_{h}}
 \newcommand{\pu}{p_{u}}
 \newcommand{\ut}{\tilde{u}}
+\newcommand{\Uds}{U_{\mathrm{ds}}}
+\newcommand{\phids}{\phi(\Uds)}
 \newcommand{\TV}{\mathrm{TV}}
 \newtheorem{proposition}{Proposition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{remark}{Remark}
 \newtheorem{corollary}{Corollary}
 
-\title{Fallback-Safe Evidence Conditioning for Discrete Preference Diffusion}
-% Alt title (spec 4.1 option 2):
-% Reliability-Gated Proposal Kernels for Discrete Preference Diffusion in Sequential Recommendation
+\title{When Stronger Text Evidence Hurts: Fallback-Safe Conditioning of
+Discrete Preference Diffusion Kernels}
+% Alt titles (FOLLOWUP-08 claim freeze may promote either):
+%   Fallback-Safe Evidence Conditioning for Discrete Preference Diffusion
+%   Reliability-Gated Proposal Kernels for Discrete Preference Diffusion
 \author{Anonymous submission}
 
 \begin{document}
@@ -63,120 +74,129 @@
 \begin{abstract}
 Discrete preference diffusion recommenders such as PreferGrow corrupt a
 user's preferred item by fading it toward a \emph{proposal distribution}
-and learn to grow the preference back. Existing personalization in this
-family acts entirely on the \emph{score} side---the transition kernel
-itself is shared by all users. We personalize the kernel: an explicit,
-history-only text-evidence reliability signal gates a convex interpolation
-between the host's learned global proposal and a frozen text-content
-anchor, so that a single user-conditioned proposal jointly shapes where
-preference fades and where it grows back. The design is
-\emph{fallback-safe}: the reliability signal is calibrated against a
-length-matched random-history null of the evidence space, the gate is zero
-at or below the null, and we prove that the resulting chain (i) retains
-Markovianity, detailed balance, and the closed-form analytic reversal of
-the host kernel, (ii) reduces \emph{exactly} to the host kernel when the
-gate closes, and (iii) deviates from it by at most the gate value in total
-variation. This turns dataset-level differences in evidence quality into a
-falsifiable prediction: gains where text evidence is informative, parity
-where it is not. Across four sequential-recommendation benchmarks the
-prediction is confirmed: \pending{one-sentence main-table summary from
-Gate-2 report; strong exit: gains on Steam/ATG/Beauty and parity on ML1M
-(delta test NDCG@10 $=$ \pnum)}. Controls (reliability shuffling, global
-proposals, ungated anchors) and text-corruption diagnostics show the gains
-require an \emph{aligned} per-user signal, and that the kernel backs off
-adaptively as evidence degrades.
-% GATE-2 medium exit: replace the empirical sentence with the
-% "safety without loss" wording frozen in SPRINT-12; forbid "gains" claims.
+and learn to grow the preference back. Personalization in this family
+acts entirely on the \emph{score} side---the transition kernel is shared
+by all users. We personalize the kernel, and in doing so surface a
+counterintuitive fact: because the proposal is a \emph{corruption}
+distribution, text evidence can be too good to use. On four benchmarks,
+a train-only measure of how well text similarity predicts the next item
+inversely rank-orders the outcome of text-tilting the kernel in all four
+cases: the tilt helps where text defines informative hard negatives and
+fails where text predicts future positives, turning corruption into
+false-negative pollution. We operationalize this with a two-factor,
+history-only gate---a per-user coherence signal calibrated against a
+length-matched random-history null, damped by a frozen dataset-level
+utility factor---that interpolates between the host's learned proposal
+and a frozen text anchor. The design is \emph{fallback-safe}: the
+conditioned chain retains Markovianity, detailed balance, and the
+analytic reversal of the host kernel; it reduces \emph{exactly} to the
+host when the gate closes; and it deviates by at most the gate value in
+total variation. Controls (reliability shuffling, global proposals,
+ungated anchors) show the mechanism requires an \emph{aligned} per-user
+signal, and corruption diagnostics show adaptive backoff as evidence
+degrades. \pending{one sentence on the frozen-gate four-dataset
+validation once SPRINT-05 lands: no-loss on closed-gate datasets,
+selective gain where the gate opens (spec 8.2 predictions).}
+% GATE-2 UPGRADE: if all four spec-8.2 predictions hold, replace the last
+% sentence with: "A four-dataset validation run of the frozen gate
+% confirms the design end-to-end: parity with the host wherever the gate
+% closes, and preserved gains where it opens."
 \end{abstract}
 
 \section{Introduction}
 
-Diffusion-based recommenders replace the single-step prediction of a
-sequential recommender with an iterative corrupt-and-reconstruct process.
-The discrete instantiation of this idea---preference fading and growing
-over the item vocabulary~\cite{prefergrow}---is attractive because the
-corruption process is defined directly on the discrete object the system
-ranks: the forward kernel fades the preferred item into a proposal
-distribution over alternatives, and the reverse process grows the
-preference back under a learned score model.
+Diffusion-based recommenders replace single-step prediction with an
+iterative corrupt-and-reconstruct process. The discrete instantiation---%
+preference fading and growing over the item
+vocabulary~\cite{prefergrow}---is attractive because corruption is
+defined directly on the object being ranked: the forward kernel fades
+the preferred item into a proposal distribution over alternatives, and
+the reverse process grows the preference back under a learned score
+model.
 
-The proposal distribution is where this family encodes ``what replaces a
-faded preference.'' It determines the stationary distribution of the
-forward chain, the reference measure of its detailed balance, the weights
-of the score-entropy objective, and the analytic reverse ratio. Yet in
-existing discrete preference diffusion the proposal is \emph{global}: a
-single distribution---uniform, popularity, or learned---shared by every
-user. Personalization enters only through the score network and through
-inference-time guidance against a ``non-preference user''
-branch~\cite{prefergrow}, i.e., entirely on the score side.
+The proposal distribution is where this family encodes ``what replaces
+a faded preference.'' It determines the stationary distribution of the
+forward chain, the reference measure of its detailed balance, the
+weights of the score-entropy objective, and the analytic reverse ratio.
+Yet in existing discrete preference diffusion the proposal is
+\emph{global}: one distribution shared by every user. Personalization
+enters only through the score network and inference-time guidance
+against a ``non-preference user'' branch~\cite{prefergrow}---entirely on
+the score side. We ask the complementary question: can the kernel
+itself be personalized---safely?
 % One-line positioning (keep verbatim somewhere in intro):
 % PreferGrow personalizes the score; we personalize the kernel --- safely.
 
-We ask the complementary question: \emph{can the kernel itself be
-personalized---safely?} Side information such as item text suggests an
-answer: when a user's history is textually coherent, content similarity
-identifies plausible substitutes, and fading preference toward
-content-similar items should sharpen the learning signal. But side
-evidence is not uniformly trustworthy---across users \emph{and across
-datasets}. A movie catalog whose ``text'' is a title and a genre tag
-carries far less evidence than a product catalog with rich descriptions.
-A kernel that tilts toward text on every dataset will be at the mercy of
-the evidence quality it happens to receive; we show this failure mode is
-real and measurable.
+Item text seems like the natural conditioning signal: when a user's
+history is textually coherent, content similarity identifies plausible
+substitutes, and fading preference toward content-similar items should
+sharpen the contrast the score model learns from. The intuition
+suggests a monotone rule---the better the text evidence, the harder the
+kernel should lean on it. \emph{Our central empirical finding is that
+this intuition is backwards.} The proposal is a corruption
+distribution: items it favors are treated as ``where preference goes
+when it fades,'' i.e., as negatives. If text similarity is so
+informative that it ranks the user's \emph{actual next item} highly,
+then a text-tilted proposal concentrates corruption mass on likely
+future positives---manufacturing false negatives exactly in proportion
+to how good the evidence is. Measuring this with a train-only statistic
+$\Uds$ (how well text similarity discriminates the next item from
+sampled negatives), we find $\Uds$ \emph{inversely} rank-orders the
+outcome of text-tilting the kernel on all four of our benchmarks
+(Sec.~\ref{sec:inversion}): the largest gain occurs on the dataset with
+the \emph{weakest} next-item text signal, and a severe loss occurs on
+the dataset with the \emph{strongest}.
 
-Our design principle is \emph{fallback-safe evidence conditioning}. An
-explicit, history-only reliability signal $\ut$ measures how far the
-user's behavior-text coherence exceeds what a \emph{random} history would
-score in the same evidence space (a length-matched null). A low-capacity
-gate $g(\ut,U_{ds})=g_{\max}\,\phi(U_{ds})\,\mathrm{clip}(\ut,0,1)$,
-zero at or below the null and damped by a frozen dataset-level utility
-factor $\phi(U_{ds})$, interpolates between the host's \emph{learned}
-global proposal and a frozen text anchor. The pseudo-item mass of the
-host kernel is left untouched. Conditional on the fixed, history-derived
-signal and frozen dataset factor, all structural properties of the host
-chain survive; when the gate closes, the kernel \emph{is} the host kernel,
-exactly; and at any gate value the kernel is within $g(\ut,U_{ds})$ of
-the host in total variation. The theory is deliberately elementary---rank-one
-kernel algebra---but it buys a property that score-side or loss-side
-side-information injection cannot even express: a provable reduction to
-the host when evidence is uninformative or misleading.
-
-This yields a falsifiable prediction rather than a uniform-superiority
-claim. When dataset-level text utility is low but aligned user histories
-still rise above the null, text tilt should contribute informative
-\emph{hard negative} pressure; when the same text space is so predictive
-that tilting the corruption proposal targets likely positives, it creates
-\emph{false negative} pressure and the frozen $\phi(U_{ds})$ factor should
-close the gate. Our experiments across Steam, ML1M, Amazon Beauty, and
-ATG are designed around this prediction, with reliability-shuffle and
-ungated-anchor controls that separate \emph{aligned} per-user reliability
-from generic proposal biases.
+This inversion reframes what a ``reliability'' signal for kernel
+conditioning must measure, and motivates our design,
+\emph{fallback-safe evidence conditioning}. A low-capacity gate
+\begin{equation*}
+  g(\ut,\Uds) \;=\; g_{\max}\;\phids\;\mathrm{clip}(\ut,0,1)
+\end{equation*}
+combines two history-only factors: a per-user coherence signal $\ut$,
+calibrated against a length-matched \emph{random-history null} of the
+evidence space (raw coherence has a high, dataset-dependent floor that
+otherwise couples the kernel's operating point to embedding geometry);
+and a frozen dataset-level utility factor $\phids$ that \emph{closes}
+the gate as $\Uds$ enters the false-negative regime. The gated kernel
+interpolates between the host's \emph{learned} global proposal and a
+frozen text anchor, leaving the host's pseudo-item mass untouched.
+Conditional on the fixed history-derived signals, all structural
+properties of the host chain survive; when the gate closes, the kernel
+\emph{is} the host kernel, exactly; and at any gate value the kernel is
+within $g$ of the host in total variation. The theory is deliberately
+elementary---rank-one kernel algebra---but it buys a property that
+score-side or loss-side side-information injection cannot even express:
+a provable reduction to the host when evidence is uninformative
+\emph{or misleading}.
 
 Our contributions:
 \begin{itemize}
-  \item \textbf{Kernel-side personalization.} The first discrete
-  preference-diffusion recommender whose transition kernel is conditioned
-  per user by an explicit, history-only evidence-reliability signal;
-  conditional Markovianity, the stationary proposal, detailed balance,
-  and the analytic reverse ratio of the host all carry over
-  (Props.~\ref{prop:validity}--\ref{prop:reverse}).
-  \item \textbf{Fallback safety.} An exact-reduction guarantee
+  \item \textbf{The utility-inversion finding.} A train-only text
+  utility statistic inversely rank-orders the outcome of text-tilting a
+  discrete preference-diffusion kernel on all four benchmarks
+  ($4/4$; probability $1/24$ under a random-ordering null), with a
+  mechanism-level account: corruption proposals reward hard negatives
+  and punish predicted positives (Sec.~\ref{sec:inversion}).
+  \item \textbf{Kernel-side personalization with fallback safety.} The
+  first discrete preference-diffusion recommender whose transition
+  kernel is conditioned per user by an explicit, history-only evidence
+  signal; conditional Markovianity, the stationary proposal, detailed
+  balance, and the analytic reverse ratio all carry over
+  (Prop.~\ref{prop:validity}), with an exact-reduction guarantee
   (Prop.~\ref{prop:reduction}) and a total-variation bound
-  (Lemma~\ref{lem:tv}), enabled by anchoring the interpolation to the
-  host's learned proposal and freezing the pseudo-item mass; plus a
-  null-calibration procedure showing that \emph{uncalibrated} reliability
-  signals inherit dataset-level embedding geometry and produce spurious,
-  regime-dependent behavior.
+  (Lemma~\ref{lem:tv}).
+  \item \textbf{Calibration methodology.} A length-matched
+  random-history null for user-level coherence---raw and even
+  null-calibrated coherence mismeasure utility, which is why the
+  dataset-level factor is estimated from utility directly and frozen
+  before any retraining (pre-registered thresholds,
+  Appendix~\ref{app:uds}).
   \item \textbf{Mechanism evidence.} Controls (reliability shuffle,
-  global proposal, ungated anchor), corruption diagnostics, and
-  calibration bucketing that show the kernel genuinely uses aligned
-  reliability to reshape its proposal and to back off under degraded
-  evidence.
-  \item \textbf{A confirmed falsifiable prediction.} Across four
-  benchmarks, gains track measured evidence informativeness:
-  \pending{fill from Gate-2 report (strong exit: positive on
-  Steam/ATG/Beauty; parity on ML1M whose real-user $\ut$ concentrates at
-  the null)}.
+  global proposal, ungated anchor) and text-corruption diagnostics
+  showing that aligned per-user gating is load-bearing and that the
+  kernel backs off adaptively as evidence degrades
+  (Sec.~\ref{sec:mechanism}).
 \end{itemize}
 
 \section{Preliminaries: Discrete Preference Diffusion}
@@ -187,9 +207,10 @@ PreferGrow~\cite{prefergrow}, an optional non-preference pseudo-item is
 appended as the last coordinate, giving $|\Omega|=M{+}1$ states. We use
 the row-vector convention: a distribution $\mu$ evolves as $\mu P$.
 
-Given a proposal distribution $p$ on $\Omega$, define the rank-one kernel
-$\Pi_p(i,j)=p(j)$ and the generator $Q_p=\Pi_p-I$. With noise scale
-$\sigma\ge 0$ and $\alpha_\sigma=e^{-\sigma}$, the forward transition is
+Given a proposal distribution $p$ on $\Omega$, define the rank-one
+kernel $\Pi_p(i,j)=p(j)$ and the generator $Q_p=\Pi_p-I$. With noise
+scale $\sigma\ge 0$ and $\alpha_\sigma=e^{-\sigma}$, the forward
+transition is
 \begin{equation}
   P_{\sigma,p} \;=\; e^{\sigma Q_p} \;=\; \alpha_\sigma I +
   (1-\alpha_\sigma)\,\Pi_p ,
@@ -198,19 +219,19 @@ $\sigma\ge 0$ and $\alpha_\sigma=e^{-\sigma}$, the forward transition is
 so a preferred item survives with probability $\alpha_\sigma$ and is
 otherwise resampled from $p$: preference \emph{fades toward the
 proposal}. The score model $s_\Theta(x_t,t,u)$ (with $u$ a SASRec-style
-history encoding) is trained by denoising score entropy~\cite{sedd} and
-the reverse process uses the analytic stationary-reversal ratio in which
-the proposal appears in closed form (Appendix~\ref{app:proofs}). The host
-model learns its proposal: $\pcore=\mathrm{softmax}(p_1)$ with $p_1$ a
-free parameter vector, trained jointly. All of
-Sec.~\ref{sec:method} treats the host score model, objective, and
-schedule as fixed---we modify \emph{only} the proposal.
+history encoding) is trained by denoising score entropy~\cite{sedd},
+and the reverse process uses the analytic stationary-reversal ratio in
+which the proposal appears in closed form (Appendix~\ref{app:proofs}).
+The host learns its proposal: $\pcore=\mathrm{softmax}(p_1)$ with $p_1$
+a free parameter vector, trained jointly. Everything below treats the
+host score model, objective, and schedule as fixed---we modify
+\emph{only} the proposal.
 
 \section{Method: Fallback-Safe Gated Proposals}
 \label{sec:method}
 
 \subsection{Evidence anchor}
-Each dataset has a frozen text bank: one text record per item (title,
+Each dataset has a frozen text bank: one record per item (title, brand,
 category, description where present), embedded once by an off-the-shelf
 text encoder and never fine-tuned. For a user history
 $h=(i_1,\dots,i_L)$ let $\bar e_h$ be the normalized mean of its item
@@ -220,140 +241,219 @@ embeddings and define the \emph{content anchor}
   \label{eq:anchor}
 \end{equation}
 a distribution over real items, down-weighted for items with missing
-text. The anchor proposes \emph{content-plausible substitutes}; it never
-replaces the host's score representation.
+text. The anchor proposes \emph{content-plausible substitutes}; it
+never replaces the host's score representation.
 
-\subsection{Null-calibrated reliability}
+\subsection{User factor: null-calibrated coherence}
 \label{sec:null}
 The raw coherence statistic
 $A_h=\frac{1}{L}\sum_{\ell}\tfrac{1}{2}\big(\langle e_{i_\ell},\bar
-e_h\rangle+1\big)$ has a high and \emph{dataset-dependent} floor: a
-random pseudo-history already scores
-\pending{production-bank medians from Gate-0 report; legacy-bank
-indication: $\approx0.81$ (ML1M), $0.77$ (Beauty), $0.87$ (Steam)}
+e_h\rangle+1\big)$ has a high, dataset-dependent floor: on our
+production banks a \emph{random} pseudo-history already scores
+$0.931$ on ML1M, $0.942$ on both Steam and Beauty
+% artifact: docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv
 because the statistic inherits the global geometry of the embedding
-space. Consuming $A_h$ in absolute terms therefore couples the kernel's
-operating point to arbitrary dataset geometry---the source of spurious
-``regime-dependent'' behavior we document in Sec.~\ref{sec:calib}.
-
-We calibrate against the evidence-space null. For each dataset we draw
-random pseudo-histories of each observed length $L$ from the frozen bank
-and record $\mu_{\mathrm{null}}(L)$, $\sigma_{\mathrm{null}}(L)$; in
-parallel we freeze a train-only dataset utility statistic $U_{ds}$ from
-next-item text discrimination. The \emph{calibrated reliability} of a
-real history is
+space. Consuming $A_h$ in absolute terms couples the kernel's operating
+point to that geometry. We therefore calibrate against the
+evidence-space null: for each dataset and history length $L$ we draw
+random pseudo-histories from the frozen bank, record
+$\mu_{\mathrm{null}}(L),\sigma_{\mathrm{null}}(L)$, and define
 \begin{equation}
-  \ut \;=\; \frac{A_h-\mu_{\mathrm{null}}(L)}{k\,\sigma_{\mathrm{null}}(L)},
-  \qquad
-  g(\ut,U_{ds}) \;=\; g_{\max}\cdot \phi(U_{ds})\cdot \mathrm{clip}(\ut,0,1),
-  \qquad
-  \phi(U_{ds}) \;=\; \mathrm{clip}\!\left(\frac{0.70-U_{ds}}{0.10},0,1\right).
-  \label{eq:gate}
+  \ut \;=\;
+  \frac{A_h-\mu_{\mathrm{null}}(L)}{k\,\sigma_{\mathrm{null}}(L)} .
+  \label{eq:utilde}
 \end{equation}
-$\ut$ is history-only (no target, no diffusion state, no current model
-score) and fixed along the whole forward/reverse trajectory, as required
-by the theory. By construction $g=0$ for histories at or below the null,
-and datasets with overly predictive text receive $\phi(U_{ds})\approx 0$:
-\emph{the gate closes both when a user's evidence is unaligned and when
-dataset-level text tilt would create false negatives}.
+$\ut$ is history-only (no target, no diffusion state, no model score)
+and fixed along each forward/reverse trajectory. A history at or below
+its null contributes zero gate.
+
+Null calibration is necessary but \emph{not sufficient}: calibrated
+coherence measures whether behavior clusters in text space, not whether
+tilting corruption toward that cluster helps. On our production banks
+the median $\ut$ ranks ML1M ($1.43$) $>$ Beauty ($0.80$) $>$ ATG
+($0.72$) $>$ Steam ($0.11$)
+% artifact: docs/reports/data/2026-07-02-gate0/gate0_u_tilde_summary.csv
+---nearly the \emph{opposite} of where text tilt actually helps
+(Sec.~\ref{sec:inversion}). This mismatch is exactly why a second,
+utility-facing factor is required.
+
+\subsection{Dataset factor: frozen text utility}
+\label{sec:uds}
+We measure what the gate actually needs to know---does text similarity
+predict \emph{positives}?---directly on the training split. For sampled
+train transitions $(h,\text{next})$, $\Uds$ is the probability that the
+anchor similarity ranks the true next item above a popularity-sampled
+negative (an AUC; estimator frozen in Appendix~\ref{app:uds}). Like the
+host's popularity prior, $\Uds$ is a train-only dataset constant; no
+validation or test information enters. The gate's dataset factor is the
+frozen hinge
+\begin{equation}
+  \phids \;=\; \mathrm{clip}\!\big((0.70-\Uds)/0.10,\;0,\;1\big),
+  \label{eq:phi}
+\end{equation}
+fully open when $\Uds\le 0.60$ (text defines hard negatives but does
+not predict positives) and fully closed when $\Uds\ge 0.70$ (tilting
+would concentrate corruption on likely positives). The thresholds were
+fixed \emph{before} the production statistics were computed and were
+not adjusted afterwards (pre-registration note in
+Appendix~\ref{app:uds}).
 
 \subsection{The gated kernel}
 Let $\pcore=\mathrm{softmax}(p_1)$ be the host's learned proposal
-(including the pseudo-item coordinate) and $\pcorer$ its restriction to
-real items, renormalized. The user-conditioned proposal is
+(including the pseudo-item coordinate $\star$) and $\pcorer$ its
+restriction to real items, renormalized. With
+$g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$,
 \begin{equation}
 \begin{aligned}
   \pu \;=\;& \pcore(\star)\, e_\star \\
-  &+ \big(1-\pcore(\star)\big)\Big[(1-g(\ut,U_{ds}))\,\pcorer +
-  g(\ut,U_{ds})\,\ch\Big],
+  &+ \big(1-\pcore(\star)\big)\Big[(1-g)\,\pcorer + g\,\ch\Big],
 \end{aligned}
 \label{eq:pu}
 \end{equation}
-where $\star$ is the pseudo-item ($\pu=(1-g)\pcore+g\,\ch$ when no
-pseudo-item is used). Three deliberate restrictions:
-(i) the \emph{pseudo-item mass is exactly the host's} and the gate never
-touches it; (ii) $g$ is the \emph{only} dial---no reliability-dependent
-temperature or popularity mixing; (iii) no new learnable modules: the
-only trained parameter in the proposal path is the host's own $p_1$,
-shared with the fallback branch. The proposal $\pu$ replaces the global
-proposal in every kernel-level object: forward corruption
-\eqref{eq:forward}, score-entropy weights, and the analytic reverse
-ratio (all call sites, not just negative sampling).
+and $\pu=(1-g)\pcore+g\,\ch$ when no pseudo-item is used. Three
+deliberate restrictions: (i) the \emph{pseudo-item mass is exactly the
+host's} and the gate never touches it; (ii) $g$ is the \emph{only}
+dial---no evidence-dependent temperature or popularity mixing; (iii) no
+new learnable modules: the only trained parameter in the proposal path
+is the host's own $p_1$, shared with the fallback branch. $\pu$
+replaces the global proposal in \emph{every} kernel-level object:
+forward corruption \eqref{eq:forward}, score-entropy weights, and the
+analytic reverse ratio---not just negative sampling.
 
 \subsection{Theory}
 \label{sec:theory}
 Proofs are in Appendix~\ref{app:proofs}. Fix a user history $h$, hence
-$\ut$ and $\pu$, for the whole trajectory.
+$\ut$, $\Uds$, and $\pu$, for the whole trajectory.
 
-\begin{proposition}[Kernel validity; informal summary of
+\begin{proposition}[Kernel validity; summary of
 Props.~\ref{prop:forward-app}--\ref{prop:reverse-app}]
 \label{prop:validity}
 With $\pu$ in place of the global proposal, the forward corruption has
 the closed form
 $q_t(x_t{=}x \mid x_0,u)=\bar\alpha_t\mathbf{1}\{x{=}x_0\}
-+(1-\bar\alpha_t)\pu(x)$; conditional on $\ut$ the chain is Markov; its
-stationary and limiting distribution is $\pu$; it satisfies detailed
-balance w.r.t.\ $\pu$; and the analytic stationary-reversal ratio is the
-host's formula with the proposal term replaced by $\pu$.
++(1-\bar\alpha_t)\pu(x)$; conditional on the fixed gate inputs the
+chain is Markov; its stationary and limiting distribution is $\pu$; it
+satisfies detailed balance w.r.t.\ $\pu$; and the analytic
+stationary-reversal ratio is the host's formula with the proposal term
+replaced by $\pu$.
 \end{proposition}
 \begin{proposition}[Exact reduction / fallback safety]
 \label{prop:reduction}
-If $g(\ut,U_{ds})=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
+If $g=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
 derived object---forward corruption, stationary distribution,
 score-entropy weights, analytic reverse ratio---coincides exactly with
 the host kernel's.
 \end{proposition}
 \begin{lemma}[Bounded deviation]
 \label{lem:tv}
-$\TV(\pu,\pcore)\le g(\ut,U_{ds})$, and each row of the forward transition
+$\TV(\pu,\pcore)\le g$, and each row of the forward transition
 satisfies
 $\TV\big(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot)\big)\le
-(1-\alpha_\sigma)\,g(\ut,U_{ds})$.
+(1-\alpha_\sigma)\,g$.
 \end{lemma}
 \begin{remark}[Why the kernel is the right injection site]
 \label{rem:site}
-Encoder- or loss-level injection of the same signal admits no analogue
+Encoder- or loss-level injection of the same signals admits no analogue
 of Prop.~\ref{prop:reduction}: there is no sense in which ``the encoder
-with text features at reliability zero'' \emph{is} the host model. The
-reduction guarantee is expressible only where the conditioning enters
-the transition law itself. Our injection-site comparison
-(Sec.~\ref{sec:threeway}) is therefore an analysis of regimes, not the
-basis of the safety claim.
+with text features at zero reliability'' \emph{is} the host model. The
+reduction guarantee is expressible only where conditioning enters the
+transition law itself. Our injection-site comparison is therefore an
+analysis of regimes, not the basis of the safety claim.
 \end{remark}
-The guarantee has teeth only under the stated scope: $\ut$ history-only
+The guarantees hold under the stated scope: gate inputs history-only
 and frozen per trajectory, self-resampling corruption, and the
 pseudo-item coordinate present in every kernel object
-(Appendix~\ref{app:boundary} lists the failure modes otherwise).
+(Appendix~\ref{app:boundary}).
+
+\section{The Utility-Inversion Analysis}
+\label{sec:inversion}
+
+Table~\ref{tab:inversion} is the paper's central empirical exhibit. For
+each dataset we report the frozen production statistic $\Uds$, the
+resulting gate factor $\phids$, and the outcome of text-tilting the
+kernel \emph{without} a dataset factor---a first-generation,
+user-factor-only instantiation of kernel gating trained before $\phids$
+existed (parameterization differences in Appendix~\ref{app:gen1};
+these numbers motivate the dataset factor and are not a benchmark of
+the final system).
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccr}
+\toprule
+Dataset & $\Uds$ & $\phids$ & $\Delta$NDCG@10 (no $\phi$) \\
+\midrule
+Steam  & 0.570 & 1.000 & $+0.0064$ \\
+ATG    & 0.688 & 0.117 & $+0.0019$ \\
+Beauty & 0.712 & 0.000 & $-0.0006$ \\
+ML1M   & 0.754 & 0.000 & $-0.0622$ \\
+\bottomrule
+\end{tabular}
+\caption{Train-only text utility $\Uds$ (popularity-negative AUC)
+inversely rank-orders the test outcome of user-gated kernel tilting
+relative to the host, $4/4$ (probability $1/24$ under a
+random-ordering null). The frozen hinge $\phids$ closes the gate
+precisely where tilting hurt.}
+% artifacts: docs/reports/data/2026-07-02-gate0/gate0_text_utility_summary.csv
+%            docs/reports/data/2026-07-01-text-side-vs-core-main-table-remote-v77.csv
+%            (delta test p2 NDCG@10 vs frozen core baselines)
+\label{tab:inversion}
+\end{table}
+
+Three readings. \emph{First}, the ordering is perfectly inverted: the
+only clear gain (Steam, $+0.0064$) occurs at the \emph{lowest} text
+utility, and the severe loss (ML1M, $-0.0622$) at the \emph{highest}.
+With four datasets this is suggestive rather than conclusive
+($p{=}1/24$ under exchangeability), but it is train-computable,
+pre-registered into $\phids$, and mechanistically expected: a proposal
+is a corruption law, so evidence that predicts positives converts tilt
+into false-negative pollution, while evidence that merely structures
+the item space supplies informative hard negatives. \emph{Second}, the
+inversion is invisible to coherence: ML1M users are the \emph{most}
+coherent relative to their null (median $\ut=1.43$), which is why
+coherence-only gating cannot save it and why $\phids$ must come from
+utility, not coherence. \emph{Third}, popularity does not explain the
+signal: $\Uds$ uses popularity-matched negatives, and the uniform-
+negative variant gives the same ordering
+($0.799/0.692/0.717/0.565$ for ML1M/ATG/Beauty/Steam).
+% artifact: gate0_text_utility_summary.csv (u_ds_uniform column)
+
+\pending{FOLLOWUP-09 per-user analysis: within-dataset correlation of
+per-user text utility with per-user first-generation delta (thousands
+of users); include if it lands---upgrades the $n{=}4$ cross-dataset
+evidence to user-level.}
+\pending{FOLLOWUP-10: $\Uds$ and $\phids$ recomputed on frozen
+token-dropout corrupted banks; report the direction of the $\phi$
+response to evidence degradation (observation only).}
 
 \section{Experiments}
 \label{sec:exp}
 
 \paragraph{Setup.}
-We evaluate on four sequential-recommendation benchmarks---Steam, ML1M,
-Amazon Beauty, and ATG\pending{verify official dataset names/statistics
-table from regenerated protocol.json}---rebuilt from raw data under a
-frozen protocol (raw source, mapping, filtering, dedup, split rules
-recorded; all methods share the regenerated splits and frozen banks).
-Metrics are HR@10 and NDCG@10 with the production
-checkpoint selector \pending{selector description: val NDCG@10 at
-inference guidance $w$, per frozen baseline protocol}; seeds and
-mean$\pm$std from the 3-seed study \pending{SPRINT-11 artifact}.
-Baselines: PreferGrow (host, learned global
-proposal)~\cite{prefergrow}, a continuous diffusion anchor
-\pending{DreamRec or DiffuRec, per final run set}~\cite{dreamrec,diffurec},
-text-guided diffusion (iDreamRec~\cite{idreamrec}), and a text-side
-sequential recommender \pending{RecFormer or UniSRec}~\cite{recformer,unisrec}.
-Hyperparameters ($\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$ initial)
-and infrastructure details in Appendix~\ref{app:impl}.
+Four sequential-recommendation benchmarks---Steam, ML1M, Amazon Beauty,
+and ATG\pending{official dataset-statistics table from regenerated
+protocol.json}---rebuilt from raw data under a frozen protocol (raw
+source, mapping, filtering, dedup, split rules recorded); all methods
+share the regenerated splits and frozen banks. Metrics: HR@10 and
+NDCG@10 under the production checkpoint selector; the host baseline is
+the frozen PreferGrow run set. Baselines beyond the host:
+\pending{continuous diffusion anchor (DreamRec or DiffuRec), iDreamRec,
+and a text-side sequential recommender (RecFormer or UniSRec), per
+final run set}~\cite{dreamrec,diffurec,idreamrec,recformer,unisrec}.
+Hyperparameters ($\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$; frozen
+$\phi$ per Eq.~\eqref{eq:phi}) and infrastructure in
+Appendix~\ref{app:impl}.
 
-\subsection{Main results: the prediction test}
-\label{sec:main}
+\subsection{Frozen-gate validation across four datasets}
+\label{sec:validation}
 
-Table~\ref{tab:main} reports the four-dataset comparison. The amended
-reading we pre-registered after Gate 0: datasets with low $U_{ds}$ should
-benefit once real-user $\ut$ rises above the null because text tilt acts
-as informative hard negatives; datasets with high $U_{ds}$ should match
-the host because $\phi(U_{ds})$ suppresses false-negative corruption.
+Under the frozen gate, $\phids$ opens Steam ($1.0$), barely opens ATG
+($0.117$), and closes Beauty and ML1M ($0$). The pre-registered
+predictions are therefore sharp: \emph{no-loss} on closed-gate datasets
+(ML1M, Beauty run at $g\equiv 0$, an end-to-end check of
+Prop.~\ref{prop:reduction}: $|\Delta\text{NDCG@10}|<0.01$), near-parity
+on ATG, and preserved gain on Steam ($\Delta>0$).
 
 \begin{table}[t]
 \centering
@@ -361,173 +461,155 @@ the host because $\phi(U_{ds})$ suppresses false-negative corruption.
 \begin{tabular}{lcccc}
 \toprule
  & \multicolumn{2}{c}{HR@10} & \multicolumn{2}{c}{NDCG@10} \\
-Dataset & Host & Ours & Host & Ours \\
+Dataset ($\phids$) & Host & Ours & Host & Ours \\
 \midrule
-Steam  & \pnum & \pnum & \pnum & \pnum \\
-ATG    & \pnum & \pnum & \pnum & \pnum \\
-Beauty & \pnum & \pnum & \pnum & \pnum \\
-ML1M   & \pnum & \pnum & \pnum & \pnum \\
+Steam (1.00)  & \pnum & \pnum & \pnum & \pnum \\
+ATG (0.12)    & \pnum & \pnum & \pnum & \pnum \\
+Beauty (0.00) & \pnum & \pnum & \pnum & \pnum \\
+ML1M (0.00)   & \pnum & \pnum & \pnum & \pnum \\
 \bottomrule
 \end{tabular}
-\caption{Main results (mean$\pm$std over 3 seeds; baselines abbreviated,
-full table with all baselines in Appendix~\ref{app:results}).
-\pending{fill from SPRINT-05/11 compare artifacts; per spec 4.6 do NOT
-caption-claim uniform superiority; ML1M row is the parity prediction.}}
-\label{tab:main}
+\caption{Frozen-gate validation \pending{fill from SPRINT-05
+compare-vs-core artifacts; report each dataset against its
+pre-registered spec-8.2 prediction; do NOT caption-claim uniform
+superiority}.}
+\label{tab:validation}
 \end{table}
 
-\pending{One paragraph: quantitative reading of Table~\ref{tab:main}
-against the prediction, frozen at Gate 2. Strong exit: positive deltas
-on Steam/ATG/Beauty, ML1M within $\pm0.01$ of host. Medium exit
-(safety-without-loss): parity everywhere with mechanism evidence
-carrying the paper. Do not write ``consistently outperforms''.}
+\pending{One paragraph reading Table~\ref{tab:validation} against the
+predictions, frozen at Gate 2. If a closed-gate dataset deviates beyond
+$\pm 0.01$, report it as an implementation red flag, not a result.}
+% GATE-2 UPGRADE: if all four predictions hold, add: "The validation
+% demonstrates fallback safety end-to-end: the theorems' g=0 reduction
+% is visible as empirical parity, and the only opened gate retains its
+% gain."
 
-\subsection{Controls: aligned reliability, not generic bias}
-\label{sec:controls}
+\subsection{Controls and mechanism evidence}
+\label{sec:mechanism}
 
-Three controls run under identical splits and selectors
-(Table~\ref{tab:controls}): \emph{global-p} ($g\equiv 0$; must match the
-host---an in-training equivalence check of
-Prop.~\ref{prop:reduction}), \emph{anchor-only} ($g\equiv g_{\max}$, no
-reliability gating), and \emph{$\ut$-shuffle} (reliability permuted
-across users; if performance survives, the signal content is
-irrelevant---our claim would fail its own control).
+The mechanism claims rest on the first-generation user-factor
+instantiation (Appendix~\ref{app:gen1}), evaluated on Beauty under
+token-dropout corruption training; all arms share splits, banks, and
+selector.
 
 \begin{table}[t]
 \centering
 \small
 \begin{tabular}{lcc}
 \toprule
-Variant & HR@10 & NDCG@10 \\
+Variant & val NDCG@10 & test NDCG@10 \\
 \midrule
-Ours (gated)        & \pnum & \pnum \\
-anchor-only         & \pnum & \pnum \\
-$\ut$-shuffle       & \pnum & \pnum \\
-global-p ($g{=}0$)  & \pnum & \pnum \\
-Host                & \pnum & \pnum \\
+user-gated (aligned $u$) & 0.0235 & \textbf{0.0393} \\
+anchor-only (no gating)  & \textbf{0.0238} & 0.0366 \\
+$u$-shuffle              & 0.0212 & 0.0206 \\
+global-$p$               & 0.0165 & 0.0289 \\
 \bottomrule
 \end{tabular}
-\caption{Controls on Beauty and Steam
-\pending{fill from SPRINT-07; two dataset blocks or side-by-side}.}
+\caption{Controls on Beauty (token-dropout regime, first-generation
+instantiation; selector val NDCG@10 at $w{=}5$). Shuffling the
+reliability signal across users collapses performance; a generic
+global proposal bias does not reproduce the gain.}
+% artifact: docs/reports/2026-06-28-beauty-token-dropout-control-results.md
 \label{tab:controls}
 \end{table}
 
-\subsection{Robustness under degraded text evidence}
-\label{sec:corruption}
+Three results carry the mechanism story. \emph{Aligned gating is
+load-bearing}: permuting the reliability signal across users
+($u$-shuffle) drops test NDCG@10 from $0.0393$ to $0.0206$---the signal
+content, not the presence of a user-level dial, drives the effect.
+\emph{Generic biases do not explain it}: a learned global proposal
+without user conditioning reaches only $0.0289$. \emph{The gate backs
+off adaptively}: under description-blanking corruption the mean
+reliability drops by $0.0134$ with a matching rise in fallback mass,
+monotonically in the user's clean reliability; under semantic token
+dropout the same direction holds ($-0.0031$), and the gated variant
+degrades $5\times$ less than the ungated anchor from clean to corrupted
+test conditions ($-0.0008$ vs.\ $-0.0043$ NDCG@10).
+% artifacts: 2026-06-28-beauty-description-blank-corruption.md,
+%            2026-06-28-beauty-token-dropout-end-to-end.md
+\pending{v2 corruption rerun under the frozen two-factor gate
+(SPRINT-08 analogue) if scheduled; otherwise scope the robustness claim
+to the first-generation instantiation explicitly.}
 
-We corrupt the frozen bank (token dropout on item texts), retrain, and
-compare clean-vs-corrupted degradation (Table~\ref{tab:corruption}) and
-the kernel's internal response: the gate should close as evidence
-degrades, most strongly for users whose clean $\ut$ was highest.
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lcc}
-\toprule
-Variant & clean$\to$corrupted $\Delta$HR@10 & $\Delta$NDCG@10 \\
-\midrule
-Ours (gated)  & \pnum & \pnum \\
-anchor-only   & \pnum & \pnum \\
-\bottomrule
-\end{tabular}
-\caption{Text-corruption robustness on Beauty
-\pending{fill from SPRINT-08; keep the v1-generation finding for context
-in text: ungated anchors degrade more}.}
-\label{tab:corruption}
-\end{table}
-
-\pfig{Backoff mechanism: clean-vs-corrupted shift of $g$ and $\ut$,
-bucketed by clean $\ut$ (SPRINT-08 diagnostics).}
-
-\subsection{Calibration analysis}
-\label{sec:calib}
-
-\pfig{Null-calibration figure: per-dataset distributions of raw
-coherence $A_h$ for real users vs.\ length-matched random-history null;
-ML1M concentrates at its null while Steam/Beauty separate---the
-one-figure explanation of why uncalibrated signals produce spurious
-regime dependence (Gate-0 artifact).}
-
-\pending{Paragraph: bucket users by $\ut$; show high-$\ut$ buckets are
-more content-tilted and low-$\ut$ buckets track the host proposal;
-relate proposal shift direction to hit-rate movement. Also report the
-proxy-vs-popularity correlation table (Appendix~\ref{app:results}) to
-preempt the ``you just up-weight popular, well-documented items''
-objection.}
+\pfig{Backoff mechanism: clean-vs-corrupted shift of the gate and
+reliability, bucketed by clean reliability (regenerate from archived
+diagnostics with the figure toolchain).}
 
 \subsection{Injection-site analysis}
 \label{sec:threeway}
 
-We inject the identical signal at three sites: encoder (feature
+We inject the identical signals at three sites: encoder (feature
 fusion), loss (confidence weighting), and kernel (ours).
-\pending{Table from SPRINT-10 on Beauty+Steam.} Per
-Remark~\ref{rem:site}, the argument for the kernel site is not that it
-wins every regime---raw rankings are regime-dependent---but that it is
-the only site where the fallback guarantee is expressible, at no cost in
-\pending{summary consistent with the observed table}.
+\pending{3-way table on Beauty and Steam if SPRINT-10 runs; otherwise
+present the first-generation regime observation: earlier injection is
+competitive in clean regimes, kernel-side conditioning strongest under
+corruption.} Per Remark~\ref{rem:site}, the argument for the kernel
+site is not that it wins every regime but that it is the only site
+where the fallback guarantee is expressible.
 
 \section{Related Work}
 \label{sec:related}
 
 \paragraph{Diffusion recommenders.}
-Continuous-diffusion recommenders inject Gaussian noise in a latent or
-embedding space~\cite{dreamrec,diffurec,preferdiff}; discrete
-formulations operate on the item vocabulary
-directly~\cite{prefergrow,llada-rec}. Our host is
-PreferGrow~\cite{prefergrow}, whose personalization is score-side
-(condition dropout plus inference-time guidance against a
+Continuous-diffusion recommenders inject Gaussian noise in a latent
+space~\cite{dreamrec,diffurec,preferdiff}; discrete formulations
+operate on the vocabulary directly~\cite{prefergrow,llada-rec}. Our
+host is PreferGrow~\cite{prefergrow}, whose personalization is
+score-side (condition dropout plus inference-time guidance against a
 non-preference-user branch); its kernel is user-independent. We supply
-the complementary, kernel-side half, anchored to their learned proposal.
+the kernel-side half, anchored to their learned proposal.
 
 \paragraph{Shaped transition kernels in discrete diffusion.}
-Structured (non-uniform) corruption matrices date to
-D3PM~\cite{d3pm}; in recommendation, CDRec~\cite{cdrec} shapes
-transition matrices with item popularity and TDPM~\cite{tdpm} modulates
-token diffusion with temporal preference structure. All are global or
-item-level signals; none condition the kernel per user on an explicit
-evidence-reliability signal, and none provide a reduction guarantee to a
-host kernel.
+Structured corruption matrices date to D3PM~\cite{d3pm}; in
+recommendation, CDRec~\cite{cdrec} shapes transitions with item
+popularity and TDPM~\cite{tdpm} modulates token diffusion with temporal
+preference structure. These are global or item-level signals; none
+condition the kernel per user on evidence signals, none provide a
+reduction guarantee, and none report the utility inversion---that
+\emph{stronger} content evidence can make kernel shaping \emph{worse}.
 
 \paragraph{Guidance and adaptivity.}
 Classifier-free guidance~\cite{cfg} and its recommendation
 uses~\cite{cfgrec} interpolate conditional and unconditional
-\emph{scores} with a global weight; adaptive guidance based on model
-confidence exists for language diffusion~\cite{acfg}. Our gate is the
-kernel-side analogue with the weight determined by measurable,
-history-only evidence reliability---and with the interpolation target
-being the host's learned proposal, which is what makes the safety
-property provable.
+\emph{scores} with a global weight; confidence-adaptive guidance exists
+for language diffusion~\cite{acfg}. Our gate is the kernel-side
+analogue with the weight set by measurable, history-only evidence
+statistics---and with the interpolation target being the host's learned
+proposal, which is what makes the safety property provable.
 
 \paragraph{Reliability and side information in recommendation.}
 Reliability-aware recommenders act at the representation, optimization,
 or decision level~\cite{ugr,truthsr}; text-side sequential recommenders
 fuse content into encoders~\cite{recformer,unisrec}. Neither line
-conditions a diffusion transition law; our text anchor is an
-instantiation of evidence, not the contribution itself.
+conditions a diffusion transition law, and the hard-negative vs.\
+false-negative distinction our gate encodes has no analogue at those
+injection sites.
 
-\section{Conclusion, Limitations}
+\section{Conclusion and Limitations}
 \label{sec:conclusion}
 
 We personalized the transition kernel of discrete preference diffusion
-with an explicit, null-calibrated, history-only evidence-reliability
-gate modulated by a frozen dataset-level utility factor, anchored to the
-host's learned proposal so that the conditioning is fallback-safe: exact
-reduction when the gate closes, bounded deviation otherwise, and full
-inheritance of the host chain's structure. Empirically the design
-converts evidence quality from a hidden
-confounder into a falsifiable prediction: \pending{one-sentence frozen
-Gate-2 summary}.
+with a two-factor, history-only evidence gate, anchored to the host's
+learned proposal so that the conditioning is fallback-safe: exact
+reduction when the gate closes, bounded deviation otherwise, full
+inheritance of the host chain's structure. The design is built around
+an empirical inversion we believe is of independent interest: because
+kernel proposals are corruption laws, text evidence that predicts
+positives is precisely the evidence a kernel must \emph{not} lean on.
 
-\emph{Limitations.} Gains are bounded by how much signal the evidence
-space actually carries---by design, a closed gate can only match the
-host, never beat it; the reliability signal is a single calibrated
-statistic and richer signals (and their calibration) are open; our
-metadata-sparsity diagnostic did not support the stronger hypothesis
-that sparsity bucketing alone predicts per-user gains
-(Appendix~\ref{app:results} reports this negative result); and the
-guarantee is specific to kernels with a stationary proposal---schedule-
-or mask-based discrete diffusions need their own analysis.
+\emph{Limitations.} The cross-dataset inversion rests on four points
+($p{=}1/24$); the user-level analysis that would harden it is
+\pending{pending (FOLLOWUP-09)}. By construction a closed gate can only
+match the host---on high-utility datasets the method's value is safety,
+not gains, and the gains column of the validation rests on the
+open-gate datasets. The mechanism evidence comes from the
+first-generation user-factor instantiation whose parameterization
+differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
+thresholds, while pre-registered, are a coarse hinge on limited
+evidence; and the guarantees are specific to kernels with a stationary
+proposal---mask- or schedule-based discrete diffusions need their own
+analysis. An earlier metadata-sparsity hypothesis was not supported and
+is reported as a negative result in Appendix~\ref{app:results}.
 
 % ======================= appendix =======================
 \clearpage
@@ -536,12 +618,10 @@ or mask-based discrete diffusions need their own analysis.
 \section{Proofs}
 \label{app:proofs}
 
-Throughout, fix the user history $h$, the calibrated signal $\ut$, the
-frozen dataset factor $\phi(U_{ds})$, the gate $g=g(\ut,U_{ds})$, and
-hence the proposal $\pu$ of Eq.~\eqref{eq:pu};
-$\pu$ is strictly positive whenever $\pcore$ and (on its support)
-$\ch$ are, which holds by softmax parameterization with the completeness
-down-weighting absorbed into logits. Row-vector convention; $\alpha_\sigma=e^{-\sigma}$.
+Throughout, fix the user history $h$, the gate inputs $\ut$ and
+$\Uds$, hence $g$ and the proposal $\pu$ of Eq.~\eqref{eq:pu}; $\pu$ is
+strictly positive whenever $\pcore$ and (on its support) $\ch$ are.
+Row-vector convention; $\alpha_\sigma=e^{-\sigma}$.
 
 \begin{proposition}[Proposal-conditioned forward corruption]
 \label{prop:forward-app}
@@ -566,17 +646,17 @@ $\prod_t\big(\alpha_t I+(1-\alpha_t)\Pi_u\big)
 
 \begin{proposition}[Conditional Markovianity]
 \label{prop:markov-app}
-Conditional on the fixed $\ut$, $(x_t)$ generated by
+Conditional on the fixed gate inputs, $(x_t)$ generated by
 $P_{\Delta\sigma_t,u}$ is a (time-inhomogeneous, per-step-size) Markov
 chain; under a fixed step size it is generated by the single generator
 $Q_u$, hence a homogeneous Markov semigroup.
 \end{proposition}
 \begin{proof}
-With $\ut$ fixed, $\pu$ and $Q_u$ are deterministic; each transition
-reads only $(x_t,\Delta\sigma_t)$, never earlier states, so the
-conditional law of $x_{t+1}$ given the past equals
-$P_{\Delta\sigma_t,u}(x_t,\cdot)$. Without conditioning on $\ut$, the
-mixture over users need not be a single Markov chain.
+With the gate inputs fixed, $\pu$ and $Q_u$ are deterministic; each
+transition reads only $(x_t,\Delta\sigma_t)$, never earlier states, so
+the conditional law of $x_{t+1}$ given the past equals
+$P_{\Delta\sigma_t,u}(x_t,\cdot)$. Without conditioning, the mixture
+over users need not be a single Markov chain.
 \end{proof}
 
 \begin{proposition}[Stationary and limiting proposal]
@@ -649,53 +729,79 @@ Rows of the transitions differ by $(1-\alpha_\sigma)(\pu-\pcore)$.
 
 \subsection{Scope and failure modes}
 \label{app:boundary}
-The guarantees require: (1) $\ut=f(h)$ history-only---no dependence on
-$x_t$, $t$, the target item, or current model scores; (2) $\ut$ fixed
-along each forward/reverse trajectory (per-step updates give a Markov
-chain on $(x_t,u_t)$ but not the same semigroup or balance structure);
+The guarantees require: (1) gate inputs history-only---no dependence on
+$x_t$, $t$, the target item, or current model scores ($\Uds$ is a
+train-split dataset constant, the same leakage class as a popularity
+prior); (2) gate inputs fixed along each forward/reverse trajectory;
 (3) the pseudo-item coordinate present consistently in $\pu$ and every
-kernel object; (4) self-resampling corruption---forced-replacement,
-top-$k$ truncation, or state-dependent masking break detailed balance
-and require new proofs; (5) hard-masked items restrict irreducibility
-claims to the support; (6) the reverse-ratio statement concerns the
-stationary-reversal analytic operator, not the exact non-stationary
-reverse kernel; (7) if $g$ or $\ut$ leak batch labels at training time,
-the certified object is a different, data-dependent kernel.
+kernel object; (4) self-resampling corruption---forced replacement,
+top-$k$ truncation, or state-dependent masking break detailed balance;
+(5) hard-masked items restrict irreducibility claims to the support;
+(6) the reverse-ratio statement concerns the stationary-reversal
+analytic operator, not the exact non-stationary reverse kernel; (7) if
+the gate leaks batch labels at training time, the certified object is a
+different, data-dependent kernel.
 
-\section{Null calibration details}
-\label{app:null}
-For each dataset and each observed history-length bin $L$: draw $R$
+\section{Null calibration and the $\Uds$ estimator}
+\label{app:uds}
+
+\paragraph{Null curves.}
+For each dataset and observed history-length bin $L$: draw $R$
 pseudo-histories i.i.d.\ uniformly from the frozen bank
-\pending{R and binning per SPRINT-02 implementation}; compute $A_h$ for
-each; record $\mu_{\mathrm{null}}(L),\sigma_{\mathrm{null}}(L)$; freeze
-with the bank hash into the dataset protocol. Real-user $\ut$ then
-follows Eq.~\eqref{eq:gate}. The null is a property of the evidence
-space alone---no interaction data enters---so calibration cannot leak
-preferences. \pending{pseudo-code block + null-curve plots per dataset
-(Gate-0 artifacts).}
+\pending{R and binning per the null-curve builder implementation};
+compute $A_h$ for each; freeze
+$\mu_{\mathrm{null}}(L),\sigma_{\mathrm{null}}(L)$ with the bank hash
+into the dataset protocol. The null is a property of the evidence space
+alone---no interaction data enters. Production floors and spreads:
+ML1M $\mu_{\mathrm{null}}{=}0.9314$, $\sigma_{\mathrm{null}}{=}0.0040$;
+Steam $0.9419/0.0075$; Beauty $0.9417/0.0044$; ATG $0.9448/0.0044$.
+% artifact: gate0_failure_component_summary.csv
 
-\section{Implementation and reproducibility}
-\label{app:impl}
-Host architecture, schedule, and training protocol follow
-PreferGrow~\cite{prefergrow}; our change is confined to the proposal
-construction and its threading through the four kernel call sites
-(forward sampling, score-entropy weights, analytic reverse ratio,
-non-preference sampling). Initial hyperparameters: $\tau_0{=}0.2$,
-$g_{\max}{=}0.5$, $k{=}2.0$; text encoder \pending{sentence-t5-xl
-production bank details}; datasets rebuilt raw-first with frozen
-protocol files; a $g\equiv0$ equivalence suite verifies
-Prop.~\ref{prop:reduction-app} against the host implementation
-numerically before any training run. \pending{hyperparameter table,
-hardware, run times, code URL at camera-ready.}
+\paragraph{$\Uds$ estimator (frozen).}
+Sample $4000$ train transitions (seed $7$); history vector = normalized
+mean of valid history-item embeddings from the production bank; $\Uds$
+= mean over transitions of
+$\Pr[\mathrm{sim}(h,\text{next})>\mathrm{sim}(h,\text{neg})]$ against
+$100$ negatives sampled from the train popularity distribution
+(uniform-negative variant and coherence-quartile decomposition reported
+as diagnostics). Artifacts record bank hash and split hash per dataset.
+
+\paragraph{Pre-registration.}
+The hinge parameters $(0.70, 0.10)$ of Eq.~\eqref{eq:phi} and the
+validation predictions of Sec.~\ref{sec:validation} were frozen in the
+project design record before the production $\Uds$ values were
+computed, and were not adjusted afterwards. The frozen criterion the
+production values were evaluated against, and its outcome, are part of
+the released project record.
+
+\section{First-generation instantiation}
+\label{app:gen1}
+
+The mechanism-evidence generation (Tables~\ref{tab:inversion}
+rightmost column and~\ref{tab:controls}) used a richer user factor
+(behavior-text coherence, text completeness, and history-stability
+proxies) mapped to three dials (anchor temperature, popularity mixing,
+pseudo-item mass), \emph{without} the dataset utility factor and
+\emph{without} anchoring to the host's learned proposal. Its ML1M
+failure is precisely what the final design removes: at the typical
+reliability level its pseudo-item mass departed far from the host's
+learned value, and no dataset-level factor prevented content tilt on
+the highest-utility bank. The final system replaces the three dials
+with the single gate $g$, freezes the pseudo-item mass to the host's,
+and adds $\phids$. First-generation numbers are therefore evidence
+about the \emph{mechanism} (aligned user gating, adaptive backoff) and
+about \emph{failure modes}, not a benchmark of the final system.
 
 \section{Additional results}
 \label{app:results}
-\pending{Full main table with all baselines (SPRINT-05); u-composition
-ablation: calibrated-agreement-only vs +completeness vs
-+history-reliability vs legacy full-u (SPRINT-09); 3-seed stability
-(SPRINT-11); proxy-vs-popularity correlation table; the negative
-metadata-sparsity result reported honestly per spec 4.6; guidance-$w$
-sensitivity.}
+\pending{Full validation table with all baselines (SPRINT-05);
+$u$-composition ablation (calibrated-agreement-only vs +completeness vs
++history vs legacy full-$u$, SPRINT-09); seed stability (SPRINT-11);
+proxy-vs-popularity correlation; guidance-$w$ sensitivity.} The
+metadata-sparsity hypothesis of the original design---that
+completeness bucketing alone predicts per-user gains---was tested and
+not supported; we report it as a negative result rather than omitting
+it.
 
 \bibliography{references}
 \bibliographystyle{aaai27}

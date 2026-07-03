@@ -9,8 +9,10 @@
 2. `pdflatex main && bibtex main && pdflatex main && pdflatex main`
 3. 缺 kit 时把文末 `\bibliographystyle{aaai27}` 换成注释里的 `plain`。
 
-## 写作纪律(冻结自 sprint spec §4.6)
+## 写作纪律(冻结自 sprint spec §8.1,2026-07-04 重写版)
 
-- Gate 2 出口决定摘要/贡献的措辞档位;medium/weak 出口的降级写法已写在 `main.tex` 相应位置的注释里。
-- 禁写:consistent gains across all datasets / uniform superiority / metadata sparsity 作正证据。
-- ML1M 的角色是 parity 预测的实证,不是"差一点追平"。
+- 当前正文是 **Family D 基线档位**:安全性定理 + 效用反转分析(表 1,真实数字已填)+ 机制证据链 + 诚实边界。
+- SPRINT-05 验证跑四条预测全中时,才允许按 `main.tex` 中标注 `GATE-2 UPGRADE` 的注释升级措辞(有记录修订,只升不降)。
+- 已填数字均在 tex 注释中引用了 `docs/reports/data/` 带日期产物;剩余 34 个 `\pending` 只可用同类产物回填。
+- 禁写:consistent gains across all datasets / uniform superiority / metadata sparsity 作正证据(负结果已如实写进附录 E)。
+- 第一代(v1)数字只作为机制证据与失败模式呈现,归属已在附录 D 说明,不得当成最终系统的 benchmark。
