@@ -177,7 +177,13 @@ Our contributions:
   discrete preference-diffusion kernel on all four benchmarks
   ($4/4$; probability $1/24$ under a random-ordering null), with a
   mechanism-level account: corruption proposals reward hard negatives
-  and punish predicted positives (Sec.~\ref{sec:inversion}).
+  and punish predicted positives (Sec.~\ref{sec:inversion}). We
+  further propose $\Uds$ as a train-only \emph{preflight} statistic
+  for any scheme that mines negatives from content similarity; our
+  kernel results are its first evidence.
+  % GATE-2 UPGRADE: if FOLLOWUP-09 confirms the inversion at user
+  % level, promote the preflight proposal to its own contribution
+  % bullet with the user-level correlation as second evidence.
   \item \textbf{Kernel-side personalization with fallback safety.} The
   first discrete preference-diffusion recommender whose transition
   kernel is conditioned per user by an explicit, history-only evidence
@@ -486,7 +492,11 @@ Appendix~\ref{app:impl}.
 \label{sec:validation}
 
 Under the frozen gate, $\phids$ opens Steam ($1.0$), barely opens ATG
-($0.117$), and closes Beauty and ML1M ($0$). The pre-registered
+($0.117$), and closes Beauty and ML1M ($0$). The validation is a bet
+with bounded downside: by Lemma~\ref{lem:tv} the kernel can deviate
+from the host by at most $g$ per row, and on the frozen artifacts the
+gate admits all of the observed first-generation gain and none of the
+observed harm (Sec.~\ref{sec:inversion}). The pre-registered
 predictions are therefore sharp: \emph{no-loss} on closed-gate datasets
 (ML1M, Beauty run at $g\equiv 0$, an end-to-end check of
 Prop.~\ref{prop:reduction}: $|\Delta\text{NDCG@10}|<0.01$), near-parity
@@ -645,6 +655,10 @@ inheritance of the host chain's structure. The design is built around
 an empirical inversion we believe is of independent interest: because
 kernel proposals are corruption laws, text evidence that predicts
 positives is precisely the evidence a kernel must \emph{not} lean on.
+Deployed this way, evidence conditioning is a bet with bounded
+downside---deviation from the host is capped by the gate, while the
+upside is whatever the opened gates deliver---and $\Uds$ prices that
+bet before a single training run.
 
 \emph{Limitations.} The cross-dataset inversion rests on four points
 ($p{=}1/24$); the user-level analysis that would harden it is
