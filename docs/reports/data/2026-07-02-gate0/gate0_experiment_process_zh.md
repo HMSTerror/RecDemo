@@ -764,3 +764,90 @@ tmux 会话很快退出，不是失败，而是脚本已经跑完并正常结束
 2. bank hash / split hash 已归档；
 3. `FOLLOWUP-06` 可以开始把 `phi(U_ds)` 接进真实 gate；
 4. `FOLLOWUP-07` 已经具备正式裁决 Gate0-v2 的输入证据。
+
+## 15. FOLLOWUP-07: 按冻结 Gate 0-v2 判据做正式裁决
+
+### 15.1 本轮目的
+
+这一轮不再重跑任何采样或训练，而是严格读取 `FOLLOWUP-05` 已冻结的
+production `U_ds` 产物，按修订文档 §7.4 的三条条件逐条裁决：
+
+1. `ML1M` 必须是四数据集里 `U_ds` 最大者；
+2. `phi(U_ML1M) <= 0.2`；
+3. `Steam / Beauty / ATG` 中至少两个满足 `phi(U_ds) >= 0.5`。
+
+如果三条全过，才允许重开 `SPRINT-05`；如果任一条失败，就进入
+Family D claim downgrade 路线，并且不再做第三轮门控修复。
+
+### 15.2 先确认读取的是服务器真实产物
+
+本轮使用的是 `FOLLOWUP-05` 在 `l20` 上产出的冻结 JSON，不重新估计
+`U_ds`，只读取并裁决。先再次确认服务器侧文件仍然存在：
+
+```bash
+ssh -o ConnectTimeout=10 l20 \
+  "hostname; date '+%F %T %z'; ls -lah /data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json"
+```
+
+返回：
+
+- `ubuntu`
+- `2026-07-03 14:38:00 +0800`
+- `/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json`
+  时间戳 `Jul 3 13:58`
+
+这说明 FOLLOWUP-07 读取的确实是服务器上已有的 production artifact。
+
+### 15.3 本地执行 frozen verdict builder
+
+随后在本地直接运行判决脚本：
+
+```powershell
+& 'E:/anaco/python.exe' scripts/build_gate0_v2_frozen_verdict.py `
+  --output-dir E:/PreferGrow/docs/reports/data/2026-07-02-gate0
+```
+
+该脚本只读取：
+
+- `gate0_text_utility_report.json`
+
+并写出：
+
+- `gate0_v2_frozen_verdict.json`
+- `gate0_v2_frozen_verdict.md`
+- `gate0_v2_family_d_downgrade_memo_zh.md`
+
+### 15.4 冻结三条件的正式结果
+
+本轮得到的三条条件结果是：
+
+1. **Condition 1 通过**
+   `ML1M U_ds = 0.753539`，高于次高的 `Beauty = 0.712427`，margin 为
+   `+0.041111`。
+
+2. **Condition 2 通过**
+   `phi(U_ML1M) = 0.000000 <= 0.2`，margin 为 `+0.200000`。
+
+3. **Condition 3 失败**
+   `Steam / Beauty / ATG` 中，只有 `Steam` 满足 `phi(U_ds) >= 0.5`；
+   实际数量是 `1`，要求是 `2`，margin 为 `-1.000000`。
+
+所以 **Gate 0-v2 frozen criterion 最终判定为 fail**。
+
+### 15.5 对主线的实际影响
+
+这一步的意义非常明确：
+
+1. `FOLLOWUP-06` 的 utility-gated 设计已经成功满足“关掉 ML1M 的门”这一半；
+2. 但它没有同时把足够多的 `v1` 获益数据集推进到“明显开门”区间；
+3. 因此它**不能**支撑重开 `SPRINT-05` 的四数据集 v2 主表训练；
+4. 根据修订文档的冻结规则，主线现在进入 **Family D claim downgrade**，
+   并且**不再进行第三轮门控修复**。
+
+### 15.6 本轮交付物
+
+本轮新增的判决产物是：
+
+- `docs/reports/data/2026-07-02-gate0/gate0_v2_frozen_verdict.json`
+- `docs/reports/data/2026-07-02-gate0/gate0_v2_frozen_verdict.md`
+- `docs/reports/data/2026-07-02-gate0/gate0_v2_family_d_downgrade_memo_zh.md`
