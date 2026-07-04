@@ -470,6 +470,16 @@ evidence to user-level.}
 token-dropout corrupted banks; report the direction of the $\phi$
 response to evidence degradation (observation only).}
 
+\paragraph{Pure out-of-sample check.}
+ASO was frozen \emph{after} the four-point table above and evaluated
+under the pre-registered rule of Sec.~8.4: with
+$\Uds{=}0.538$ and $\phids{=}1.0$, the frozen prediction was
+$\Delta\mathrm{NDCG}@10 > 0$ against the ASO host. The observed result
+was a miss: $\Delta\mathrm{NDCG}@10 = -0.0108$ on the test p2 selector.
+We therefore record ASO as a pure out-of-sample prediction miss, not as
+support for upgrading the gate claim.
+% artifact: docs/reports/data/2026-07-02-gate0/aso_validation_report.md
+
 \section{Experiments}
 \label{sec:exp}
 

@@ -1,0 +1,135 @@
+{
+  "actual_outcome": {
+    "core_best_metric": 0.04770390689457725,
+    "core_best_step": 3000,
+    "delta_test_p10_ndcg10": -0.007601769748806005,
+    "delta_test_p2_ndcg10": -0.01082634404768723,
+    "delta_test_p5_ndcg10": -0.008484847763122583,
+    "delta_val_p2_ndcg10": -0.012487705528653928,
+    "run_best_metric": 0.035527615199115195,
+    "run_best_step": 3000
+  },
+  "core_summary": {
+    "best_metric": 0.04770390689457725,
+    "best_step": 3000,
+    "local_path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-02-gate0\\aso_validation_inputs\\aso_core_best_summary_hybrid.json",
+    "sha256": "8ffb94d8193f7776e6d649259b9a077f8142d315293925399f072f2453b0687f",
+    "source_path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ASO/best_summary_hybrid.json",
+    "test": {
+      "p10_ndcg10": 0.0344210100847485,
+      "p2_ndcg10": 0.03732515090345508,
+      "p5_ndcg10": 0.03519389614543354
+    },
+    "validation": {
+      "p10_ndcg10": 0.044591651870121256,
+      "p2_ndcg10": 0.04770390689457725,
+      "p5_ndcg10": 0.04592335364178399
+    }
+  },
+  "dataset": "ASO",
+  "decision_summary": "The frozen ASO prediction missed: phi(U_ds) opened the gate and predicted a positive delta, but the observed test p2 delta versus the frozen host is negative.",
+  "evaluated_at": "2026-07-04T14:42:36+08:00",
+  "evaluation_rule": "delta_test_p2_ndcg10 > 0",
+  "launch_checks": [
+    {
+      "detail": "manifest=ASO step0=ASO",
+      "id": "dataset_matches_step0",
+      "label": "Manifest dataset matches the frozen ASO step-0 report",
+      "passed": true
+    },
+    {
+      "detail": "phi(U_ds)=1.000000; run_decision=launch_validation_run",
+      "id": "phi_positive_opened_run",
+      "label": "The frozen rule opened the run because phi(U_ds) > 0",
+      "passed": true
+    },
+    {
+      "detail": "manifest=/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/aso_step0_utility/gate0_text_utility_report.json step0=/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/aso_step0_utility/gate0_text_utility_report.json",
+      "id": "utility_artifact_matches_step0",
+      "label": "Manifest utility artifact path matches the frozen step-0 source",
+      "passed": true
+    },
+    {
+      "detail": "u_ds=0.537923/0.537923; phi=1.000000/1.000000",
+      "id": "frozen_u_ds_matches_step0",
+      "label": "Manifest U_ds / phi / hashes match the frozen step-0 decision",
+      "passed": true
+    },
+    {
+      "detail": "write_best_checkpoint=True; write_snapshot_checkpoint=False",
+      "id": "storage_policy_best_only",
+      "label": "Frozen storage policy is best-checkpoint only",
+      "passed": true
+    },
+    {
+      "detail": "early_stop_metric=ndcg10; early_stop_strength=p5",
+      "id": "early_stop_selector_matches_spec",
+      "label": "Early-stop selector is ndcg10 at p5",
+      "passed": true
+    }
+  ],
+  "launch_checks_pass": true,
+  "no_post_hoc_reframing": true,
+  "pre_registered_prediction": "delta_test_p2_ndcg10 > 0",
+  "prediction_hit": false,
+  "prediction_outcome": "miss",
+  "run_manifest": {
+    "bank_hash": "c94f6f8ee81a05727e9a77a70bd2ca83658a27d5e0b2cb9b09994a484fb819e5",
+    "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ASO",
+    "frozen_config": {
+      "agreement_k": 2.0,
+      "agreement_weight": 0.45,
+      "center_embeddings": false,
+      "completeness_weight": 0.15,
+      "early_stop_metric": "ndcg10",
+      "early_stop_strength": "p5",
+      "ess_weight": 0.2,
+      "g_max": 0.5,
+      "history_reliability_weight": 0.4,
+      "injection_mode": "kernel",
+      "kernel_version": "v2",
+      "max_temperature_scale": 2.0,
+      "min_pseudo_mass": 0.05,
+      "popularity_mix_power": 1.0,
+      "popularity_mix_scale": 1.0,
+      "pseudo_mass_power": 1.0,
+      "pseudo_mass_scale": 1.0,
+      "recency_weight": 0.3,
+      "stability_weight": 0.5,
+      "temperature": 0.2,
+      "write_best_checkpoint": true,
+      "write_snapshot_checkpoint": false
+    },
+    "local_path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-02-gate0\\aso_validation_inputs\\aso_validation_frozen_run_manifest.json",
+    "null_curve_hash": "e35749ee1534a9e1af8da9a3111e336e1cef3368aecc97aac4bdde108f524ad1",
+    "phi_u_ds": 1.0,
+    "random_seed": 100,
+    "run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/aso_proposal_adaptive_mainpath",
+    "sha256": "d576683b1a00710d959954433f3bfd84de8bae9ab84aee2494799f507c0e4b4c",
+    "source_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/aso_proposal_adaptive_mainpath/checkpoints-meta/ASO/frozen_run_manifest.json",
+    "split_hash": "32f1025ef14c166dcd9dee00509fecd3162b0d0eaa1efaf4b60e7b40c8927a2b",
+    "u_ds_artifact_hash": "dbef1f2feae27807d87cdb0a6f6e98b2b55be9ff58ef74aeebd4983f1c12869d",
+    "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/aso_step0_utility/gate0_text_utility_report.json",
+    "u_ds_popularity": 0.5379225000000001
+  },
+  "run_summary": {
+    "best_metric": 0.035527615199115195,
+    "best_step": 3000,
+    "local_path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-02-gate0\\aso_validation_inputs\\aso_validation_best_summary_proposal_adaptive.json",
+    "sha256": "cb66aba13fc86ccbb92c075796bc3dd66f34ba868773777a8bfbdb08b451c89e",
+    "source_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/aso_proposal_adaptive_mainpath/checkpoints-meta/ASO/best_summary_proposal_adaptive.json",
+    "test": {
+      "p10_ndcg10": 0.026819240335942497,
+      "p2_ndcg10": 0.026498806855767852,
+      "p5_ndcg10": 0.02670904838231096
+    },
+    "validation": {
+      "p10_ndcg10": 0.034126200040312325,
+      "p2_ndcg10": 0.03521620136592332,
+      "p5_ndcg10": 0.035527615199115195
+    }
+  },
+  "scientific_role": "pure_out_of_sample_prediction_point",
+  "step0_prediction_tier": "phi_ge_0p5_positive",
+  "step0_report_path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-02-gate0\\aso_step0_report.json"
+}
