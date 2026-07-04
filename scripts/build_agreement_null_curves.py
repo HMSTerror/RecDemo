@@ -32,6 +32,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset-dir", required=True, help="Dataset directory containing *_data.df and text bank artifacts")
     parser.add_argument("--embeddings-path", default=None, help="Optional override for sentence_t5_xl_item_emb.pt")
     parser.add_argument("--text-bank", default=None, help="Optional override for text_bank.csv")
+    parser.add_argument(
+        "--text-utility-report-path",
+        default=None,
+        help="Optional override for the dataset-level frozen U_ds artifact used by text-side gating.",
+    )
     parser.add_argument("--output", default=None, help="Output JSON path")
     parser.add_argument("--samples-per-length", type=int, default=256)
     parser.add_argument("--seed", type=int, default=20260702)
@@ -89,6 +94,7 @@ def build_null_curve_artifact(
     dataset_dir: Path,
     embeddings_path: Path | None = None,
     text_bank_path: Path | None = None,
+    text_utility_report_path: Path | None = None,
     output_path: Path | None = None,
     samples_per_length: int = 256,
     seed: int = 20260702,
@@ -113,6 +119,7 @@ def build_null_curve_artifact(
         embeddings_path=embeddings_path,
         text_bank_path=text_bank_path,
         center_embeddings=center_embeddings,
+        text_utility_report_path=Path(text_utility_report_path).resolve() if text_utility_report_path else None,
     )
     builder.eval()
 
@@ -159,6 +166,7 @@ def main() -> None:
         dataset_dir=Path(args.dataset_dir),
         embeddings_path=Path(args.embeddings_path) if args.embeddings_path else None,
         text_bank_path=Path(args.text_bank) if args.text_bank else None,
+        text_utility_report_path=Path(args.text_utility_report_path) if args.text_utility_report_path else None,
         output_path=Path(args.output) if args.output else None,
         samples_per_length=args.samples_per_length,
         seed=args.seed,
