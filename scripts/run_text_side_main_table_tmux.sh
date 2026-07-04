@@ -52,6 +52,7 @@ TEXT_POPULARITY_MIX_POWER="${TEXT_POPULARITY_MIX_POWER:-1.0}"
 TEXT_PSEUDO_MASS_SCALE="${TEXT_PSEUDO_MASS_SCALE:-1.0}"
 TEXT_PSEUDO_MASS_POWER="${TEXT_PSEUDO_MASS_POWER:-1.0}"
 TEXT_CENTER_EMBEDDINGS="${TEXT_CENTER_EMBEDDINGS:-False}"
+TEXT_ABLATION_MODE="${TEXT_ABLATION_MODE:-none}"
 TEXT_INJECTION_MODE="${TEXT_INJECTION_MODE:-kernel}"
 
 
@@ -262,6 +263,7 @@ manifest = {
         "pseudo_mass_scale": float(os.environ["TEXT_PSEUDO_MASS_SCALE"]),
         "pseudo_mass_power": float(os.environ["TEXT_PSEUDO_MASS_POWER"]),
         "center_embeddings": os.environ["TEXT_CENTER_EMBEDDINGS"] == "True",
+        "ablation_mode": os.environ["TEXT_ABLATION_MODE"],
         "injection_mode": os.environ["TEXT_INJECTION_MODE"],
         "write_snapshot_checkpoint": os.environ["WRITE_SNAPSHOT_CHECKPOINT"] == "True",
         "write_best_checkpoint": os.environ["WRITE_BEST_CHECKPOINT"] == "True",
@@ -372,7 +374,7 @@ run_dataset() {
       text_side.min_pseudo_mass="$TEXT_MIN_PSEUDO_MASS" \
       text_side.pseudo_mass_scale="$TEXT_PSEUDO_MASS_SCALE" \
       text_side.pseudo_mass_power="$TEXT_PSEUDO_MASS_POWER" \
-      text_side.ablation_mode=none \
+      text_side.ablation_mode="$TEXT_ABLATION_MODE" \
       text_side.injection_mode="$TEXT_INJECTION_MODE"
   ) 2>&1 | tee "$log_file"
 
@@ -466,6 +468,7 @@ export TEXT_POPULARITY_MIX_POWER="$TEXT_POPULARITY_MIX_POWER"
 export TEXT_PSEUDO_MASS_SCALE="$TEXT_PSEUDO_MASS_SCALE"
 export TEXT_PSEUDO_MASS_POWER="$TEXT_PSEUDO_MASS_POWER"
 export TEXT_CENTER_EMBEDDINGS="$TEXT_CENTER_EMBEDDINGS"
+export TEXT_ABLATION_MODE="$TEXT_ABLATION_MODE"
 export TEXT_INJECTION_MODE="$TEXT_INJECTION_MODE"
 bash "$REPO_ROOT/scripts/run_text_side_main_table_tmux.sh" "$REPO_ROOT"
 EOF
