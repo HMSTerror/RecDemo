@@ -181,9 +181,9 @@ Our contributions:
   further propose $\Uds$ as a train-only \emph{preflight} statistic
   for any scheme that mines negatives from content similarity; our
   kernel results are its first evidence.
-  % GATE-2 UPGRADE: if FOLLOWUP-09 confirms the inversion at user
-  % level, promote the preflight proposal to its own contribution
-  % bullet with the user-level correlation as second evidence.
+  % FOLLOWUP-09 did not confirm the inversion at user level, so the
+  % preflight proposal remains supported at the cross-dataset level
+  % only in this draft.
   \item \textbf{Kernel-side personalization with fallback safety.} The
   first discrete preference-diffusion recommender whose transition
   kernel is conditioned per user by an explicit, history-only evidence
@@ -462,10 +462,20 @@ test is individually weak, exact $p=1/6$).
 % artifact: docs/reports/data/2026-07-04-phi-sensitivity-grid.csv
 %           docs/reports/data/2026-07-04-phi-sensitivity-summary.md
 
-\pending{FOLLOWUP-09 per-user analysis: within-dataset correlation of
-per-user text utility with per-user first-generation delta (thousands
-of users); include if it lands---upgrades the $n{=}4$ cross-dataset
-evidence to user-level.}
+\paragraph{User-level readout.}
+We also ran the within-dataset per-user follow-up requested in
+Spec.~8.3 on sampled train-user transitions, regenerating the
+first-generation readout from frozen best checkpoints when cached
+per-user dumps were unavailable. The inverse utility-harm ordering did
+\emph{not} reproduce at user level: Spearman correlations between
+per-user train-only text utility and per-user
+$\Delta\mathrm{NDCG}@10$ were weak and non-negative on both datasets
+($\rho=0.028$ on ML1M with $n=4{,}832$ users; $\rho=0.046$ on Steam
+with $n=31{,}836$ users). Utility-bucket means moved in the same
+direction: higher-utility users were slightly less negative, not more
+negative. We therefore keep the inversion claim at the cross-dataset
+level and do not upgrade it to a user-level law.
+% artifact: docs/reports/data/2026-07-04-followup09/per_user_utility_harm_report.md
 \pending{FOLLOWUP-10: $\Uds$ and $\phids$ recomputed on frozen
 token-dropout corrupted banks; report the direction of the $\phi$
 response to evidence degradation (observation only).}
@@ -671,11 +681,14 @@ upside is whatever the opened gates deliver---and $\Uds$ prices that
 bet before a single training run.
 
 \emph{Limitations.} The cross-dataset inversion rests on four points
-($p{=}1/24$); the user-level analysis that would harden it is
-\pending{pending (FOLLOWUP-09)}. By construction a closed gate can only
-match the host---on high-utility datasets the method's value is safety,
-not gains, and the gains column of the validation rests on the
-open-gate datasets. The mechanism evidence comes from the
+($p{=}1/24$), and the within-dataset per-user follow-up does not
+reproduce it: on ML1M and Steam, the utility-vs-
+$\Delta\mathrm{NDCG}@10$ association is weak and slightly positive
+($\rho=0.028$ and $0.046$), so the inversion remains a dataset-level
+observation rather than a user-level mechanism law. By construction a
+closed gate can only match the host---on high-utility datasets the
+method's value is safety, not gains, and the gains column of the
+validation rests on the open-gate datasets. The mechanism evidence comes from the
 first-generation user-factor instantiation whose parameterization
 differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
 thresholds, while pre-registered and robust across $65\%$ of a
