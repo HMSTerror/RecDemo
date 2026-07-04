@@ -476,9 +476,22 @@ direction: higher-utility users were slightly less negative, not more
 negative. We therefore keep the inversion claim at the cross-dataset
 level and do not upgrade it to a user-level law.
 % artifact: docs/reports/data/2026-07-04-followup09/per_user_utility_harm_report.md
-\pending{FOLLOWUP-10: $\Uds$ and $\phids$ recomputed on frozen
-token-dropout corrupted banks; report the direction of the $\phi$
-response to evidence degradation (observation only).}
+\paragraph{Corrupted-bank gate response.}
+We also recomputed the frozen Sec.~7.3 estimator on the existing
+frozen Beauty token-dropout banks, using the same regenerated train
+split and the same 4000-transition / seed-7 / 100-popularity-negative
+protocol as the clean-bank artifact. Across the canonical corrupted
+ladder (30\% through 50\% token dropout), $\Uds$ declined monotonically
+with dropout rate within the corrupted banks, from $0.7133$ at the
+lightest corrupted point to $0.7044$ at 50\% dropout, but every value
+remained above the frozen $0.70$ shutoff; $\phids$ therefore stayed at
+$0$ throughout. Relative to the clean bank ($\Uds=0.7124$), the
+lightest corrupted bank was slightly higher ($+0.0008$), so we record
+this as observational evidence only rather than a strict monotone law.
+It does not justify any frozen-parameter update, and on the archived
+Beauty corruption banks the dataset-level gate never opens as text
+evidence degrades.
+% artifact: docs/reports/data/2026-07-04-followup10/beauty_corrupted_u_ds_phi_report.md
 
 \paragraph{Pure out-of-sample check.}
 ASO was frozen \emph{after} the four-point table above and evaluated
