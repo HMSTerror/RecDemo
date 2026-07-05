@@ -194,19 +194,43 @@ class CompareTextSideMainTableToCoreTests(unittest.TestCase):
                         "with personalzation strength 2",
                         "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
                         "0.010000   0.020000   0.030000   0.040000",
-                        "test phase:",
-                        "with personalzation strength 2",
+                        "with personalzation strength 5",
                         "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
                         "0.011000   0.021000   0.031000   0.041000",
-                        "step: 2000, evaluation_loss: 1.0",
-                        "Generating items at step: 2000",
-                        "with personalzation strength 2",
+                        "with personalzation strength 10",
                         "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
                         "0.012000   0.022000   0.032000   0.042000",
                         "test phase:",
                         "with personalzation strength 2",
                         "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
                         "0.013000   0.023000   0.033000   0.043000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.014000   0.024000   0.034000   0.044000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.015000   0.025000   0.035000   0.045000",
+                        "step: 2000, evaluation_loss: 1.0",
+                        "Generating items at step: 2000",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.016000   0.026000   0.036000   0.046000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.017000   0.027000   0.037000   0.047000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.018000   0.028000   0.038000   0.048000",
+                        "test phase:",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.019000   0.029000   0.039000   0.049000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.020000   0.030000   0.040000   0.050000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.021000   0.031000   0.041000   0.051000",
                     ]
                 )
                 + "\n",
@@ -217,8 +241,63 @@ class CompareTextSideMainTableToCoreTests(unittest.TestCase):
             self.assertIsNotNone(parsed)
             assert parsed is not None
             self.assertEqual(2000, parsed["step"])
-            self.assertEqual(0.022, parsed["validation"]["p2"]["ndcg10"])
-            self.assertEqual(0.023, parsed["test"]["p2"]["ndcg10"])
+            self.assertEqual(0.026, parsed["validation"]["p2"]["ndcg10"])
+            self.assertEqual(0.030, parsed["test"]["p5"]["ndcg10"])
+            self.assertEqual(0.031, parsed["test"]["p10"]["ndcg10"])
+
+    def test_parse_latest_live_eval_ignores_trailing_incomplete_test_block(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_path = Path(tmpdir) / "ml1m_partial.log"
+            log_path.write_text(
+                "\n".join(
+                    [
+                        "step: 1000, evaluation_loss: 1.0",
+                        "Generating items at step: 1000",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.010000   0.020000   0.030000   0.040000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.011000   0.021000   0.031000   0.041000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.012000   0.022000   0.032000   0.042000",
+                        "test phase:",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.013000   0.023000   0.033000   0.043000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.014000   0.024000   0.034000   0.044000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.015000   0.025000   0.035000   0.045000",
+                        "step: 2000, evaluation_loss: 1.0",
+                        "Generating items at step: 2000",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.016000   0.026000   0.036000   0.046000",
+                        "with personalzation strength 5",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.017000   0.027000   0.037000   0.047000",
+                        "with personalzation strength 10",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.018000   0.028000   0.038000   0.048000",
+                        "test phase:",
+                        "with personalzation strength 2",
+                        "NDCG@5     NDCG@10    NDCG@20    NDCG@50",
+                        "0.019000   0.029000   0.039000   0.049000",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            parsed = compare.parse_latest_live_eval(log_path)
+            self.assertIsNotNone(parsed)
+            assert parsed is not None
+            self.assertEqual(1000, parsed["step"])
+            self.assertEqual(0.025, parsed["test"]["p10"]["ndcg10"])
 
     def test_write_outputs_preserve_headers(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -22,6 +22,7 @@ CORE_SUMMARY_FILES = {
     "ATG": "best_summary_hybrid.json",
 }
 EVAL_STEP_PATTERN = re.compile(r"step:\s*(\d+),\s*evaluation_loss:")
+REQUIRED_LIVE_STRENGTHS = ("p2", "p5", "p10")
 
 
 def read_status_rows(path: Path) -> list[dict[str, str]]:
@@ -48,7 +49,9 @@ def parse_latest_live_eval(log_path: Path) -> dict | None:
     def finalize(block: dict | None, latest_complete: dict | None) -> dict | None:
         if block is None:
             return latest_complete
-        if "p2" in block["validation"] and "p2" in block["test"]:
+        if all(strength in block["validation"] for strength in REQUIRED_LIVE_STRENGTHS) and all(
+            strength in block["test"] for strength in REQUIRED_LIVE_STRENGTHS
+        ):
             return block
         return latest_complete
 
