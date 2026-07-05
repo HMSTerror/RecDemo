@@ -216,6 +216,10 @@ class RunTextSideMainTableTmuxTests(unittest.TestCase):
             manifest_path = run_dir / "checkpoints-meta" / "ML1M" / "frozen_run_manifest.json"
             manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual("global_p", manifest_payload["frozen_config"]["ablation_mode"])
+            self.assertEqual(
+                to_wsl_path(repo_root),
+                manifest_payload["provenance"]["repo_root"],
+            )
 
 
 if __name__ == "__main__":

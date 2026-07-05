@@ -165,6 +165,82 @@ class SummarizeTextSideMainTableRunsTests(unittest.TestCase):
             self.assertEqual("invalid_stale", rows[0]["official_status"])
             self.assertEqual("no", rows[0]["manifest_exists"])
 
+    def test_official_mode_marks_mismatched_manifest_provenance_as_invalid_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_root = Path(tmpdir)
+            summary_path = (
+                run_root
+                / "steam_proposal_adaptive_mainpath"
+                / "checkpoints-meta"
+                / "Steam"
+                / "best_summary_proposal_adaptive.json"
+            )
+            summary_path.parent.mkdir(parents=True)
+            summary_path.write_text(json.dumps({"best_step": 12000, "best_metric": 0.03}), encoding="utf-8")
+
+            manifest_path = (
+                run_root
+                / "steam_proposal_adaptive_mainpath"
+                / "checkpoints-meta"
+                / "Steam"
+                / "frozen_run_manifest.json"
+            )
+            manifest_path.write_text(
+                json.dumps({"provenance": {"repo_root": "/tmp/dirty-root"}}),
+                encoding="utf-8",
+            )
+
+            rows = summary.build_rows(
+                run_root=run_root,
+                datasets=["Steam"],
+                beauty_summary_override=None,
+                official_mode=True,
+                official_repo_root=Path("/tmp/clean-root"),
+            )
+
+            self.assertEqual("invalid_stale", rows[0]["status"])
+            self.assertEqual("invalid_stale", rows[0]["official_status"])
+            self.assertEqual("yes", rows[0]["manifest_exists"])
+
+    def test_official_mode_accepts_matching_manifest_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_root = Path(tmpdir)
+            clean_root = Path(tmpdir) / "clean_root"
+            clean_root.mkdir()
+
+            summary_path = (
+                run_root
+                / "steam_proposal_adaptive_mainpath"
+                / "checkpoints-meta"
+                / "Steam"
+                / "best_summary_proposal_adaptive.json"
+            )
+            summary_path.parent.mkdir(parents=True)
+            summary_path.write_text(json.dumps({"best_step": 12000, "best_metric": 0.03}), encoding="utf-8")
+
+            manifest_path = (
+                run_root
+                / "steam_proposal_adaptive_mainpath"
+                / "checkpoints-meta"
+                / "Steam"
+                / "frozen_run_manifest.json"
+            )
+            manifest_path.write_text(
+                json.dumps({"provenance": {"repo_root": str(clean_root.resolve())}}),
+                encoding="utf-8",
+            )
+
+            rows = summary.build_rows(
+                run_root=run_root,
+                datasets=["Steam"],
+                beauty_summary_override=None,
+                official_mode=True,
+                official_repo_root=clean_root,
+            )
+
+            self.assertEqual("completed", rows[0]["status"])
+            self.assertEqual("completed", rows[0]["official_status"])
+
     def test_parse_args_does_not_enable_beauty_override_by_default(self) -> None:
         with mock.patch.object(sys, "argv", ["summarize_text_side_main_table_runs.py"]):
             args = summary.parse_args()

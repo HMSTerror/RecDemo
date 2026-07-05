@@ -9,6 +9,7 @@ PYTHON_BIN="${PYTHON_BIN:-/data/Zijian/goal/PreferGrow/.venv/bin/python}"
 DATASET_ROOT="${DATASET_ROOT:-$REPO_ROOT/dataset/paper_raw_v1}"
 RUN_ROOT="${RUN_ROOT:-/data/Zijian/goal/RecDemoRuns/main_table_text_side}"
 MODEL_PATH="${MODEL_PATH:-/data/models/sentence-transformers/sentence-t5-xl}"
+REPO_GIT_HEAD="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true)"
 GPU_IDS_CSV="${GPU_IDS_CSV:-0,1}"
 SESSION_PREFIX="${SESSION_PREFIX:-textside_main_table}"
 INNER_RUN="${INNER_RUN:-0}"
@@ -192,6 +193,8 @@ write_run_manifest() {
   NULL_CURVE_PATH="$null_curve_path" \
   UTILITY_REPORT_PATH="$TEXT_UTILITY_REPORT_PATH" \
   MANIFEST_PATH="$manifest_path" \
+  REPO_ROOT_PATH="$REPO_ROOT" \
+  REPO_GIT_HEAD="$REPO_GIT_HEAD" \
   RUN_DIR="$run_dir" \
   RANDOM_SEED="100" \
   "$PYTHON_BIN" - <<'PY'
@@ -234,6 +237,10 @@ if str(dataset_row["split_hash"]) != split_hash:
     )
 
 manifest = {
+    "provenance": {
+        "repo_root": str(Path(os.environ["REPO_ROOT_PATH"]).resolve()),
+        "git_head": os.environ.get("REPO_GIT_HEAD", ""),
+    },
     "dataset": dataset_name,
     "run_dir": str(run_dir),
     "random_seed": int(os.environ["RANDOM_SEED"]),

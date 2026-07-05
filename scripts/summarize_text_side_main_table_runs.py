@@ -79,6 +79,16 @@ def parse_summary(summary_path: Path) -> tuple[str, str]:
     return str(payload.get("best_step", "")), str(payload.get("best_metric", ""))
 
 
+def parse_manifest_provenance(manifest_path: Path) -> tuple[str, str]:
+    if not manifest_path.exists():
+        return "", ""
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    provenance = payload.get("provenance", {})
+    if not isinstance(provenance, dict):
+        return "", ""
+    return str(provenance.get("repo_root", "")), str(provenance.get("git_head", ""))
+
+
 def scan_launcher_queues(run_root: Path) -> dict[str, str]:
     queued_by_dataset: dict[str, str] = {}
     for launcher in run_root.glob("*/run_batch.sh"):
@@ -111,9 +121,15 @@ def detect_official_status(
     base_status: str,
     summary_exists: bool,
     manifest_exists: bool,
+    manifest_repo_root: str,
+    official_repo_root: Path | None,
 ) -> str:
     if summary_exists and not manifest_exists:
         return "invalid_stale"
+    if manifest_exists and official_repo_root is not None:
+        expected_repo_root = str(official_repo_root.resolve())
+        if manifest_repo_root != expected_repo_root:
+            return "invalid_stale"
     return base_status
 
 
@@ -135,7 +151,10 @@ def build_rows(
     datasets: list[str],
     beauty_summary_override: Path | None = None,
     official_mode: bool = False,
+    official_repo_root: Path | None = None,
 ) -> list[dict[str, str]]:
+    if official_mode and official_repo_root is None:
+        official_repo_root = REPO_ROOT
     queue_map = scan_launcher_queues(run_root)
     rows: list[dict[str, str]] = []
     for dataset in datasets:
@@ -158,11 +177,14 @@ def build_rows(
         queue_launcher = queue_map.get(dataset, "")
         summary_exists = summary_path.exists()
         manifest_exists = manifest_path.exists()
+        manifest_repo_root, _manifest_git_head = parse_manifest_provenance(manifest_path)
         base_status = detect_status(summary_path, log_path, queue_launcher)
         official_status = detect_official_status(
             base_status=base_status,
             summary_exists=summary_exists,
             manifest_exists=manifest_exists,
+            manifest_repo_root=manifest_repo_root,
+            official_repo_root=official_repo_root,
         )
         row_status = official_status if official_mode else base_status
         rows.append(
@@ -233,6 +255,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--official-mode", action="store_true")
+    parser.add_argument("--official-repo-root", type=Path, default=None)
     parser.add_argument(
         "--beauty-summary-override",
         type=Path,
@@ -253,6 +276,7 @@ def main() -> None:
         datasets=list(args.datasets),
         beauty_summary_override=args.beauty_summary_override,
         official_mode=args.official_mode,
+        official_repo_root=args.official_repo_root,
     )
     write_csv(output_csv, rows)
     write_markdown(output_md, rows)
