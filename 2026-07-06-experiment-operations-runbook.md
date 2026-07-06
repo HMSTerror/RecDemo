@@ -60,6 +60,7 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
   # 或 source /data/Zijian/goal/PreferGrow/.venv/bin/activate
   ```
 - GPU:两张 L20(48GB),`nvidia-smi` 看占用;GPU 0/1 由发射器的 `GPU_IDS_CSV` 或 `--gpu-id` 指定;
+- 2026-07-06 补探测:`l20` **也没有** `pdflatex` / `tectonic` / `xelatex`;别把服务器当论文 PDF 的现成编译后备机,`CLOSE-07` 仍需要单独准备 TeX 环境或换一台能编译的机器;
 - **模型全部在 `/data/models/` 下**:
   - 文本编码器(t5):`/data/models/sentence-transformers/sentence-t5-xl`(已核实存在);
   - 图像编码器(siglip):同在 `/data/models/` 下,首次使用先 `ls /data/models/` 确认确切子目录名再填给脚本;
