@@ -113,6 +113,24 @@ def build_best_summary(metric_name, best_step, best_metric, best_val_results, be
     }
 
 
+def maybe_write_periodic_checkpoint(
+    *,
+    current_step,
+    snapshot_freq_for_preemption,
+    latest_checkpoint_path,
+    state,
+    write_latest_checkpoint,
+):
+    if not write_latest_checkpoint:
+        return False
+    if snapshot_freq_for_preemption <= 0:
+        return False
+    if current_step % snapshot_freq_for_preemption != 0:
+        return False
+    utils.save_single_checkpoint(latest_checkpoint_path, state)
+    return True
+
+
 @hydra.main(version_base=None, config_path="./configs", config_name="config")
 def main(cfg: DictConfig):
     setup_seed(cfg.random_seed)
@@ -176,7 +194,7 @@ def main(cfg: DictConfig):
     early_stop_strength = str(cfg.training.get("early_stop_strength", "p2"))
     early_stop_min_delta = float(cfg.training.get("early_stop_min_delta", 0.0))
     early_stop_enabled = early_stop_patience > 0
-    write_snapshot_checkpoint = bool(cfg.training.get("write_snapshot_checkpoint", True))
+    write_latest_checkpoint = bool(cfg.training.get("write_snapshot_checkpoint", True))
     write_best_checkpoint = bool(cfg.training.get("write_best_checkpoint", True))
 
     best_metric = float("-inf")
@@ -186,6 +204,7 @@ def main(cfg: DictConfig):
     no_improve_count = 0
     stop_training = False
     summary_path = os.path.join(checkpoint_meta_dir, f"best_summary_{cfg.graph.type}.json")
+    latest_checkpoint_path = os.path.join(checkpoint_meta_dir, f"checkpoint_{cfg.graph.type}.pth")
     best_checkpoint_path = os.path.join(checkpoint_meta_dir, f"checkpoint_{cfg.graph.type}_best.pth")
 
     while state["step"] < num_train_steps and not stop_training:
@@ -205,12 +224,13 @@ def main(cfg: DictConfig):
                 print("step: %d, training_loss: %.5e, time_elapsed: %.2fs" % (current_step, loss.item(), elapsed_time))
                 start_time = current_time
 
-            if current_step % cfg.training.snapshot_freq_for_preemption == 0:
-                save_step = current_step // cfg.training.snapshot_freq
-                utils.save_single_checkpoint(
-                    os.path.join(checkpoint_dir, f"checkpoint_{cfg.graph.type}_{save_step}.pth"),
-                    state,
-                )
+            maybe_write_periodic_checkpoint(
+                current_step=current_step,
+                snapshot_freq_for_preemption=cfg.training.snapshot_freq_for_preemption,
+                latest_checkpoint_path=latest_checkpoint_path,
+                state=state,
+                write_latest_checkpoint=write_latest_checkpoint,
+            )
 
             if current_step % cfg.training.eval_freq == 0:
                 try:
@@ -227,11 +247,10 @@ def main(cfg: DictConfig):
                 current_step % cfg.training.snapshot_freq == 0 or current_step >= num_train_steps
             )
             if should_snapshot and sampling_fns is not None:
-                checkpoint_path = os.path.join(checkpoint_meta_dir, f"checkpoint_{cfg.graph.type}.pth")
-                if write_snapshot_checkpoint:
-                    utils.save_single_checkpoint(checkpoint_path, state)
+                if write_latest_checkpoint:
+                    utils.save_single_checkpoint(latest_checkpoint_path, state)
                 else:
-                    print(f"SKIP_SNAPSHOT_CHECKPOINT step={current_step} path={checkpoint_path}")
+                    print(f"SKIP_LATEST_CHECKPOINT step={current_step} path={latest_checkpoint_path}")
                 print(f"Generating items at step: {current_step}")
                 val_results, test_results = run_eval_suite(
                     score_model=score_model,
