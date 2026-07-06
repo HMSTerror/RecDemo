@@ -1,0 +1,481 @@
+{
+  "datasets": [
+    {
+      "bank_hash": "78fed57c4afba29031624357ad7b8e543aa20a0b06b3373e69525625e6e78023",
+      "core_best_metric": 0.01464087009924878,
+      "core_best_step": 27000,
+      "core_test_p10_ndcg10": 0.014376594164974,
+      "core_test_p2_ndcg10": 0.012895807155713,
+      "core_test_p5_ndcg10": 0.013496976644964,
+      "current_best_metric": 0.016632993411694566,
+      "current_best_step": 66000,
+      "current_test_p10_ndcg10": 0.016165704843637,
+      "current_test_p2_ndcg10": 0.014911009456831,
+      "current_test_p5_ndcg10": 0.015140031944749,
+      "dataset": "Steam",
+      "dataset_verdict": "directional_hit_reference_miss",
+      "delta_test_p10_ndcg10": 0.001789110678662,
+      "delta_test_p2_ndcg10": 0.002015202301118,
+      "delta_test_p5_ndcg10": 0.001643055299786,
+      "delta_val_p2_ndcg10": 0.001717997779528,
+      "early_stop_wait_counter": 5,
+      "early_stop_wait_patience": 5,
+      "expected_outcome": "delta_test_p2_ndcg10 > 0",
+      "last_logged_step": 71000,
+      "local_manifest_copy": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\steam_frozen_run_manifest.json",
+      "manifest_checks": [
+        {
+          "detail": "repo_root=/data/Zijian/goal/RecDemo_clean_main",
+          "id": "repo_root_clean_main",
+          "label": "repo_root points at the clean execution root",
+          "passed": true
+        },
+        {
+          "detail": "random_seed=100",
+          "id": "seed_present",
+          "label": "random_seed is recorded",
+          "passed": true
+        },
+        {
+          "detail": "bank_hash=78fed57c4afba29031624357ad7b8e543aa20a0b06b3373e69525625e6e78023; null_curve_hash=fb52fde65111f94a295d023c6915803b238d7d28e021ab8616a8c2ed4c90be47; split_hash=a0e0a7e03cb0823386da7f0832f595253633014dd50f64fc63c2d431d0f84006; u_ds_artifact_hash=75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+          "id": "hashes_present",
+          "label": "bank/null/split/U_ds hashes are recorded",
+          "passed": true
+        },
+        {
+          "detail": "observed='v2'; expected='v2'",
+          "id": "kernel_version",
+          "label": "frozen_config.kernel_version matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=2.0; expected=2.0",
+          "id": "agreement_k",
+          "label": "frozen_config.agreement_k matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=0.5; expected=0.5",
+          "id": "g_max",
+          "label": "frozen_config.g_max matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='ndcg10'; expected='ndcg10'",
+          "id": "early_stop_metric",
+          "label": "frozen_config.early_stop_metric matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='p5'; expected='p5'",
+          "id": "early_stop_strength",
+          "label": "frozen_config.early_stop_strength matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=True; expected=True",
+          "id": "write_best_checkpoint",
+          "label": "frozen_config.write_best_checkpoint matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=False; expected=False",
+          "id": "write_snapshot_checkpoint",
+          "label": "frozen_config.write_snapshot_checkpoint matches the frozen sprint setting",
+          "passed": true
+        }
+      ],
+      "manifest_checks_pass": true,
+      "null_curve_hash": "fb52fde65111f94a295d023c6915803b238d7d28e021ab8616a8c2ed4c90be47",
+      "official_status": "completed",
+      "phi_u_ds": 1.0,
+      "prediction_outcome": "hit",
+      "provenance_repo_root": "/data/Zijian/goal/RecDemo_clean_main",
+      "queue_launcher": "sprint05_backfill_gpu1",
+      "random_seed": 100,
+      "reference_magnitude_outcome": "miss",
+      "remote_log_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/logs/steam_proposal_adaptive_mainpath.log",
+      "remote_manifest_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "remote_run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath",
+      "remote_summary_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/best_summary_proposal_adaptive.json",
+      "split_hash": "a0e0a7e03cb0823386da7f0832f595253633014dd50f64fc63c2d431d0f84006",
+      "status": "completed",
+      "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+      "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+      "u_ds_popularity": 0.5695662499999999,
+      "verdict_reason": "Steam kept the positive sign but stayed below the >= +0.003 reference magnitude."
+    },
+    {
+      "bank_hash": "76fcfc25668145bfbaba194f2f0f652acda0c424363f689f35bb653eb525497d",
+      "core_best_metric": 0.09584176589619875,
+      "core_best_step": 302000,
+      "core_test_p10_ndcg10": 0.102170742343752,
+      "core_test_p2_ndcg10": 0.091021753257844,
+      "core_test_p5_ndcg10": 0.099923875016794,
+      "current_best_metric": 0.09517516100200263,
+      "current_best_step": 405000,
+      "current_test_p10_ndcg10": 0.095596713146165,
+      "current_test_p2_ndcg10": 0.07588870818712,
+      "current_test_p5_ndcg10": 0.088931624328109,
+      "dataset": "ML1M",
+      "dataset_verdict": "miss",
+      "delta_test_p10_ndcg10": -0.006574029197588,
+      "delta_test_p2_ndcg10": -0.015133045070724,
+      "delta_test_p5_ndcg10": -0.010992250688685,
+      "delta_val_p2_ndcg10": -0.015803589924925,
+      "early_stop_wait_counter": 5,
+      "early_stop_wait_patience": 5,
+      "expected_outcome": "abs(delta_test_p2_ndcg10) < 0.01",
+      "last_logged_step": 410000,
+      "local_manifest_copy": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\ml1m_frozen_run_manifest.json",
+      "manifest_checks": [
+        {
+          "detail": "repo_root=/data/Zijian/goal/RecDemo_clean_main",
+          "id": "repo_root_clean_main",
+          "label": "repo_root points at the clean execution root",
+          "passed": true
+        },
+        {
+          "detail": "random_seed=100",
+          "id": "seed_present",
+          "label": "random_seed is recorded",
+          "passed": true
+        },
+        {
+          "detail": "bank_hash=76fcfc25668145bfbaba194f2f0f652acda0c424363f689f35bb653eb525497d; null_curve_hash=65ac766547e53a23823775d32a9e5fa7b6afa7502f866ae84f05bc910a8e69bd; split_hash=7895e743467fd60060127264894250a0502d94028e84441400aa14dfd9118576; u_ds_artifact_hash=75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+          "id": "hashes_present",
+          "label": "bank/null/split/U_ds hashes are recorded",
+          "passed": true
+        },
+        {
+          "detail": "observed='v2'; expected='v2'",
+          "id": "kernel_version",
+          "label": "frozen_config.kernel_version matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=2.0; expected=2.0",
+          "id": "agreement_k",
+          "label": "frozen_config.agreement_k matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=0.5; expected=0.5",
+          "id": "g_max",
+          "label": "frozen_config.g_max matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='ndcg10'; expected='ndcg10'",
+          "id": "early_stop_metric",
+          "label": "frozen_config.early_stop_metric matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='p5'; expected='p5'",
+          "id": "early_stop_strength",
+          "label": "frozen_config.early_stop_strength matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=True; expected=True",
+          "id": "write_best_checkpoint",
+          "label": "frozen_config.write_best_checkpoint matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=False; expected=False",
+          "id": "write_snapshot_checkpoint",
+          "label": "frozen_config.write_snapshot_checkpoint matches the frozen sprint setting",
+          "passed": true
+        }
+      ],
+      "manifest_checks_pass": true,
+      "null_curve_hash": "65ac766547e53a23823775d32a9e5fa7b6afa7502f866ae84f05bc910a8e69bd",
+      "official_status": "completed",
+      "phi_u_ds": 0.0,
+      "prediction_outcome": "miss",
+      "provenance_repo_root": "/data/Zijian/goal/RecDemo_clean_main",
+      "queue_launcher": "sprint05_backfill_gpu1",
+      "random_seed": 100,
+      "reference_magnitude_outcome": "",
+      "remote_log_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/logs/ml1m_proposal_adaptive_mainpath.log",
+      "remote_manifest_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/frozen_run_manifest.json",
+      "remote_run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath",
+      "remote_summary_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/best_summary_proposal_adaptive.json",
+      "split_hash": "7895e743467fd60060127264894250a0502d94028e84441400aa14dfd9118576",
+      "status": "completed",
+      "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+      "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+      "u_ds_popularity": 0.75353875,
+      "verdict_reason": "ML1M missed its pre-registered parity-style prediction."
+    },
+    {
+      "bank_hash": "591e4f4ee24160becd190f2b5279a48a351004ff6fd09f228473188a182b5d9b",
+      "core_best_metric": 0.018365813648302143,
+      "core_best_step": 20000,
+      "core_test_p10_ndcg10": 0.040539326822485,
+      "core_test_p2_ndcg10": 0.033294857803678,
+      "core_test_p5_ndcg10": 0.041599098719008,
+      "current_best_metric": 0.024532750777767648,
+      "current_best_step": 18000,
+      "current_test_p10_ndcg10": 0.040298677463239,
+      "current_test_p2_ndcg10": 0.029435971334722,
+      "current_test_p5_ndcg10": 0.042029809097732,
+      "dataset": "Beauty",
+      "dataset_verdict": "hit",
+      "delta_test_p10_ndcg10": -0.000240649359246,
+      "delta_test_p2_ndcg10": -0.003858886468956,
+      "delta_test_p5_ndcg10": 0.000430710378725,
+      "delta_val_p2_ndcg10": 0.000179503610773,
+      "early_stop_wait_counter": 5,
+      "early_stop_wait_patience": 5,
+      "expected_outcome": "abs(delta_test_p2_ndcg10) < 0.01",
+      "last_logged_step": 23000,
+      "local_manifest_copy": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\beauty_frozen_run_manifest.json",
+      "manifest_checks": [
+        {
+          "detail": "repo_root=/data/Zijian/goal/RecDemo_clean_main",
+          "id": "repo_root_clean_main",
+          "label": "repo_root points at the clean execution root",
+          "passed": true
+        },
+        {
+          "detail": "random_seed=100",
+          "id": "seed_present",
+          "label": "random_seed is recorded",
+          "passed": true
+        },
+        {
+          "detail": "bank_hash=591e4f4ee24160becd190f2b5279a48a351004ff6fd09f228473188a182b5d9b; null_curve_hash=7d7bb94850ddef882ae037724261b21cc2e0bba623d8e9651510297a96d0948b; split_hash=ab2863e37b13290aa216ae4c83c725a852e2a7fdd9325afb1d501e0141e3f2b6; u_ds_artifact_hash=75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+          "id": "hashes_present",
+          "label": "bank/null/split/U_ds hashes are recorded",
+          "passed": true
+        },
+        {
+          "detail": "observed='v2'; expected='v2'",
+          "id": "kernel_version",
+          "label": "frozen_config.kernel_version matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=2.0; expected=2.0",
+          "id": "agreement_k",
+          "label": "frozen_config.agreement_k matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=0.5; expected=0.5",
+          "id": "g_max",
+          "label": "frozen_config.g_max matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='ndcg10'; expected='ndcg10'",
+          "id": "early_stop_metric",
+          "label": "frozen_config.early_stop_metric matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='p5'; expected='p5'",
+          "id": "early_stop_strength",
+          "label": "frozen_config.early_stop_strength matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=True; expected=True",
+          "id": "write_best_checkpoint",
+          "label": "frozen_config.write_best_checkpoint matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=False; expected=False",
+          "id": "write_snapshot_checkpoint",
+          "label": "frozen_config.write_snapshot_checkpoint matches the frozen sprint setting",
+          "passed": true
+        }
+      ],
+      "manifest_checks_pass": true,
+      "null_curve_hash": "7d7bb94850ddef882ae037724261b21cc2e0bba623d8e9651510297a96d0948b",
+      "official_status": "completed",
+      "phi_u_ds": 0.0,
+      "prediction_outcome": "hit",
+      "provenance_repo_root": "/data/Zijian/goal/RecDemo_clean_main",
+      "queue_launcher": "sprint05_official_beauty_gpu0",
+      "random_seed": 100,
+      "reference_magnitude_outcome": "",
+      "remote_log_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/logs/beauty_proposal_adaptive_mainpath.log",
+      "remote_manifest_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "remote_run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath",
+      "remote_summary_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/best_summary_proposal_adaptive.json",
+      "split_hash": "ab2863e37b13290aa216ae4c83c725a852e2a7fdd9325afb1d501e0141e3f2b6",
+      "status": "completed",
+      "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+      "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+      "u_ds_popularity": 0.7124275,
+      "verdict_reason": "Beauty satisfied its pre-registered parity-style prediction."
+    },
+    {
+      "bank_hash": "90ac91f8d54a19cf5f0c70a304b0a6ddf63d5803e45f0a85e293377642b9812f",
+      "core_best_metric": 0.031003162221413583,
+      "core_best_step": 39000,
+      "core_test_p10_ndcg10": 0.043648658540524,
+      "core_test_p2_ndcg10": 0.041877507019888,
+      "core_test_p5_ndcg10": 0.042992388063084,
+      "current_best_metric": 0.029494931106811513,
+      "current_best_step": 30000,
+      "current_test_p10_ndcg10": 0.041204882061368,
+      "current_test_p2_ndcg10": 0.03046740161338,
+      "current_test_p5_ndcg10": 0.040614593945725,
+      "dataset": "ATG",
+      "dataset_verdict": "miss",
+      "delta_test_p10_ndcg10": -0.002443776479156,
+      "delta_test_p2_ndcg10": -0.011410105406507,
+      "delta_test_p5_ndcg10": -0.002377794117359,
+      "delta_val_p2_ndcg10": -0.00964373404676,
+      "early_stop_wait_counter": 5,
+      "early_stop_wait_patience": 5,
+      "expected_outcome": "abs(delta_test_p2_ndcg10) < 0.01",
+      "last_logged_step": 35000,
+      "local_manifest_copy": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\atg_frozen_run_manifest.json",
+      "manifest_checks": [
+        {
+          "detail": "repo_root=/data/Zijian/goal/RecDemo_clean_main",
+          "id": "repo_root_clean_main",
+          "label": "repo_root points at the clean execution root",
+          "passed": true
+        },
+        {
+          "detail": "random_seed=100",
+          "id": "seed_present",
+          "label": "random_seed is recorded",
+          "passed": true
+        },
+        {
+          "detail": "bank_hash=90ac91f8d54a19cf5f0c70a304b0a6ddf63d5803e45f0a85e293377642b9812f; null_curve_hash=80a138589986c99467aa11e5a821a20820e87ae5a126c973de5daf672b0fc4f0; split_hash=33315c196f7a377a223f2a20705d3557e827c39c547baf16b69645f2e43db0ec; u_ds_artifact_hash=75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+          "id": "hashes_present",
+          "label": "bank/null/split/U_ds hashes are recorded",
+          "passed": true
+        },
+        {
+          "detail": "observed='v2'; expected='v2'",
+          "id": "kernel_version",
+          "label": "frozen_config.kernel_version matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=2.0; expected=2.0",
+          "id": "agreement_k",
+          "label": "frozen_config.agreement_k matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=0.5; expected=0.5",
+          "id": "g_max",
+          "label": "frozen_config.g_max matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='ndcg10'; expected='ndcg10'",
+          "id": "early_stop_metric",
+          "label": "frozen_config.early_stop_metric matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed='p5'; expected='p5'",
+          "id": "early_stop_strength",
+          "label": "frozen_config.early_stop_strength matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=True; expected=True",
+          "id": "write_best_checkpoint",
+          "label": "frozen_config.write_best_checkpoint matches the frozen sprint setting",
+          "passed": true
+        },
+        {
+          "detail": "observed=False; expected=False",
+          "id": "write_snapshot_checkpoint",
+          "label": "frozen_config.write_snapshot_checkpoint matches the frozen sprint setting",
+          "passed": true
+        }
+      ],
+      "manifest_checks_pass": true,
+      "null_curve_hash": "80a138589986c99467aa11e5a821a20820e87ae5a126c973de5daf672b0fc4f0",
+      "official_status": "completed",
+      "phi_u_ds": 0.11737499999999956,
+      "prediction_outcome": "miss",
+      "provenance_repo_root": "/data/Zijian/goal/RecDemo_clean_main",
+      "queue_launcher": "sprint05_official_atg_gpu1",
+      "random_seed": 100,
+      "reference_magnitude_outcome": "",
+      "remote_log_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/logs/atg_proposal_adaptive_mainpath.log",
+      "remote_manifest_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "remote_run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath",
+      "remote_summary_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/best_summary_proposal_adaptive.json",
+      "split_hash": "33315c196f7a377a223f2a20705d3557e827c39c547baf16b69645f2e43db0ec",
+      "status": "completed",
+      "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+      "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+      "u_ds_popularity": 0.6882625,
+      "verdict_reason": "ATG missed its pre-registered parity-style prediction."
+    }
+  ],
+  "gate1": {
+    "dataset": "ML1M",
+    "delta_test_p2_ndcg10": -0.015133045070724,
+    "diagnostic_allowed": false,
+    "diagnostic_margin": 0.014866954929275998,
+    "diagnostic_threshold": -0.03,
+    "implementation_red_flag": true,
+    "pass_margin": -0.005133045070724001,
+    "pass_threshold": -0.01,
+    "prop6_empirical_claim_pause": true,
+    "summary": "ML1M missed the no-loss threshold, but not badly enough to open the single frozen diagnostic iteration.",
+    "verdict": "fail_no_diagnostic"
+  },
+  "gate2_exits": {
+    "medium": {
+      "reachable": false,
+      "reason": "Needs the no-loss main line to hold on the Gate 1 path. The official ML1M delta is -0.015133, which stays below the -0.01 pass threshold."
+    },
+    "strong": {
+      "reachable": false,
+      "reason": "Needs all four pre-registered outcomes to land cleanly, including Steam reaching the reference magnitude. The current official table does not satisfy that."
+    },
+    "weak": {
+      "reachable": true,
+      "reason": "The Family D baseline wording was already frozen in FOLLOWUP-08, so the weak exit remains available even when Gate 1 does not clear."
+    }
+  },
+  "generated_at": "2026-07-06T13:49:01+08:00",
+  "output_dir": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1",
+  "report_name": "SPRINT-05 official rerun closeout and Gate 1 readout",
+  "sources": {
+    "compare_csv_local": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\text-side-vs-core-main-table.csv",
+    "compare_csv_source": "/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-05-sprint05/text-side-vs-core-main-table.csv",
+    "status_csv_local": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\inputs\\text-side-main-table-run-status.csv",
+    "status_csv_source": "/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-05-sprint05/text-side-main-table-run-status.csv"
+  },
+  "spec_anchor": "docs/superpowers/specs/2026-07-02-aaai27-fallback-safe-kernel-sprint-design.md",
+  "sprint05": {
+    "dataset_verdicts": {
+      "ATG": "miss",
+      "Beauty": "hit",
+      "ML1M": "miss",
+      "Steam": "directional_hit_reference_miss"
+    },
+    "hit_datasets": [
+      "Beauty"
+    ],
+    "miss_datasets": [
+      "ML1M",
+      "ATG"
+    ],
+    "official_complete": true,
+    "partial_hit_datasets": [
+      "Steam"
+    ],
+    "summary": "All four datasets finished under clean-root manifests; Beauty hit parity, Steam kept the positive sign but missed the reference magnitude, while ML1M and ATG missed parity."
+  }
+}

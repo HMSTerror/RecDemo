@@ -1,0 +1,42 @@
+{
+  "bank_hash": "76fcfc25668145bfbaba194f2f0f652acda0c424363f689f35bb653eb525497d",
+  "dataset": "ML1M",
+  "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M",
+  "frozen_config": {
+    "ablation_mode": "none",
+    "agreement_k": 2.0,
+    "agreement_weight": 0.45,
+    "center_embeddings": false,
+    "completeness_weight": 0.15,
+    "early_stop_metric": "ndcg10",
+    "early_stop_strength": "p5",
+    "ess_weight": 0.2,
+    "g_max": 0.5,
+    "history_reliability_weight": 0.4,
+    "injection_mode": "kernel",
+    "kernel_version": "v2",
+    "max_temperature_scale": 2.0,
+    "min_pseudo_mass": 0.05,
+    "popularity_mix_power": 1.0,
+    "popularity_mix_scale": 1.0,
+    "pseudo_mass_power": 1.0,
+    "pseudo_mass_scale": 1.0,
+    "recency_weight": 0.3,
+    "stability_weight": 0.5,
+    "temperature": 0.2,
+    "write_best_checkpoint": true,
+    "write_snapshot_checkpoint": false
+  },
+  "null_curve_hash": "65ac766547e53a23823775d32a9e5fa7b6afa7502f866ae84f05bc910a8e69bd",
+  "phi_u_ds": 0.0,
+  "provenance": {
+    "git_head": "b2c796f18b4bce671f83b809742f82a98057a34f",
+    "repo_root": "/data/Zijian/goal/RecDemo_clean_main"
+  },
+  "random_seed": 100,
+  "run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath",
+  "split_hash": "7895e743467fd60060127264894250a0502d94028e84441400aa14dfd9118576",
+  "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+  "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+  "u_ds_popularity": 0.75353875
+}

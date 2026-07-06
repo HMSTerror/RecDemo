@@ -1,0 +1,42 @@
+{
+  "bank_hash": "90ac91f8d54a19cf5f0c70a304b0a6ddf63d5803e45f0a85e293377642b9812f",
+  "dataset": "ATG",
+  "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG",
+  "frozen_config": {
+    "ablation_mode": "none",
+    "agreement_k": 2.0,
+    "agreement_weight": 0.45,
+    "center_embeddings": false,
+    "completeness_weight": 0.15,
+    "early_stop_metric": "ndcg10",
+    "early_stop_strength": "p5",
+    "ess_weight": 0.2,
+    "g_max": 0.5,
+    "history_reliability_weight": 0.4,
+    "injection_mode": "kernel",
+    "kernel_version": "v2",
+    "max_temperature_scale": 2.0,
+    "min_pseudo_mass": 0.05,
+    "popularity_mix_power": 1.0,
+    "popularity_mix_scale": 1.0,
+    "pseudo_mass_power": 1.0,
+    "pseudo_mass_scale": 1.0,
+    "recency_weight": 0.3,
+    "stability_weight": 0.5,
+    "temperature": 0.2,
+    "write_best_checkpoint": true,
+    "write_snapshot_checkpoint": false
+  },
+  "null_curve_hash": "80a138589986c99467aa11e5a821a20820e87ae5a126c973de5daf672b0fc4f0",
+  "phi_u_ds": 0.11737499999999956,
+  "provenance": {
+    "git_head": "b2c796f18b4bce671f83b809742f82a98057a34f",
+    "repo_root": "/data/Zijian/goal/RecDemo_clean_main"
+  },
+  "random_seed": 100,
+  "run_dir": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath",
+  "split_hash": "33315c196f7a377a223f2a20705d3557e827c39c547baf16b69645f2e43db0ec",
+  "u_ds_artifact_hash": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+  "u_ds_artifact_path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+  "u_ds_popularity": 0.6882625
+}
