@@ -118,6 +118,28 @@ summary_path_for() {
 }
 
 
+slugify_variant() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '_'
+}
+
+
+run_variant_label() {
+  local label="mainpath"
+  if [[ "$TEXT_ABLATION_MODE" != "none" ]]; then
+    label="ablation_$(slugify_variant "$TEXT_ABLATION_MODE")"
+  fi
+  if [[ "$TEXT_INJECTION_MODE" != "kernel" ]]; then
+    local injection_label="injection_$(slugify_variant "$TEXT_INJECTION_MODE")"
+    if [[ "$label" == "mainpath" ]]; then
+      label="$injection_label"
+    else
+      label="${label}_${injection_label}"
+    fi
+  fi
+  echo "$label"
+}
+
+
 print_summary() {
   local summary_path="$1"
   SUMMARY_PATH="$summary_path" "$PYTHON_BIN" - <<'PY'
@@ -291,7 +313,9 @@ run_dataset() {
   local dataset_dir="$DATASET_ROOT/$dataset"
   local embeddings_path="$dataset_dir/sentence_t5_xl_item_emb.pt"
   local null_curve_path="$dataset_dir/agreement_null_curves.json"
-  local run_name="${dataset,,}_proposal_adaptive_mainpath"
+  local run_variant
+  run_variant="$(run_variant_label)"
+  local run_name="${dataset,,}_proposal_adaptive_${run_variant}"
   local run_dir="$RUN_ROOT/$run_name"
   local summary_path
   summary_path="$(summary_path_for "$dataset" "$run_dir")"

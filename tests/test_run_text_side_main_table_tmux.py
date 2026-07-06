@@ -209,7 +209,7 @@ class RunTextSideMainTableTmuxTests(unittest.TestCase):
             )
 
             self.assertEqual(0, result.returncode, decode_output(result.stderr) or decode_output(result.stdout))
-            run_dir = run_root / "ml1m_proposal_adaptive_mainpath"
+            run_dir = run_root / "ml1m_proposal_adaptive_ablation_global_p"
             captured_args = (run_dir / "captured_args.txt").read_text(encoding="utf-8")
             self.assertIn("text_side.ablation_mode=global_p", captured_args)
 
