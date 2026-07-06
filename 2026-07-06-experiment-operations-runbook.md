@@ -277,6 +277,23 @@ Get-CimInstance Win32_Process |
 
 2026-07-06 实机已验证这条 watcher 链是通的: `23:55:23` 检到 `SPRINT-07` complete,`23:55:29` 完成 `sprint07` 工件同步,`23:55:32` 在远端创建 `close02_ml1m_noise_floor` 会话。
 
+⚠️ 2026-07-07 凌晨又踩到一个恢复细节: 原始 watcher 可能卡在
+`launch_close02_ml1m_noise_floor_tmux.py` 这一跳,表现为日志停在
+`launching CLOSE-02`,但远端 tmux 会话其实已经起来了。本地若遇到这种半挂状态,
+**不要**重跑带 `--launch-close02-on-complete` 的整条链,否则有机会把正在跑的
+`close02_ml1m_noise_floor` 会话杀掉重开。安全恢复方式是直接启一个只读监控:
+
+```powershell
+& 'E:/anaco/python.exe' scripts/retry_sprint07_when_l20_ready.py `
+  --close02-only `
+  --log-path E:/PreferGrow/logs/close02_only_retry_YYYY-MM-DD_HH-mm-ss.log `
+  --close02-report-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-close02-ml1m-noise-floor `
+  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor
+```
+
+这个模式只会轮询远端 `build_close02_ml1m_noise_floor_report.py` 并在完成后 `scp`
+三份 dated artifact,不会重新发射或重置远端训练。
+
 ### 7.5 CLOSE-02 宿主噪声地板(ML1M core 多种子)
 
 > 用途:给 `CLOSE-02` 跑 2-3 个 **host/core** 种子,量化 ML1M 的 run-to-run noise floor。这里不是 text-side,而是 `graph.type=hybrid` + `text_side.enabled=False` 的宿主线。

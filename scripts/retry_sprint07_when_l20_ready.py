@@ -32,6 +32,7 @@ DEFAULT_LOCAL_CLOSE02_REPORT_DIR = (
     REPO_ROOT / "docs" / "reports" / "data" / f"{date.today().isoformat()}-close02-ml1m-noise-floor"
 )
 DEFAULT_CLOSE02_SEEDS = (100, 101, 102)
+DEFAULT_CLOSE02_LAUNCH_TIMEOUT_SECONDS = 30
 SPRINT07_REPORT_FILENAMES = ("sprint07_control_table.csv", "sprint07_control_report_zh.md")
 CLOSE02_REPORT_FILENAMES = (
     "close02_ml1m_noise_floor_table.csv",
@@ -65,6 +66,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--local-close02-report-dir", type=Path, default=DEFAULT_LOCAL_CLOSE02_REPORT_DIR)
     parser.add_argument("--launch-close02-on-complete", action="store_true")
     parser.add_argument("--close02-seeds", nargs="+", type=int, default=list(DEFAULT_CLOSE02_SEEDS))
+    parser.add_argument("--close02-only", action="store_true")
+    parser.add_argument("--close02-launch-timeout-seconds", type=int, default=DEFAULT_CLOSE02_LAUNCH_TIMEOUT_SECONDS)
     parser.add_argument("--print-only", action="store_true")
     return parser.parse_args()
 
@@ -340,10 +343,20 @@ def launch_close02_followup(
     *,
     command: list[str],
     log_path: Path,
+    timeout_seconds: int = DEFAULT_CLOSE02_LAUNCH_TIMEOUT_SECONDS,
     runner: Callable[..., subprocess.CompletedProcess] = subprocess.run,
 ) -> bool:
     append_log(log_path, "sprint07 complete -> launching CLOSE-02")
-    result = runner(command, cwd=REPO_ROOT, capture_output=True, text=True)
+    try:
+        result = runner(command, cwd=REPO_ROOT, capture_output=True, text=True, timeout=timeout_seconds)
+    except subprocess.TimeoutExpired as exc:
+        stdout = (getattr(exc, "stdout", "") or getattr(exc, "output", "") or "").strip().replace("\n", " | ")
+        detail = f" stdout={stdout}" if stdout else ""
+        append_log(
+            log_path,
+            f"CLOSE-02 launch timed out after {timeout_seconds}s; continuing to close02 polling because the remote tmux session may already be live.{detail}",
+        )
+        return True
     if result.returncode == 0:
         stdout = (result.stdout or "").strip().replace("\n", " | ")
         append_log(log_path, f"CLOSE-02 launch succeeded stdout={stdout}")
@@ -355,6 +368,23 @@ def launch_close02_followup(
 
 def main() -> None:
     args = parse_args()
+    close02_seeds = tuple(args.close02_seeds)
+    close02_status_command = build_close02_status_command(
+        host=args.host,
+        remote_base=args.remote_base,
+        remote_python=args.remote_python,
+        close02_run_root=args.close02_run_root,
+        close02_report_dir=args.close02_report_dir,
+        close02_seeds=close02_seeds,
+        connect_timeout=args.connect_timeout,
+    )
+    close02_sync_commands = build_close02_report_sync_commands(
+        host=args.host,
+        report_dir=args.close02_report_dir,
+        local_report_dir=args.local_close02_report_dir,
+        connect_timeout=args.connect_timeout,
+    )
+
     status_command = build_status_command(
         host=args.host,
         remote_base=args.remote_base,
@@ -363,8 +393,13 @@ def main() -> None:
         connect_timeout=args.connect_timeout,
     )
     if args.print_only:
-        print("STATUS " + " ".join(status_command))
         print(f"LOG {args.log_path}")
+        if args.close02_only:
+            print("CLOSE02_STATUS " + " ".join(close02_status_command))
+            for command in close02_sync_commands:
+                print("CLOSE02_SYNC " + " ".join(command))
+            return
+        print("STATUS " + " ".join(status_command))
         for command in build_report_sync_commands(
             host=args.host,
             report_dir=args.report_dir,
@@ -375,26 +410,31 @@ def main() -> None:
         if args.launch_close02_on_complete:
             close02_command = build_close02_launch_command(
                 local_python=args.local_python,
-                close02_seeds=tuple(args.close02_seeds),
+                close02_seeds=close02_seeds,
             )
             print("CLOSE02 " + " ".join(close02_command))
-            close02_status_command = build_close02_status_command(
-                host=args.host,
-                remote_base=args.remote_base,
-                remote_python=args.remote_python,
-                close02_run_root=args.close02_run_root,
-                close02_report_dir=args.close02_report_dir,
-                close02_seeds=tuple(args.close02_seeds),
-                connect_timeout=args.connect_timeout,
-            )
             print("CLOSE02_STATUS " + " ".join(close02_status_command))
-            for command in build_close02_report_sync_commands(
-                host=args.host,
-                report_dir=args.close02_report_dir,
-                local_report_dir=args.local_close02_report_dir,
-                connect_timeout=args.connect_timeout,
-            ):
+            for command in close02_sync_commands:
                 print("CLOSE02_SYNC " + " ".join(command))
+        return
+
+    if args.close02_only:
+        close02_ok = run_close02_attempt_loop(
+            status_command=close02_status_command,
+            log_path=args.log_path,
+            expected_seeds=close02_seeds,
+            max_attempts=args.max_attempts,
+            interval_seconds=args.interval_seconds,
+        )
+        if not close02_ok:
+            raise SystemExit(1)
+        close02_sync_ok = sync_close02_artifacts(
+            commands=close02_sync_commands,
+            log_path=args.log_path,
+            local_report_dir=args.local_close02_report_dir,
+        )
+        if not close02_sync_ok:
+            raise SystemExit(1)
         return
 
     ok = run_attempt_loop(
@@ -418,35 +458,26 @@ def main() -> None:
     if args.launch_close02_on_complete:
         close02_command = build_close02_launch_command(
             local_python=args.local_python,
-            close02_seeds=tuple(args.close02_seeds),
+            close02_seeds=close02_seeds,
         )
-        launched = launch_close02_followup(command=close02_command, log_path=args.log_path)
+        launched = launch_close02_followup(
+            command=close02_command,
+            log_path=args.log_path,
+            timeout_seconds=args.close02_launch_timeout_seconds,
+        )
         if not launched:
             raise SystemExit(1)
         close02_ok = run_close02_attempt_loop(
-            status_command=build_close02_status_command(
-                host=args.host,
-                remote_base=args.remote_base,
-                remote_python=args.remote_python,
-                close02_run_root=args.close02_run_root,
-                close02_report_dir=args.close02_report_dir,
-                close02_seeds=tuple(args.close02_seeds),
-                connect_timeout=args.connect_timeout,
-            ),
+            status_command=close02_status_command,
             log_path=args.log_path,
-            expected_seeds=tuple(args.close02_seeds),
+            expected_seeds=close02_seeds,
             max_attempts=args.max_attempts,
             interval_seconds=args.interval_seconds,
         )
         if not close02_ok:
             raise SystemExit(1)
         close02_sync_ok = sync_close02_artifacts(
-            commands=build_close02_report_sync_commands(
-                host=args.host,
-                report_dir=args.close02_report_dir,
-                local_report_dir=args.local_close02_report_dir,
-                connect_timeout=args.connect_timeout,
-            ),
+            commands=close02_sync_commands,
             log_path=args.log_path,
             local_report_dir=args.local_close02_report_dir,
         )

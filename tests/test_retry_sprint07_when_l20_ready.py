@@ -1,4 +1,5 @@
 import importlib.util
+import types
 import subprocess
 import tempfile
 import unittest
@@ -245,6 +246,61 @@ class RetrySprint07WhenL20ReadyTests(unittest.TestCase):
             log_text = log_path.read_text(encoding="utf-8")
             self.assertIn("launching CLOSE-02", log_text)
             self.assertIn("CLOSE-02 launch succeeded", log_text)
+
+    def test_launch_close02_followup_treats_timeout_as_recoverable(self) -> None:
+        module = load_script_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_path = Path(tmpdir) / "sprint07.log"
+
+            def runner(*args, **kwargs):
+                raise subprocess.TimeoutExpired(cmd=args[0], timeout=kwargs["timeout"], output="ssh l20 remote-command")
+
+            ok = module.launch_close02_followup(
+                command=["python", "scripts/launch_close02_ml1m_noise_floor_tmux.py", "--seeds", "100"],
+                log_path=log_path,
+                timeout_seconds=3,
+                runner=runner,
+            )
+
+            self.assertTrue(ok)
+            log_text = log_path.read_text(encoding="utf-8")
+            self.assertIn("launching CLOSE-02", log_text)
+            self.assertIn("launch timed out after 3s", log_text)
+
+    def test_main_close02_only_skips_sprint07_and_syncs_close02(self) -> None:
+        module = load_script_module()
+        args = types.SimpleNamespace(
+            log_path=Path("E:/PreferGrow/logs/close02.log"),
+            max_attempts=10,
+            interval_seconds=60,
+            connect_timeout=8,
+            host="l20",
+            remote_base="/data/Zijian/goal/RecDemo_clean_main",
+            remote_python="/data/Zijian/goal/PreferGrow/.venv/bin/python",
+            report_dir="/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07",
+            local_report_dir=Path("E:/PreferGrow/docs/reports/data/2026-07-06-sprint07"),
+            local_python=Path("E:/anaco/python.exe"),
+            close02_run_root="/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor",
+            close02_report_dir="/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-close02-ml1m-noise-floor",
+            local_close02_report_dir=Path("E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor"),
+            launch_close02_on_complete=False,
+            close02_seeds=[100, 101, 102],
+            close02_only=True,
+            close02_launch_timeout_seconds=30,
+            print_only=False,
+        )
+
+        with mock.patch.object(module, "parse_args", return_value=args), \
+            mock.patch.object(module, "run_attempt_loop") as run_attempt_loop, \
+            mock.patch.object(module, "run_close02_attempt_loop", return_value=True) as run_close02_attempt_loop, \
+            mock.patch.object(module, "sync_close02_artifacts", return_value=True) as sync_close02_artifacts, \
+            mock.patch.object(module, "launch_close02_followup") as launch_close02_followup:
+            module.main()
+
+        run_attempt_loop.assert_not_called()
+        run_close02_attempt_loop.assert_called_once()
+        sync_close02_artifacts.assert_called_once()
+        launch_close02_followup.assert_not_called()
 
     def test_sync_sprint07_artifacts_logs_success(self) -> None:
         module = load_script_module()
