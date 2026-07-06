@@ -30,9 +30,9 @@ class RetrySprint07WhenL20ReadyTests(unittest.TestCase):
             connect_timeout=9,
         )
 
-        self.assertEqual(["ssh", "-o", "ConnectTimeout=9", "l20"], command[:4])
-        self.assertIn("build_sprint07_control_report.py", command[4])
-        self.assertIn("sprint07_control_table.csv", command[4])
+        self.assertEqual(["ssh", "-n", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=9", "l20"], command[:8])
+        self.assertIn("build_sprint07_control_report.py", command[8])
+        self.assertIn("sprint07_control_table.csv", command[8])
 
     def test_build_close02_launch_command_uses_local_python_and_seed_list(self) -> None:
         module = load_script_module()
@@ -57,11 +57,11 @@ class RetrySprint07WhenL20ReadyTests(unittest.TestCase):
             connect_timeout=9,
         )
 
-        self.assertEqual(["ssh", "-o", "ConnectTimeout=9", "l20"], command[:4])
-        self.assertIn("build_close02_ml1m_noise_floor_report.py", command[4])
-        self.assertIn("--run-root", command[4])
-        self.assertIn("--seeds 100 101 102", command[4])
-        self.assertIn("close02_ml1m_noise_floor_table.csv", command[4])
+        self.assertEqual(["ssh", "-n", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=9", "l20"], command[:8])
+        self.assertIn("build_close02_ml1m_noise_floor_report.py", command[8])
+        self.assertIn("--run-root", command[8])
+        self.assertIn("--seeds 100 101 102", command[8])
+        self.assertIn("close02_ml1m_noise_floor_table.csv", command[8])
 
     def test_build_report_sync_commands_pull_expected_files(self) -> None:
         module = load_script_module()
@@ -73,11 +73,11 @@ class RetrySprint07WhenL20ReadyTests(unittest.TestCase):
         )
 
         self.assertEqual(2, len(commands))
-        self.assertEqual(["scp", "-o", "ConnectTimeout=8"], commands[0][:3])
-        self.assertIn("sprint07_control_table.csv", commands[0][3])
-        self.assertTrue(commands[0][4].endswith("sprint07_control_table.csv"))
-        self.assertIn("sprint07_control_report_zh.md", commands[1][3])
-        self.assertTrue(commands[1][4].endswith("sprint07_control_report_zh.md"))
+        self.assertEqual(["scp", "-B", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"], commands[0][:6])
+        self.assertIn("sprint07_control_table.csv", commands[0][6])
+        self.assertTrue(commands[0][7].endswith("sprint07_control_table.csv"))
+        self.assertIn("sprint07_control_report_zh.md", commands[1][6])
+        self.assertTrue(commands[1][7].endswith("sprint07_control_report_zh.md"))
 
     def test_build_close02_report_sync_commands_pull_expected_files(self) -> None:
         module = load_script_module()
@@ -89,12 +89,13 @@ class RetrySprint07WhenL20ReadyTests(unittest.TestCase):
         )
 
         self.assertEqual(3, len(commands))
-        self.assertIn("close02_ml1m_noise_floor_table.csv", commands[0][3])
-        self.assertTrue(commands[0][4].endswith("close02_ml1m_noise_floor_table.csv"))
-        self.assertIn("close02_ml1m_noise_floor_report.json", commands[1][3])
-        self.assertTrue(commands[1][4].endswith("close02_ml1m_noise_floor_report.json"))
-        self.assertIn("close02_ml1m_noise_floor_report_zh.md", commands[2][3])
-        self.assertTrue(commands[2][4].endswith("close02_ml1m_noise_floor_report_zh.md"))
+        self.assertEqual(["scp", "-B", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"], commands[0][:6])
+        self.assertIn("close02_ml1m_noise_floor_table.csv", commands[0][6])
+        self.assertTrue(commands[0][7].endswith("close02_ml1m_noise_floor_table.csv"))
+        self.assertIn("close02_ml1m_noise_floor_report.json", commands[1][6])
+        self.assertTrue(commands[1][7].endswith("close02_ml1m_noise_floor_report.json"))
+        self.assertIn("close02_ml1m_noise_floor_report_zh.md", commands[2][6])
+        self.assertTrue(commands[2][7].endswith("close02_ml1m_noise_floor_report_zh.md"))
 
     def test_completion_state_requires_all_rows_completed(self) -> None:
         module = load_script_module()

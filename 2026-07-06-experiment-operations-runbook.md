@@ -79,7 +79,7 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 | Gate0/效用工件 | `/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0` | `gate0_text_utility_report.json`(U_ds,训练发射器要读它) |
 | 腐蚀 bank | `/data/Zijian/goal/RecDemoRuns/beauty_corruptions` | 冻结 token-dropout bank,勿重生成 |
 | 当前 SPRINT-07 读数目录 | `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07` | `sprint07_control_table.csv` + `sprint07_control_report_zh.md` |
-| 当前 CLOSE-02 读数目录 | `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-close02-ml1m-noise-floor` | `close02_ml1m_noise_floor_{table,report}.csv/json/md` |
+| 当前 CLOSE-02 live 刷新目录 | `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor` | `close02_ml1m_noise_floor_{table,report}.csv/json/md`; `2026-07-06-*` 目录保留为更早的 provisional snapshot |
 
 补充说明:
 - `clean root` 表示**官方 provenance 根**;它应尽量保持干净,但不要假设服务器上的 `git status --short` 永远为空。
@@ -91,8 +91,10 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 - 2026-07-06 23:57(+08:00) 再探测:`clean root` 当前位于 `main@74a7ea1`,且**不是干净工作树**;实测仍有已跟踪改动 `scripts/run_text_side_main_table_tmux.sh`、`scripts/sprint05_official_orchestrator.sh`、`scripts/sprint05_watchdog.sh`,以及未跟踪的 dated report 目录和 live helper(`build_sprint07_control_report.py` / `launch_close02_ml1m_noise_floor_tmux.py` / `build_close02_ml1m_noise_floor_report.py` 等),所以 **`git pull --ff-only` 不能想当然直接跑**;
 - 活跃 tmux 会话实测已切换为 `close02_ml1m_noise_floor`、`sprint07_report_watch`、`sprint07_steam_followup`;也就是说 `SPRINT-07` 已收尾,watcher 已自动把链路推进到 `CLOSE-02`;
 - `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07/` 已经是**完成态**读数目录;本地 watcher 于 `2026-07-06 23:55:29 +08:00` 同步成功;
+- `2026-07-07 00:34(+08:00)` 再探测:`CLOSE-02` 当前 live 刷新目录已经切到 `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor/`;`2026-07-06-close02-*` 目录仍可保留为更早的 provisional snapshot,但恢复 watcher 和手工 `scp` 都应显式指向 `2026-07-07` 这套目录;
 - `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/` 现在已经出现,但刚启动时只会先看到 `ml1m_core_seed100/`;这是因为 launcher 把 `100 -> 101 -> 102` 串在**同一个 tmux session**里顺序执行,不是三开并行;
 - 23:55:32(+08:00) `close02_ml1m_noise_floor` 会话创建成功;23:56 左右 GPU1 上在跑 `ml1m_core_seed100`(`pid=1033052`),其日志位于 `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/logs/ml1m_core_seed100.log`; seeds 101/102 仍在同一会话后排队;
+- 同一轮 `00:34` 探测中,`seed100` 的训练日志已经推进到 `step=12000`,而 dated table 仍显示 `running@9000`;这说明 live 表刷新可能落后一轮轮询,恢复时优先把它当作**观测延迟**,不要因为 table 暂时慢于日志就误判卡死;
 - GPU 占用也要一起看:当次探测里 GPU1 已切到 `CLOSE-02` 的 seed100;如果 GPU0 仍被别的实验占住,那是正常的,不影响这条单卡串行噪声地板链继续推进。
 
 ## 4. 代码同步标准流(每次会话必做)
@@ -256,7 +258,7 @@ FORCE=1 SKIP_EXISTING=0 DATASETS_CSV=ML1M,ATG GPU_IDS_CSV=1 \
   --log-path E:/PreferGrow/logs/sprint07_to_close02_chain_2026-07-06_22-21-15.log `
   --local-python E:/anaco/python.exe `
   --local-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-sprint07 `
-  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor `
+  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-07-close02-ml1m-noise-floor `
   --launch-close02-on-complete `
   --close02-seeds 100 101 102
 ```
@@ -287,12 +289,16 @@ Get-CimInstance Win32_Process |
 & 'E:/anaco/python.exe' scripts/retry_sprint07_when_l20_ready.py `
   --close02-only `
   --log-path E:/PreferGrow/logs/close02_only_retry_YYYY-MM-DD_HH-mm-ss.log `
-  --close02-report-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-close02-ml1m-noise-floor `
-  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor
+  --close02-report-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor `
+  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-07-close02-ml1m-noise-floor
 ```
 
 这个模式只会轮询远端 `build_close02_ml1m_noise_floor_report.py` 并在完成后 `scp`
-三份 dated artifact,不会重新发射或重置远端训练。
+三份 dated artifact,不会重新发射或重置远端训练。恢复**旧 run** 时不要偷懒依赖 `<today>` 默认目录;应像上面这样显式传当前服务器正在刷新的 dated 目录。
+
+补充:2026-07-07 本地又补了一层恢复加固,`retry_sprint07_when_l20_ready.py` 里的 `ssh/scp`
+现在会强制走 batch/no-tty/no-stdin 形态。如果你本地代码还停在这个补丁之前,可能会复现
+“远端报告已经写完,但本地 `ssh` 子进程不退出”的假卡死;先把本地仓库更新到最新再挂 watcher。
 
 ### 7.5 CLOSE-02 宿主噪声地板(ML1M core 多种子)
 
@@ -327,15 +333,15 @@ Get-CimInstance Win32_Process |
 发射后读数:
 
 ```powershell
-ssh l20 "cd /data/Zijian/goal/RecDemo_clean_main && /data/Zijian/goal/PreferGrow/.venv/bin/python scripts/build_close02_ml1m_noise_floor_report.py --output-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-close02-ml1m-noise-floor"
+ssh l20 "cd /data/Zijian/goal/RecDemo_clean_main && /data/Zijian/goal/PreferGrow/.venv/bin/python scripts/build_close02_ml1m_noise_floor_report.py --output-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor"
 ```
 
 ⚠️ `build_close02_ml1m_noise_floor_report.py` 的默认 `--run-root` 是 **L20 上的 Linux 路径**;在 Windows 本地直接运行默认参数读不到 `/data/...`。正常做法有两种:
 
 1. 让 `retry_sprint07_when_l20_ready.py --launch-close02-on-complete` 自动在远端刷新报告并 `scp` 回本地;
-2. 或者像上面这样在 `l20` 上执行报告脚本,再手工 `scp` 三个工件回 `E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor/`。
+2. 或者像上面这样在 `l20` 上执行报告脚本,再手工 `scp` 三个工件回 `E:/PreferGrow/docs/reports/data/2026-07-07-close02-ml1m-noise-floor/`。
 
-固定产物目录:
+固定产物目录(新跑可以用 `<today>`;恢复旧 run 时必须显式对齐服务器当前 live refresh dir):
 
 ```text
 docs/reports/data/<today>-close02-ml1m-noise-floor/

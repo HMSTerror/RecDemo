@@ -33,6 +33,8 @@ DEFAULT_LOCAL_CLOSE02_REPORT_DIR = (
 )
 DEFAULT_CLOSE02_SEEDS = (100, 101, 102)
 DEFAULT_CLOSE02_LAUNCH_TIMEOUT_SECONDS = 30
+SSH_BASE_ARGS = ["ssh", "-n", "-T", "-o", "BatchMode=yes"]
+SCP_BASE_ARGS = ["scp", "-B", "-o", "BatchMode=yes"]
 SPRINT07_REPORT_FILENAMES = ("sprint07_control_table.csv", "sprint07_control_report_zh.md")
 CLOSE02_REPORT_FILENAMES = (
     "close02_ml1m_noise_floor_table.csv",
@@ -86,7 +88,7 @@ def build_status_command(
         f"{_q(remote_python)} scripts/build_sprint07_control_report.py >/tmp/sprint07_retry_refresh.log 2>&1 && "
         f"cat {_q(control_csv)}"
     )
-    return ["ssh", "-o", f"ConnectTimeout={connect_timeout}", host, remote_command]
+    return [*SSH_BASE_ARGS, "-o", f"ConnectTimeout={connect_timeout}", host, remote_command]
 
 
 def build_close02_status_command(
@@ -111,7 +113,7 @@ def build_close02_status_command(
         f">/tmp/close02_retry_refresh.log 2>&1 && "
         f"cat {_q(report_csv)}"
     )
-    return ["ssh", "-o", f"ConnectTimeout={connect_timeout}", host, remote_command]
+    return [*SSH_BASE_ARGS, "-o", f"ConnectTimeout={connect_timeout}", host, remote_command]
 
 
 def append_log(log_path: Path, message: str) -> None:
@@ -261,7 +263,7 @@ def build_report_sync_commands(
     for filename in filenames:
         commands.append(
             [
-                "scp",
+                *SCP_BASE_ARGS,
                 "-o",
                 f"ConnectTimeout={connect_timeout}",
                 f"{host}:{report_dir}/{filename}",
