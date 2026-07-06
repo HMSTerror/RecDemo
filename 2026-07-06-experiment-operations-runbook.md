@@ -73,7 +73,8 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 | 本地仓库 | `E:\PreferGrow` | 开发/提交/报告 |
 | 远端仓库(**dirty root**) | `/data/Zijian/goal/RecDemo` | 数据集、Gate0 工件、历史产物;工作区**长期是脏的** |
 | 远端**clean root** | `/data/Zijian/goal/RecDemo_clean_main` | **官方跑唯一合法执行根**(见 §7.1 红线) |
-| 运行产物根 | `/data/Zijian/goal/RecDemoRuns/main_table_text_side` | `<dataset>_proposal_adaptive_mainpath/{checkpoints,checkpoints-meta,logs}`;消融跑在 `<dataset>_proposal_adaptive_ablation_<mode>` |
+| 主表运行产物根 | `/data/Zijian/goal/RecDemoRuns/main_table_text_side` | `<dataset>_proposal_adaptive_mainpath/{checkpoints,checkpoints-meta,logs}`;消融跑在 `<dataset>_proposal_adaptive_ablation_<mode>` |
+| CLOSE-02 运行产物根 | `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor` | `ml1m_core_seed<seed>/{logs,checkpoints,checkpoints-meta}`;当前按 `100 -> 101 -> 102` 串行排队 |
 | 数据集根 | `/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/{ML1M,Steam,Beauty,ATG,ASO}` | 再生 split + 冻结 bank |
 | 原始数据 | `/data/Zijian/goal/RecDemo/dataset/raw/amazon` 等 | wget 下来的原始压缩包 |
 | Gate0/效用工件 | `/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0` | `gate0_text_utility_report.json`(U_ds,训练发射器要读它) |
@@ -85,7 +86,7 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 - `clean root` 表示**官方 provenance 根**;它应尽量保持干净,但不要假设服务器上的 `git status --short` 永远为空。
 - 2026-07-06 实机检查显示,`/data/Zijian/goal/RecDemo_clean_main` 上可能暂存 `docs/reports/data/...`、`build_sprint07_control_report.py` 等运行时文件;`git pull --ff-only` 前必须先看状态。
 
-### 3.1 2026-07-06 实机状态快照(带日期,别当成永恒真理)
+### 3.1 2026-07-06/07 实机状态快照(带日期,别当成永恒真理)
 
 - `ssh l20` 可通,`hostname=ubuntu`;
 - 2026-07-06 23:57(+08:00) 再探测:`clean root` 当前位于 `main@74a7ea1`,且**不是干净工作树**;实测仍有已跟踪改动 `scripts/run_text_side_main_table_tmux.sh`、`scripts/sprint05_official_orchestrator.sh`、`scripts/sprint05_watchdog.sh`,以及未跟踪的 dated report 目录和 live helper(`build_sprint07_control_report.py` / `launch_close02_ml1m_noise_floor_tmux.py` / `build_close02_ml1m_noise_floor_report.py` 等),所以 **`git pull --ff-only` 不能想当然直接跑**;
@@ -95,6 +96,8 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 - `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/` 现在已经出现,但刚启动时只会先看到 `ml1m_core_seed100/`;这是因为 launcher 把 `100 -> 101 -> 102` 串在**同一个 tmux session**里顺序执行,不是三开并行;
 - 23:55:32(+08:00) `close02_ml1m_noise_floor` 会话创建成功;23:56 左右 GPU1 上在跑 `ml1m_core_seed100`(`pid=1033052`),其日志位于 `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/logs/ml1m_core_seed100.log`; seeds 101/102 仍在同一会话后排队;
 - 同一轮 `00:34` 探测中,`seed100` 的训练日志已经推进到 `step=12000`,而 dated table 仍显示 `running@9000`;这说明 live 表刷新可能落后一轮轮询,恢复时优先把它当作**观测延迟**,不要因为 table 暂时慢于日志就误判卡死;
+- `2026-07-07 01:00(+08:00)` 再探测:远端 `close02_ml1m_noise_floor` 会话仍存活(`tmux pane pid=1033037`);dated table 已推进到 `seed100 running@20000`,而日志尾部已出现 `step=21000` 和 `NEW_BEST step=20000`;这再次说明 live report 落后一轮轮询属于正常现象,不是卡死;
+- 同一轮 `01:00` 探测里,本地活跃恢复 watcher 已切换为只读 `--close02-only` 模式:`pid=40912`,`log=E:/PreferGrow/logs/close02_only_retry_2026-07-07_00-41-15.log`,`--interval-seconds 120 --max-attempts 720`;原始整链 watcher(`pid=23300`) 只保留为历史链路证据,不再是当前活跃监控;
 - GPU 占用也要一起看:当次探测里 GPU1 已切到 `CLOSE-02` 的 seed100;如果 GPU0 仍被别的实验占住,那是正常的,不影响这条单卡串行噪声地板链继续推进。
 
 ## 4. 代码同步标准流(每次会话必做)
@@ -263,7 +266,7 @@ FORCE=1 SKIP_EXISTING=0 DATASETS_CSV=ML1M,ATG GPU_IDS_CSV=1 \
   --close02-seeds 100 101 102
 ```
 
-2026-07-06 当晚正在跑的 watcher 就是这条链,实测后台进程 `pid=23300`,创建时间 `2026-07-06 22:39:26 +08:00`。续接时先查它是不是还活着,不要重复开第二条 watcher:
+2026-07-06 当晚最初跑起来的 watcher 就是这条链,实测后台进程曾是 `pid=23300`,创建时间 `2026-07-06 22:39:26 +08:00`。续接时先查它是不是还活着,不要重复开第二条 watcher:
 
 ```powershell
 Get-CimInstance Win32_Process |
@@ -299,6 +302,20 @@ Get-CimInstance Win32_Process |
 补充:2026-07-07 本地又补了一层恢复加固,`retry_sprint07_when_l20_ready.py` 里的 `ssh/scp`
 现在会强制走 batch/no-tty/no-stdin 形态。如果你本地代码还停在这个补丁之前,可能会复现
 “远端报告已经写完,但本地 `ssh` 子进程不退出”的假卡死;先把本地仓库更新到最新再挂 watcher。
+
+当前这次 live 恢复实际挂着的是:
+
+```powershell
+& 'E:/anaco/python.exe' scripts/retry_sprint07_when_l20_ready.py `
+  --close02-only `
+  --log-path E:/PreferGrow/logs/close02_only_retry_2026-07-07_00-41-15.log `
+  --close02-report-dir /data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor `
+  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-07-close02-ml1m-noise-floor `
+  --interval-seconds 120 `
+  --max-attempts 720
+```
+
+注意:`retry_sprint07_when_l20_ready.py` 的脚本默认 `--max-attempts` 仍是 `240`;上面这条是**显式改成 720** 来覆盖过夜轮询,不是脚本默认值已经变了。
 
 ### 7.5 CLOSE-02 宿主噪声地板(ML1M core 多种子)
 
@@ -386,7 +403,7 @@ SPRINT-07 的当前固定文件名就是:
 | 症状 | 处置 |
 |---|---|
 | ssh 超时但 VPN 正常(有 10.7.7.x) | 远端宕机/内网故障 → 等待或联系管理员;tmux 里的跑**在服务器活着时不受影响**,恢复后先 `tmux ls` 清点 |
-| ssh 间歇 flap | 长任务全走 tmux;本地起 retry helper 轮询:`retry_gate0_when_l20_ready.py` / `retry_sprint07_when_l20_ready.py`(后台跑,日志在 `logs/*_retry_l20.log`);`retry_sprint07_when_l20_ready.py --launch-close02-on-complete` 现在会一路盯到 `CLOSE-02` 报告也同步回来;注意默认 240 次后仍会自行退出,超时后要手工重启 |
+| ssh 间歇 flap | 长任务全走 tmux;本地起 retry helper 轮询:`retry_gate0_when_l20_ready.py` / `retry_sprint07_when_l20_ready.py`(后台跑,日志在 `logs/*_retry_l20.log`);`retry_sprint07_when_l20_ready.py --launch-close02-on-complete` 现在会一路盯到 `CLOSE-02` 报告也同步回来;若只剩 `CLOSE-02` 在跑,优先切 `--close02-only` 只读恢复;脚本默认 240 次后会退出,需要过夜时显式传 `--max-attempts 720` 之类的更大值 |
 | VPN 掉线 | OpenVPN GUI 重连;看 `%USERPROFILE%\OpenVPN\log\OpenVPN-Client.log` |
 | /data 写满 | `df -h /data`;清理或临时到 /tmp 执行,完成后把产物归档回仓库目录(FOLLOWUP-02 先例) |
 | 脚本 0 字节/缺失 | 磁盘满时期的产物,重新同步代码(§4 应急通道) |
