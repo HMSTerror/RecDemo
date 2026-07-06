@@ -87,11 +87,12 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 ### 3.1 2026-07-06 实机状态快照(带日期,别当成永恒真理)
 
 - `ssh l20` 可通,`hostname=ubuntu`;
-- `clean root` 当时位于 `main@74a7ea1`;
+- 2026-07-06 23:20(+08:00) 再探测:`clean root` 当前位于 `main@dc3a8f8`,且**不是干净工作树**;实测有已跟踪改动 `scripts/run_text_side_main_table_tmux.sh`、`scripts/sprint05_official_orchestrator.sh`、`scripts/sprint05_watchdog.sh`,以及未跟踪的 dated report 目录与 `build_sprint07_control_report.py` / `launch_close02_ml1m_noise_floor_tmux.py` / `build_close02_ml1m_noise_floor_report.py` 等 live helper,所以 **`git pull --ff-only` 不能想当然直接跑**;
 - 活跃 tmux 会话实测为 `sprint07_report_watch`、`sprint07_steam_ctrl`、`sprint07_steam_followup`;
 - `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07/` 已存在 live 表和 live 中文报告;
 - `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/` 在真正发射 `CLOSE-02` 之前**不会自动出现**;
-- `Steam/text_anchor_only` 已完成;`Steam/global_p` 在 GPU1 上继续跑(2026-07-06 22:31 左右已到 `step 10000`),因此 live 表里出现 `running` 是正常的。
+- `Steam/text_anchor_only` 已完成;`Steam/global_p` 在 GPU1 上继续跑。2026-07-06 23:16 左右 live 表最后确认到 `running@29000`,同一次晚些时候训练日志已经打印到 `step 30000`,所以 **live 表比日志慢一个 polling 周期是正常现象**;
+- GPU 占用也要一起看:当次探测里 `GPU0` 被 `root` 的 `python3 -m src.trainers.train_slowfast_e2e ... --dataset_name Beauty --device cuda:0` 占住(约 45GB),`GPU1` 才是 `Steam/global_p`(`pid=994887`),因此 `CLOSE-02` 仍未启动是预期现象。
 
 ## 4. 代码同步标准流(每次会话必做)
 
@@ -251,11 +252,20 @@ FORCE=1 SKIP_EXISTING=0 DATASETS_CSV=ML1M,ATG GPU_IDS_CSV=1 \
 
 ```powershell
 & 'E:/anaco/python.exe' scripts/retry_sprint07_when_l20_ready.py `
-  --log-path E:/PreferGrow/logs/sprint07_to_close02_chain.log `
+  --log-path E:/PreferGrow/logs/sprint07_to_close02_chain_2026-07-06_22-21-15.log `
   --local-python E:/anaco/python.exe `
   --local-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-sprint07 `
+  --local-close02-report-dir E:/PreferGrow/docs/reports/data/2026-07-06-close02-ml1m-noise-floor `
   --launch-close02-on-complete `
   --close02-seeds 100 101 102
+```
+
+2026-07-06 当晚正在跑的 watcher 就是这条链,实测后台进程 `pid=23300`,创建时间 `2026-07-06 22:39:26 +08:00`。续接时先查它是不是还活着,不要重复开第二条 watcher:
+
+```powershell
+Get-CimInstance Win32_Process |
+  Where-Object { $_.CommandLine -like '*retry_sprint07_when_l20_ready.py*' } |
+  Select-Object ProcessId, CreationDate, CommandLine | Format-List
 ```
 
 它会做三件事:
@@ -320,6 +330,7 @@ cat /data/Zijian/goal/RecDemoRuns/main_table_text_side/<run>/checkpoints-meta/<D
 ⚠️ **并行竞态**:`summarize_text_side_main_table_runs.py` 与 `compare_text_side_main_table_to_core.py` 同时打同一 /tmp 目录会读到 stale status——**永远顺序执行**或直接用快照脚本。
 ⚠️ compare 的 live 值:运行中的跑会忽略尾部不完整 test 块(已修复),live 列为空先怀疑跑还没进入 test 阶段。
 ⚠️ `build_sprint07_control_report.py` 和 `build_close02_ml1m_noise_floor_report.py` 对 `status!=completed` 的行**隐藏 provisional metrics**;live 期间只读 `status`、`last_logged_step`、日志尾部,不要把半跑出的 summary 数字当 final。
+⚠️ live 表的 `last_logged_step` / watcher 日志,可能比训练日志尾部慢一轮轮询;如果表里还是 `running@29000`,但 `tail -n 80 ...global_p.log` 已经看到 `step: 30000`,优先把它当成**正常观测延迟**,不要误判成卡死。
 对照臂报告:`build_sprint07_control_report.py` 以**日志完成标记**判 completed,live 跑不会被误报为完成。
 `CLOSE-02` 的 watcher 也是通过**远端先刷新 report,再同步 dated artifact**的方式工作,不是在 Windows 上直接读 `/data/...`。
 SPRINT-07 的当前固定文件名就是:
