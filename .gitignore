@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 .ccg/
+docs/reports/2026-07-06-experiment-operations-runbook.md
+future_work/
