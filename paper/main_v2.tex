@@ -647,10 +647,20 @@ degrades $5\times$ less than the ungated anchor from clean to corrupted
 test conditions ($-0.0008$ vs.\ $-0.0043$ NDCG@10).
 % artifacts: 2026-06-28-beauty-description-blank-corruption.md,
 %            2026-06-28-beauty-token-dropout-end-to-end.md
-\pending{v2 control arms under the frozen two-factor gate: Beauty
-four arms completed on the clean root, Steam arms in flight (CLOSE-01);
-fill from docs/reports/data/2026-07-06-sprint07/sprint07_control_table.csv
-once archived locally, and scope claims to completed arms.}
+Under the frozen two-factor gate, the clean-root v2 controls separate
+closed-gate parity from opened-gate mechanism effects. On Beauty, where
+$\phi(U_{ds})=0$, the \texttt{global\_p} arm is numerically identical
+to the full run (both $0.0294$ test NDCG@10) and the $u$-shuffle arm
+does not degrade it ($0.0330$), consistent with the dataset-level gate
+being shut. On Steam, where $\phi(U_{ds})=1$, shuffling the user
+reliability signal lowers test NDCG@10 by $0.0011$ relative to full,
+while the \texttt{global\_p} arm stays close to the host
+($+0.00035$ vs.\ core) and below the full run, so the deployed arm's
+small positive gain is not explained by a dataset-agnostic bias alone.
+The \texttt{text\_anchor\_only} arm is reported only as a high-variance
+reference control rather than a replacement for the gated method; it
+rises to $0.0302$ on Steam and sits slightly below full on Beauty.
+% artifact: docs/reports/data/2026-07-06-sprint07/sprint07_control_table.csv
 
 \pfig{Backoff mechanism: clean-vs-corrupted shift of the gate and
 reliability, bucketed by clean reliability (regenerate from archived

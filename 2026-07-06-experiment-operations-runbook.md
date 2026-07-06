@@ -88,12 +88,12 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 ### 3.1 2026-07-06 实机状态快照(带日期,别当成永恒真理)
 
 - `ssh l20` 可通,`hostname=ubuntu`;
-- 2026-07-06 23:20(+08:00) 再探测:`clean root` 当前位于 `main@dc3a8f8`,且**不是干净工作树**;实测有已跟踪改动 `scripts/run_text_side_main_table_tmux.sh`、`scripts/sprint05_official_orchestrator.sh`、`scripts/sprint05_watchdog.sh`,以及未跟踪的 dated report 目录与 `build_sprint07_control_report.py` / `launch_close02_ml1m_noise_floor_tmux.py` / `build_close02_ml1m_noise_floor_report.py` 等 live helper,所以 **`git pull --ff-only` 不能想当然直接跑**;
-- 活跃 tmux 会话实测为 `sprint07_report_watch`、`sprint07_steam_ctrl`、`sprint07_steam_followup`;
-- `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07/` 已存在 live 表和 live 中文报告;
-- `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/` 在真正发射 `CLOSE-02` 之前**不会自动出现**;
-- `Steam/text_anchor_only` 已完成;`Steam/global_p` 在 GPU1 上继续跑。2026-07-06 23:16 左右 live 表最后确认到 `running@29000`,同一次晚些时候训练日志已经打印到 `step 30000`,所以 **live 表比日志慢一个 polling 周期是正常现象**;
-- GPU 占用也要一起看:当次探测里 `GPU0` 被 `root` 的 `python3 -m src.trainers.train_slowfast_e2e ... --dataset_name Beauty --device cuda:0` 占住(约 45GB),`GPU1` 才是 `Steam/global_p`(`pid=994887`),因此 `CLOSE-02` 仍未启动是预期现象。
+- 2026-07-06 23:57(+08:00) 再探测:`clean root` 当前位于 `main@74a7ea1`,且**不是干净工作树**;实测仍有已跟踪改动 `scripts/run_text_side_main_table_tmux.sh`、`scripts/sprint05_official_orchestrator.sh`、`scripts/sprint05_watchdog.sh`,以及未跟踪的 dated report 目录和 live helper(`build_sprint07_control_report.py` / `launch_close02_ml1m_noise_floor_tmux.py` / `build_close02_ml1m_noise_floor_report.py` 等),所以 **`git pull --ff-only` 不能想当然直接跑**;
+- 活跃 tmux 会话实测已切换为 `close02_ml1m_noise_floor`、`sprint07_report_watch`、`sprint07_steam_followup`;也就是说 `SPRINT-07` 已收尾,watcher 已自动把链路推进到 `CLOSE-02`;
+- `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07/` 已经是**完成态**读数目录;本地 watcher 于 `2026-07-06 23:55:29 +08:00` 同步成功;
+- `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/` 现在已经出现,但刚启动时只会先看到 `ml1m_core_seed100/`;这是因为 launcher 把 `100 -> 101 -> 102` 串在**同一个 tmux session**里顺序执行,不是三开并行;
+- 23:55:32(+08:00) `close02_ml1m_noise_floor` 会话创建成功;23:56 左右 GPU1 上在跑 `ml1m_core_seed100`(`pid=1033052`),其日志位于 `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/logs/ml1m_core_seed100.log`; seeds 101/102 仍在同一会话后排队;
+- GPU 占用也要一起看:当次探测里 GPU1 已切到 `CLOSE-02` 的 seed100;如果 GPU0 仍被别的实验占住,那是正常的,不影响这条单卡串行噪声地板链继续推进。
 
 ## 4. 代码同步标准流(每次会话必做)
 
@@ -269,11 +269,13 @@ Get-CimInstance Win32_Process |
   Select-Object ProcessId, CreationDate, CommandLine | Format-List
 ```
 
-它会做三件事:
+它会做四件事:
 1. 轮询远端 `sprint07_control_table.csv` 是否八行全 completed;
 2. 一旦完成,把远端 `sprint07_control_table.csv` 和 `sprint07_control_report_zh.md` 拉回本地同 dated 目录;
 3. 然后自动发 `CLOSE-02` 的 `launch_close02_ml1m_noise_floor_tmux.py`;
 4. `CLOSE-02` 发出后继续轮询远端 `close02_ml1m_noise_floor_table.csv`,等 2-3 个种子都 completed 后,再把 `close02_ml1m_noise_floor_{table,report}.csv/json/md` 拉回本地 dated 目录。
+
+2026-07-06 实机已验证这条 watcher 链是通的: `23:55:23` 检到 `SPRINT-07` complete,`23:55:29` 完成 `sprint07` 工件同步,`23:55:32` 在远端创建 `close02_ml1m_noise_floor` 会话。
 
 ### 7.5 CLOSE-02 宿主噪声地板(ML1M core 多种子)
 
@@ -293,6 +295,17 @@ Get-CimInstance Win32_Process |
 - selector: val ndcg10 @ p5
 - checkpoints: best only (no snapshot)
 ```
+
+按 2026-07-06 的实机目录看,launcher 会在 run root 下按种子创建
+`ml1m_core_seed100/`、`ml1m_core_seed101/`、`ml1m_core_seed102/` 子目录,每个子目录里都有:
+
+```text
+- logs/ml1m_core_seed<seed>.log
+- single_train.log
+- checkpoints-meta/ML1M/frozen_run_manifest.json
+```
+
+注意:因为三个 seed 是**同一 tmux 会话里串行执行**,所以 seed100 没结束前,你通常只会在服务器上看到 `ml1m_core_seed100/`; seed101/102 目录会在前一个 seed 收尾后再陆续出现。这不是漏发射。
 
 发射后读数:
 
