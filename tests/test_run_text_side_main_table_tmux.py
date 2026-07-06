@@ -221,6 +221,75 @@ class RunTextSideMainTableTmuxTests(unittest.TestCase):
                 manifest_payload["provenance"]["repo_root"],
             )
 
+    def test_inner_run_can_use_script_defaults_without_preexporting_text_env(self) -> None:
+        bash = shutil.which("bash")
+        if bash is None:
+            self.skipTest("bash is not available")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            repo_root = root / "fake_repo"
+            repo_root.mkdir()
+            write_fake_single_train(repo_root / "single_train.py")
+
+            dataset_root = root / "datasets"
+            dataset_dir = dataset_root / "ML1M"
+            dataset_dir.mkdir(parents=True)
+            text_bank_path = dataset_dir / "text_bank.csv"
+            embeddings_path = dataset_dir / "sentence_t5_xl_item_emb.pt"
+            null_curve_path = dataset_dir / "agreement_null_curves.json"
+            split_path = dataset_dir / "train_data.df"
+            text_bank_path.write_text("item_id,text\n1,foo\n", encoding="utf-8")
+            embeddings_path.write_bytes(b"embeddings")
+            null_curve_path.write_text("{\"bins\": []}\n", encoding="utf-8")
+            split_path.write_bytes(b"split")
+
+            utility_report_path = root / "gate0_text_utility_report.json"
+            utility_report_path.write_text(
+                json.dumps(
+                    {
+                        "datasets": [
+                            {
+                                "dataset": "ML1M",
+                                "bank_hash": sha256_paths(text_bank_path, embeddings_path),
+                                "split_hash": sha256_paths(split_path),
+                                "u_ds_popularity": 0.61,
+                                "phi_u_ds": 0.0,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            run_root = root / "runs"
+            command = build_bash_command(
+                env_map={
+                    "INNER_RUN": "1",
+                    "PYTHON_BIN": "python3",
+                    "DATASET_ROOT": to_wsl_path(dataset_root),
+                    "RUN_ROOT": to_wsl_path(run_root),
+                    "GPU_IDS_CSV": "5",
+                    "DATASETS_CSV": "ML1M",
+                    "TEXT_UTILITY_REPORT_PATH": to_wsl_path(utility_report_path),
+                    "TEXT_ABLATION_MODE": "global_p",
+                },
+                repo_root=repo_root,
+            )
+            result = subprocess.run(
+                [bash, "-lc", command],
+                check=False,
+                capture_output=True,
+                cwd=REPO_ROOT,
+            )
+
+            self.assertEqual(0, result.returncode, decode_output(result.stderr) or decode_output(result.stdout))
+            run_dir = run_root / "ml1m_proposal_adaptive_ablation_global_p"
+            manifest_path = run_dir / "checkpoints-meta" / "ML1M" / "frozen_run_manifest.json"
+            manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual("v2", manifest_payload["frozen_config"]["kernel_version"])
+            self.assertEqual("global_p", manifest_payload["frozen_config"]["ablation_mode"])
+
 
 if __name__ == "__main__":
     unittest.main()
