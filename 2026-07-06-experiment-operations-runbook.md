@@ -72,18 +72,22 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 |---|---|---|
 | 本地仓库 | `E:\PreferGrow` | 开发/提交/报告 |
 | 远端仓库(**dirty root**) | `/data/Zijian/goal/RecDemo` | 数据集、Gate0 工件、历史产物;工作区**长期是脏的** |
-| 远端**clean root** | `/data/Zijian/goal/RecDemo_clean_main` | **官方跑唯一合法执行根**(见 §7.1 红线) |
+| 远端主表 **clean root** | `/data/Zijian/goal/RecDemo_clean_main` | `SPRINT-05/07` 主表与控制臂历史官方执行根 |
+| 远端 closeout **clean root** | `/data/Zijian/goal/RecDemo_clean_closeout_chain` | 当前 `CLOSE-02/CLOSE-03` 官方执行根,专门绕开 dirty root 与旧 clean root 的脏树风险 |
 | 主表运行产物根 | `/data/Zijian/goal/RecDemoRuns/main_table_text_side` | `<dataset>_proposal_adaptive_mainpath/{checkpoints,checkpoints-meta,logs}`;消融跑在 `<dataset>_proposal_adaptive_ablation_<mode>` |
 | CLOSE-02 运行产物根 | `/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor` | `ml1m_core_seed<seed>/{logs,checkpoints,checkpoints-meta}`;当前按 `100 -> 101 -> 102` 串行排队 |
+| CLOSE-03 运行产物根 | `/data/Zijian/goal/RecDemoRuns/close03_beauty_token_dropout` | `close03_beauty_token_dropout_<arm>_p5/{logs,checkpoints,checkpoints-meta}`;等待 `CLOSE-02` 全部 seeds 完成后自动接力 |
 | 数据集根 | `/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/{ML1M,Steam,Beauty,ATG,ASO}` | 再生 split + 冻结 bank |
 | 原始数据 | `/data/Zijian/goal/RecDemo/dataset/raw/amazon` 等 | wget 下来的原始压缩包 |
 | Gate0/效用工件 | `/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-02-gate0` | `gate0_text_utility_report.json`(U_ds,训练发射器要读它) |
 | 腐蚀 bank | `/data/Zijian/goal/RecDemoRuns/beauty_corruptions` | 冻结 token-dropout bank,勿重生成 |
 | 当前 SPRINT-07 读数目录 | `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-06-sprint07` | `sprint07_control_table.csv` + `sprint07_control_report_zh.md` |
-| 当前 CLOSE-02 live 刷新目录 | `/data/Zijian/goal/RecDemo_clean_main/docs/reports/data/2026-07-07-close02-ml1m-noise-floor` | `close02_ml1m_noise_floor_{table,report}.csv/json/md`; `2026-07-06-*` 目录保留为更早的 provisional snapshot |
+| 当前 CLOSE-02 report 目录 | `/data/Zijian/goal/RecDemo_clean_closeout_chain/docs/reports/data/2026-07-07-close02-ml1m-noise-floor` | `close02_ml1m_noise_floor_{table,report}.csv/json/md`; `2026-07-06-*` 目录保留为更早的 provisional snapshot |
+| closeout 链日志 | `/data/Zijian/goal/RecDemo_clean_closeout_chain/logs/closeout_run_chain.log` | `closeout_run_chain` 的接力日志;先等 `CLOSE-02`,再自动发 `CLOSE-03` |
 
 补充说明:
 - `clean root` 表示**官方 provenance 根**;它应尽量保持干净,但不要假设服务器上的 `git status --short` 永远为空。
+- `RecDemo_clean_main` 记录的是前一波主表/控制臂官方工件;`RecDemo_clean_closeout_chain` 是 2026-07-07 起专门给 `CLOSE-02/CLOSE-03` 准备的独立 clean clone,当前实机 HEAD 为 `a8d9823`。
 - 2026-07-06 实机检查显示,`/data/Zijian/goal/RecDemo_clean_main` 上可能暂存 `docs/reports/data/...`、`build_sprint07_control_report.py` 等运行时文件;`git pull --ff-only` 前必须先看状态。
 
 ### 3.1 2026-07-06/07 实机状态快照(带日期,别当成永恒真理)
@@ -99,6 +103,11 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 - `2026-07-07 01:00(+08:00)` 再探测:远端 `close02_ml1m_noise_floor` 会话仍存活(`tmux pane pid=1033037`);dated table 已推进到 `seed100 running@20000`,而日志尾部已出现 `step=21000` 和 `NEW_BEST step=20000`;这再次说明 live report 落后一轮轮询属于正常现象,不是卡死;
 - 同一轮 `01:00` 探测里,本地活跃恢复 watcher 已切换为只读 `--close02-only` 模式:`pid=40912`,`log=E:/PreferGrow/logs/close02_only_retry_2026-07-07_00-41-15.log`,`--interval-seconds 120 --max-attempts 720`;原始整链 watcher(`pid=23300`) 只保留为历史链路证据,不再是当前活跃监控;
 - GPU 占用也要一起看:当次探测里 GPU1 已切到 `CLOSE-02` 的 seed100;如果 GPU0 仍被别的实验占住,那是正常的,不影响这条单卡串行噪声地板链继续推进。
+- `2026-07-07 01:56(+08:00)` 再探测:`close02_ml1m_noise_floor` 仍是唯一需要盯的活链;dated table 与本地 watcher 都已推进到 `seed100 running@38000`,而 `seed100` 日志已经进入 `test phase`;但 `seed101/102` 仍未落 summary、也尚未起跑,说明当前仍处在 **seed100 收尾评估阶段** 而不是卡死或跳链。
+- 同一轮 `01:56` 探测里,GPU1 同时出现两个 PreferGrow venv Python 进程(`pid=1033052` / `1033785`);这更像同一条 `CLOSE-02` run 的训练/评估子进程并存,**不要**据此误判成重复发射。GPU0 仍被 unrelated `python3` 占住,所以 `CLOSE-03` 继续保持"已预检、未发射"状态是对的。
+- 同一轮 `tmux list-panes` 里 `sprint07_report_watch` 和 `sprint07_steam_followup` 仍然在列表里;现阶段把它们视作历史残留 pane,不要把它们当新的官方证据源或据此重复补发 `SPRINT-07`。
+- `2026-07-07 02:17(+08:00)` 再探测:当前活跃 tmux 会话已经收敛成 `close02_ml1m_noise_floor` 与 `closeout_run_chain` 两个;后者日志仍停在 `wait close02`,说明接力链本身正常,只是严格等 `CLOSE-02` 先关账。
+- 同一轮 `02:17` 探测里,`RecDemo_clean_closeout_chain@a8d9823` 已经成为本轮 closeout 官方执行根;`seed100` 日志推进到 `step=168000` 且刚写出 `NEW_BEST step=167000`,而 `seed101/102` 目录还没出现最终 summary,`close03_beauty_token_dropout` 目录也还没有 manifest/summary,所以当前**明确还没跑完**。
 
 ## 4. 代码同步标准流(每次会话必做)
 
@@ -208,9 +217,9 @@ tmux kill-session -t <name>                # 确认无用后再杀
 
 ### 7.1 官方纪律红线(先读)
 
-1. **官方跑只认 clean root**:`run` 的 manifest 记录 `provenance.repo_root`,不是 `/data/Zijian/goal/RecDemo_clean_main` 的一律判 `invalid_stale`,白跑;
+1. **官方跑只认 manifest 里的 clean root**:`run` 的 manifest 必须记录预期的 `provenance.repo_root`;当前合法根分两类:`/data/Zijian/goal/RecDemo_clean_main`(历史主表/SPRINT-07 工件) 与 `/data/Zijian/goal/RecDemo_clean_closeout_chain`(当前 `CLOSE-02/CLOSE-03` closeout 链)。从 dirty root 发的,或 repo_root 对不上的,一律按 `invalid_stale` 处理;
 2. **冻结参数零改动**:`v2 / g_max=0.5 / k=2.0 / τ0=0.2 / φ(0.70,0.10) / U_ds 工件 hash 对齐`;
-3. **存储纪律**:`WRITE_BEST_CHECKPOINT=True`、`WRITE_SNAPSHOT_CHECKPOINT=False`(只留 best);
+3. **存储纪律**:当前 checkpoint 逻辑已经硬化为 **latest + best**:`checkpoints-meta/<DS>/checkpoint_<graph>.pth` 覆盖保存 latest,`checkpoints-meta/<DS>/checkpoint_<graph>_best.pth` 保留 best;`run_dir/checkpoints/<DS>/` 不应再滚出一串 step checkpoint。发射器层面仍显式保留 `WRITE_SNAPSHOT_CHECKPOINT=True` 与 `WRITE_BEST_CHECKPOINT=True`,因为新的 latest 覆盖写逻辑挂在 snapshot 开关下;
 4. **选择器**:early stop = `val ndcg10 @ p5`,patience 5,min_step 5000;
 5. 每跑必产 `frozen_run_manifest.json`(config/seed/bank/null/split/U_ds 五 hash),读数前先核 manifest。
 
@@ -330,10 +339,10 @@ Get-CimInstance Win32_Process |
 远端默认:
 - session: close02_ml1m_noise_floor
 - run root: /data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor
-- repo root: /data/Zijian/goal/RecDemo_clean_main
+- repo root: /data/Zijian/goal/RecDemo_clean_closeout_chain
 - dataset: /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M
 - selector: val ndcg10 @ p5
-- checkpoints: best only (no snapshot)
+- checkpoints: latest + best (`checkpoint_hybrid.pth` + `checkpoint_hybrid_best.pth`; `run_dir/checkpoints/` 不再堆 step snapshots)
 ```
 
 按 2026-07-06 的实机目录看,launcher 会在 run root 下按种子创建
@@ -385,6 +394,7 @@ cat /data/Zijian/goal/RecDemoRuns/main_table_text_side/<run>/checkpoints-meta/<D
 ⚠️ compare 的 live 值:运行中的跑会忽略尾部不完整 test 块(已修复),live 列为空先怀疑跑还没进入 test 阶段。
 ⚠️ `build_sprint07_control_report.py` 和 `build_close02_ml1m_noise_floor_report.py` 对 `status!=completed` 的行**隐藏 provisional metrics**;live 期间只读 `status`、`last_logged_step`、日志尾部,不要把半跑出的 summary 数字当 final。
 ⚠️ live 表的 `last_logged_step` / watcher 日志,可能比训练日志尾部慢一轮轮询;如果表里还是 `running@29000`,但 `tail -n 80 ...global_p.log` 已经看到 `step: 30000`,优先把它当成**正常观测延迟**,不要误判成卡死。
+⚠️ 对 `CLOSE-02` 再多加一条:就算 `seed100` 日志已经进入 `test phase`,只要 `close02_ml1m_noise_floor_table.csv` 还没把该 seed 标成 `completed`,或者 `best_summary_hybrid.json` 还没作为最终 summary 被 report builder 读到,都**只能**按 running 处理,不能提前拿日志里的 test 指标当噪声地板结论。
 对照臂报告:`build_sprint07_control_report.py` 以**日志完成标记**判 completed,live 跑不会被误报为完成。
 `CLOSE-02` 的 watcher 也是通过**远端先刷新 report,再同步 dated artifact**的方式工作,不是在 Windows 上直接读 `/data/...`。
 SPRINT-07 的当前固定文件名就是:
@@ -393,7 +403,7 @@ SPRINT-07 的当前固定文件名就是:
 
 ## 9. 读数回写
 
-1. 远端产物落 `RecDemo_clean_main/docs/reports/data/<日期>-<主题>/`;
+1. 远端产物落到**对应的官方 clean root**下:`RecDemo_clean_main/docs/reports/data/<日期>-<主题>/`(历史主表/SPRINT-07) 或 `RecDemo_clean_closeout_chain/docs/reports/data/<日期>-<主题>/`(当前 `CLOSE-02/CLOSE-03`);
 2. 拉回本地同路径,构建报告(如 `build_sprint05_gate1_report.py`)——报告脚本会自动核 manifest 五 hash;
 3. 本地 `git add docs/reports/data/<...> && git commit`;
 4. 论文数字**只准**从这些带日期工件回填(tex 注释里引用工件路径)。
