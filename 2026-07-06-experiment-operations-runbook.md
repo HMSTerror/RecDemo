@@ -87,7 +87,7 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 
 补充说明:
 - `clean root` 表示**官方 provenance 根**;它应尽量保持干净,但不要假设服务器上的 `git status --short` 永远为空。
-- `RecDemo_clean_main` 记录的是前一波主表/控制臂官方工件;`RecDemo_clean_closeout_chain` 是 2026-07-07 起专门给 `CLOSE-02/CLOSE-03` 准备的独立 clean clone,当前实机 HEAD 为 `a8d9823`。
+- `RecDemo_clean_main` 记录的是前一波主表/控制臂官方工件;`RecDemo_clean_closeout_chain` 是 2026-07-07 起专门给 `CLOSE-02/CLOSE-03` 准备的独立 clean clone,当前实机 HEAD 已 fast-forward 到 `a4bba2c`。
 - 2026-07-06 实机检查显示,`/data/Zijian/goal/RecDemo_clean_main` 上可能暂存 `docs/reports/data/...`、`build_sprint07_control_report.py` 等运行时文件;`git pull --ff-only` 前必须先看状态。
 
 ### 3.1 2026-07-06/07 实机状态快照(带日期,别当成永恒真理)
@@ -107,7 +107,8 @@ ssh l20 "cd /data/Zijian/goal/RecDemo && git branch --show-current && git rev-pa
 - 同一轮 `01:56` 探测里,GPU1 同时出现两个 PreferGrow venv Python 进程(`pid=1033052` / `1033785`);这更像同一条 `CLOSE-02` run 的训练/评估子进程并存,**不要**据此误判成重复发射。GPU0 仍被 unrelated `python3` 占住,所以 `CLOSE-03` 继续保持"已预检、未发射"状态是对的。
 - 同一轮 `tmux list-panes` 里 `sprint07_report_watch` 和 `sprint07_steam_followup` 仍然在列表里;现阶段把它们视作历史残留 pane,不要把它们当新的官方证据源或据此重复补发 `SPRINT-07`。
 - `2026-07-07 02:17(+08:00)` 再探测:当前活跃 tmux 会话已经收敛成 `close02_ml1m_noise_floor` 与 `closeout_run_chain` 两个;后者日志仍停在 `wait close02`,说明接力链本身正常,只是严格等 `CLOSE-02` 先关账。
-- 同一轮 `02:17` 探测里,`RecDemo_clean_closeout_chain@a8d9823` 已经成为本轮 closeout 官方执行根;`seed100` 日志推进到 `step=168000` 且刚写出 `NEW_BEST step=167000`,而 `seed101/102` 目录还没出现最终 summary,`close03_beauty_token_dropout` 目录也还没有 manifest/summary,所以当前**明确还没跑完**。
+- `2026-07-07 11:10(+08:00)` 再探测:上述两个 tmux 会话仍在;`closeout_run_chain.log` 仍只有 `wait close02`;`seed100` 日志已推进到 `step=177000` 且刚写出 `NEW_BEST step=176000`;`seed101/102` 目录仍未生成,`close03_beauty_token_dropout` 也还没有 manifest/summary,所以这一轮 closeout 链到该时刻**仍明确未跑完**。
+- 需要注意 provenance:当前 clean clone 的 HEAD 已经是 `a4bba2c`,但正在运行的 `CLOSE-02 seed100` 是更早在 `a8d9823` 时发射出去的;等它结束后,后续 `CLOSE-03` 会接到更新后的 launcher 版本。
 
 ## 4. 代码同步标准流(每次会话必做)
 
