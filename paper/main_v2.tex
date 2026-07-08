@@ -269,6 +269,24 @@ host score model, objective, and schedule as fixed; we modify
 \section{Method: Fallback-Safe Gated Proposals}
 \label{sec:method}
 
+Figure~\ref{fig:method} overviews the construction; the pieces are
+specified below.
+
+\begin{figure}[t]
+\centering
+\pfig{Figure 1 (method overview): draw per the Figure-1 prompt in
+docs/reports/2026-07-08-figure-prompts.md, then replace this box with
+an includegraphics call.}
+\caption{Overview of fallback-safe evidence conditioning. A frozen
+text bank defines a per-history content anchor $\ch$; a two-factor,
+history-only gate $g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$
+interpolates the corruption proposal between the host's learned
+$\pcore$ and $\ch$. When the gate closes ($g{=}0$) the kernel is
+exactly the host's (Prop.~\ref{prop:reduction}); at any gate value the
+deviation is bounded by $g$ in total variation (Lemma~\ref{lem:tv}).}
+\label{fig:method}
+\end{figure}
+
 \subsection{Evidence anchor}
 Each dataset has a frozen text bank: one record per item (title, brand,
 category, description where present), embedded once by an off-the-shelf
@@ -406,7 +424,24 @@ pseudo-item coordinate present in every kernel object
 \section{The Utility-Inversion Analysis}
 \label{sec:inversion}
 
-Table~\ref{tab:inversion} is the paper's central empirical exhibit. For
+\begin{figure}[t]
+\centering
+\pfig{Figure 2 (inversion mechanism): draw per the Figure-2 prompt in
+docs/reports/2026-07-08-figure-prompts.md, then replace this box with
+an includegraphics call.}
+\caption{Why stronger text evidence hurts. Left (low $\Uds$): text
+similarity structures the item space but does not predict the next
+item, so tilting corruption toward the anchor supplies informative
+hard negatives. Right (high $\Uds$): text similarity ranks the true
+next item highly, so the same tilt lands corruption on likely future
+positives and manufactures false negatives
+(Prop.~\ref{prop:collision}). The frozen hinge $\phids$ closes the
+gate in the right-hand regime.}
+\label{fig:inversion}
+\end{figure}
+
+Table~\ref{tab:inversion} is the paper's central empirical exhibit;
+Figure~\ref{fig:inversion} sketches the mechanism behind it. For
 each dataset we report the frozen production statistic $\Uds$, the
 resulting gate factor $\phids$, and the outcome of text-tilting the
 kernel \emph{without} a dataset factor: a first-generation,
