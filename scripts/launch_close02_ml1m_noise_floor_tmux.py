@@ -9,7 +9,7 @@ import subprocess
 
 
 DEFAULT_HOST = "l20"
-DEFAULT_REMOTE_BASE = PurePosixPath("/data/Zijian/goal/RecDemo_clean_main")
+DEFAULT_REMOTE_BASE = PurePosixPath("/data/Zijian/goal/RecDemo_clean_closeout_chain")
 DEFAULT_RUN_ROOT = PurePosixPath("/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor")
 DEFAULT_PYTHON_BIN = PurePosixPath("/data/Zijian/goal/PreferGrow/.venv/bin/python")
 DEFAULT_DATASET_DIR = PurePosixPath("/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M")

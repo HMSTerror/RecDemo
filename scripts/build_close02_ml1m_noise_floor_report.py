@@ -12,7 +12,7 @@ import re
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUN_ROOT = Path("/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor")
-DEFAULT_OFFICIAL_REPO_ROOT = Path("/data/Zijian/goal/RecDemo_clean_main")
+DEFAULT_OFFICIAL_REPO_ROOT = Path("/data/Zijian/goal/RecDemo_clean_closeout_chain")
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "reports" / "data" / f"{date.today().isoformat()}-close02-ml1m-noise-floor"
 DEFAULT_GATE1_REPORT = REPO_ROOT / "docs" / "reports" / "data" / "2026-07-06-gate1" / "sprint05_gate1_report.json"
 DEFAULT_SEEDS = (100, 101, 102)

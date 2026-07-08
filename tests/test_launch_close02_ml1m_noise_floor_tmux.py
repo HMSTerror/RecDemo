@@ -16,10 +16,17 @@ def load_script_module():
 
 
 class LaunchClose02Ml1mNoiseFloorTmuxTests(unittest.TestCase):
+    def test_default_remote_base_uses_closeout_clean_root(self) -> None:
+        module = load_script_module()
+        self.assertEqual(
+            "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+            str(module.DEFAULT_REMOTE_BASE),
+        )
+
     def test_build_seed_inner_command_uses_hybrid_core_protocol_and_p5_selector(self) -> None:
         module = load_script_module()
         command = module.build_seed_inner_command(
-            remote_base=Path("/data/Zijian/goal/RecDemo_clean_main"),
+            remote_base=Path("/data/Zijian/goal/RecDemo_clean_closeout_chain"),
             run_root=Path("/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor"),
             python_bin=Path("/data/Zijian/goal/PreferGrow/.venv/bin/python"),
             dataset_dir=Path("/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M"),
@@ -38,7 +45,7 @@ class LaunchClose02Ml1mNoiseFloorTmuxTests(unittest.TestCase):
     def test_build_session_inner_command_loops_over_requested_seeds(self) -> None:
         module = load_script_module()
         command = module.build_session_inner_command(
-            remote_base=Path("/data/Zijian/goal/RecDemo_clean_main"),
+            remote_base=Path("/data/Zijian/goal/RecDemo_clean_closeout_chain"),
             run_root=Path("/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor"),
             python_bin=Path("/data/Zijian/goal/PreferGrow/.venv/bin/python"),
             dataset_dir=Path("/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M"),
@@ -56,7 +63,7 @@ class LaunchClose02Ml1mNoiseFloorTmuxTests(unittest.TestCase):
     def test_build_remote_command_wraps_inner_command_in_tmux(self) -> None:
         module = load_script_module()
         command = module.build_remote_command(
-            remote_base=Path("/data/Zijian/goal/RecDemo_clean_main"),
+            remote_base=Path("/data/Zijian/goal/RecDemo_clean_closeout_chain"),
             run_root=Path("/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor"),
             python_bin=Path("/data/Zijian/goal/PreferGrow/.venv/bin/python"),
             dataset_dir=Path("/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M"),
@@ -70,10 +77,10 @@ class LaunchClose02Ml1mNoiseFloorTmuxTests(unittest.TestCase):
 
     def test_build_ssh_argv_avoids_windows_shell_quoting(self) -> None:
         module = load_script_module()
-        argv = module.build_ssh_argv(host="l20", remote_command="cd /data/Zijian/goal/RecDemo_clean_main")
+        argv = module.build_ssh_argv(host="l20", remote_command="cd /data/Zijian/goal/RecDemo_clean_closeout_chain")
         self.assertEqual("ssh", argv[0])
         self.assertEqual("l20", argv[1])
-        self.assertEqual("cd /data/Zijian/goal/RecDemo_clean_main", argv[2])
+        self.assertEqual("cd /data/Zijian/goal/RecDemo_clean_closeout_chain", argv[2])
 
 
 if __name__ == "__main__":

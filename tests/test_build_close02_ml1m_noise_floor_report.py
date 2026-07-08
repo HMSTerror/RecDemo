@@ -85,6 +85,12 @@ def write_gate1_report(path: Path, delta: float) -> None:
 
 
 class BuildClose02Ml1mNoiseFloorReportTests(unittest.TestCase):
+    def test_default_official_repo_root_uses_closeout_clean_root(self) -> None:
+        self.assertEqual(
+            "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+            str(report.DEFAULT_OFFICIAL_REPO_ROOT).replace("\\", "/"),
+        )
+
     def test_build_rows_and_decision_line(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
