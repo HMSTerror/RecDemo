@@ -1,0 +1,5 @@
+dataset,item_count,train_rows,val_rows,test_rows,total_rows,source_artifact
+ML1M,3706,755782,98622,85405,939809,docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv
+Steam,9265,988517,81695,80651,1150863,docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv
+Beauty,12101,17890,2236,2237,22363,docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv
+ATG,11921,15529,1941,1942,19412,docs/reports/data/2026-07-02-gate0/gate0_failure_component_summary.csv
