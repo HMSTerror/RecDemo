@@ -114,66 +114,67 @@ safety, not improvement.
 \section{Introduction}
 
 Diffusion-based recommenders replace single-step prediction with an
-iterative corrupt-and-reconstruct process. The discrete instantiation---%
-preference fading and growing over the item
-vocabulary~\cite{prefergrow}---is attractive because corruption is
-defined directly on the object being ranked: the forward kernel fades
-the preferred item into a proposal distribution over alternatives, and
-the reverse process grows the preference back under a learned score
-model.
+iterative corrupt-and-reconstruct process. In the discrete
+instantiation---preference fading and growing over the item
+vocabulary~\cite{prefergrow}, built on structured discrete kernels and
+score-entropy training~\cite{d3pm,sedd}---corruption acts directly on
+the object being ranked: the forward kernel fades the preferred item
+into a \emph{proposal distribution} over alternatives, and the reverse
+process grows the preference back under a learned score model.
 
-The proposal distribution is where this family encodes ``what replaces
-a faded preference.'' It determines the stationary distribution of the
-forward chain, the reference measure of its detailed balance, the
-weights of the score-entropy objective, and the analytic reverse ratio.
-Yet in existing discrete preference diffusion the proposal is
-\emph{global}: one distribution shared by every user. Personalization
-enters only through the score network and inference-time guidance
-against a ``non-preference user'' branch~\cite{prefergrow}---entirely on
-the score side. We ask the complementary question: can the kernel
-itself be personalized---safely?
-% One-line positioning: PreferGrow personalizes the score; we personalize
-% the kernel --- safely.
+The proposal distribution is the central object of this family. It
+encodes ``what replaces a faded preference,'' and through that choice
+it determines the stationary distribution of the forward chain, the
+reference measure of its detailed balance, the weights of the
+score-entropy objective, and the analytic reverse ratio. Yet in
+existing discrete preference diffusion the proposal is \emph{global}:
+one kernel shared by every user, with personalization entering only
+through the score network and inference-time guidance against a
+``non-preference user'' branch~\cite{prefergrow}. Meanwhile, item
+text---the most abundant external evidence about items---is routinely
+exploited on the representation side of sequential
+recommenders~\cite{recformer,unisrec}, and continuous-diffusion
+recommenders condition denoisers or guidance
+signals~\cite{dreamrec,preferdiff,diffurec}. The corruption kernel
+itself has remained unconditioned.
 
-The question has acquired urgency. A fast-moving line of work is making
-discrete-diffusion corruption \emph{adaptive} for generative
-recommendation: parallel semantic-ID decoding under masked diffusion
-\cite{llada-rec}, confidence-ordered any-order decoding \cite{gr-diffgrm},
-and position-adaptive masking schedules motivated by the observation
-that uniform masking is harmful \cite{gr-admasked}, with analysis
-beginning to follow \cite{gr-mdtheory} on top of the general
-discrete-diffusion language-model program \cite{dllm-llada,sedd}. What
-this wave adapts \emph{to} is largely model-internal signals
-(confidence, position heuristics); what it lacks is a notion of
-\emph{evidence pricing}---a train-computable statistic that says when
-external evidence should be allowed to shape corruption at all---and
-safety guarantees for the shaped process. This paper is a
-pre-registered reliability study of exactly that question, in the
-simplest kernel family where it can be posed cleanly.
+Making corruption \emph{adaptive} is now an active program in
+generative recommendation: parallel semantic-ID decoding under masked
+diffusion~\cite{llada-rec}, confidence-ordered any-order
+decoding~\cite{gr-diffgrm}, and position-adaptive masking schedules
+motivated by the observation that uniform masking is
+harmful~\cite{gr-admasked}, with theoretical analysis beginning to
+follow~\cite{gr-mdtheory} on top of the discrete-diffusion
+language-model program~\cite{dllm-llada}. What this wave adapts to,
+however, is model-\emph{internal} signal---confidence and position
+heuristics. Two ingredients are missing for \emph{external} evidence:
+a train-computable decision rule for whether evidence should be
+allowed to shape corruption at all, and a guarantee for the shaped
+process when the evidence is misleading. This paper is a
+pre-registered reliability study of exactly those two ingredients, in
+the simplest kernel family where they can be posed cleanly.
 
-Item text seems like the natural conditioning signal: when a user's
-history is textually coherent, content similarity identifies plausible
-substitutes, and fading preference toward content-similar items should
-sharpen the contrast the score model learns from. The intuition
-suggests a monotone rule---the better the text evidence, the harder the
-kernel should lean on it. \emph{Our central empirical finding is that
-this intuition is backwards.} The proposal is a corruption
-distribution: items it favors are treated as ``where preference goes
-when it fades,'' i.e., as negatives. If text similarity is so
-informative that it ranks the user's \emph{actual next item} highly,
-then a text-tilted proposal concentrates corruption mass on likely
-future positives---manufacturing false negatives exactly in proportion
-to how good the evidence is. Measuring this with a train-only statistic
-$\Uds$ (how well text similarity discriminates the next item from
-sampled negatives), we find $\Uds$ \emph{inversely} rank-orders the
-outcome of text-tilting the kernel on all four of our benchmarks
-(Sec.~\ref{sec:inversion}): the largest gain occurs on the dataset with
-the \emph{weakest} next-item text signal, and a severe loss occurs on
+Intuition suggests a monotone rule: the better the text evidence, the
+harder the kernel should lean on it. \emph{Our central empirical
+finding is that this intuition is backwards.} The proposal is a
+corruption distribution---items it favors are treated as ``where
+preference goes when it fades,'' that is, as negatives. If text
+similarity is informative enough to rank the user's \emph{actual next
+item} highly, a text-tilted proposal concentrates corruption mass on
+likely future positives, manufacturing false negatives in proportion
+to the quality of the evidence---a failure mode the negative-sampling
+literature pays dearly to avoid~\cite{srns,debiased}. Measuring
+evidence quality with a train-only statistic $\Uds$ (how well text
+similarity discriminates the next item from sampled negatives), we
+find that $\Uds$ \emph{inversely} rank-orders the outcome of
+text-tilting the kernel on all four of our benchmarks
+(Sec.~\ref{sec:inversion}): the largest gain occurs on the dataset
+with the \emph{weakest} next-item text signal, and a severe loss on
 the dataset with the \emph{strongest}.
 
-This inversion reframes what a ``reliability'' signal for kernel
-conditioning must measure, and motivates our design,
-\emph{fallback-safe evidence conditioning}. A low-capacity gate
+The inversion dictates what a reliability signal for kernel
+conditioning must do, and motivates our design, \emph{fallback-safe
+evidence conditioning}. A low-capacity gate
 \begin{equation*}
   g(\ut,\Uds) \;=\; g_{\max}\;\phids\;\mathrm{clip}(\ut,0,1)
 \end{equation*}
@@ -187,12 +188,20 @@ interpolates between the host's \emph{learned} global proposal and a
 frozen text anchor, leaving the host's pseudo-item mass untouched.
 Conditional on the fixed history-derived signals, all structural
 properties of the host chain survive; when the gate closes, the kernel
-\emph{is} the host kernel, exactly; and at any gate value the kernel is
-within $g$ of the host in total variation. The theory is deliberately
-elementary---rank-one kernel algebra---but it buys a property that
-score-side or loss-side side-information injection cannot even express:
-a provable reduction to the host when evidence is uninformative
-\emph{or misleading}.
+\emph{is} the host kernel, exactly; and at any gate value the kernel
+stays within $g$ of the host in total variation. The theory is
+deliberately elementary---rank-one kernel algebra---but it buys a
+property that score-side or loss-side side-information injection
+cannot even express: a provable reduction to the host when evidence is
+uninformative \emph{or misleading}. Neither ingredient is tied to the
+host: $\Uds$ uses only the evidence bank and training transitions, and
+the gate and its guarantees are stated for rank-one absorbing kernels
+rather than for one architecture. A pre-registered four-dataset
+validation and mechanism controls then test the design under a frozen
+protocol, and we report the outcome as it fell: directional gain where
+the gate opens, parity where it closes, and the remaining readouts
+held open as an implementation question rather than evidence in
+either direction.
 
 Our contributions:
 \begin{itemize}
