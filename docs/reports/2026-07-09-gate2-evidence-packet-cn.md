@@ -144,8 +144,8 @@ Gate-2 当天只需要改三类地方：
 
 ### 1. `paper/main_v2.tex`
 
-- `line 637` 附近：ML1M / ATG 红灯归因
-- `line 845` 附近：limitations 里的噪声表述
+- `line 659` 附近：ML1M / ATG 红灯归因
+- `line 867` 附近：limitations 里的噪声表述
 - `line 646-649` 一带：是否启用 upgrade-only 句
 
 ### 2. `paper/main_v2_zh.md`

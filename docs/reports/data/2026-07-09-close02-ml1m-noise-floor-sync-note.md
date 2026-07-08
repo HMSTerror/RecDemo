@@ -68,8 +68,8 @@ _用途：记录本地工作区里关于 `CLOSE-02` 的最新可见证据、date
 
 在新的 dated close02 artifact 落地前：
 
-1. `paper/main_v2.tex:637` 仍只能保留 “host noise floor pending / under investigation” 一类保守写法。
-2. `paper/main_v2.tex:845` 的 limitations 也不能写成 “within the measured host noise floor”。
+1. `paper/main_v2.tex:659` 仍只能保留 “host noise floor pending / under investigation” 一类保守写法。
+2. `paper/main_v2.tex:867` 的 limitations 也不能写成 “within the measured host noise floor”。
 3. `paper/main_v2.tex:646-649` 一带的 Gate-2 upgrade-only 注释只能继续作为注释保留，不能提前抬入正文。
 
 可直接配套使用的措辞补丁见：
@@ -137,8 +137,8 @@ playbook 中给出的目标路径是：
    - `noise_floor:<value>`
    - `decision_line:<value>`
 2. 再按 `docs/reports/2026-07-09-main-v2-wording-patches-cn.md` 替换：
-   - `paper/main_v2.tex:637`
-   - `paper/main_v2.tex:845`
+   - `paper/main_v2.tex:659`
+   - `paper/main_v2.tex:867`
 3. 若 `decision_line` 支持升级，再把 Gate-2 冻结包从 `weak-default` 推到可讨论 `medium-conditional`
 
 ### 4. 仍然禁止的事

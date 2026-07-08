@@ -78,8 +78,8 @@ flowchart TB
 
 ### 1. `CLOSE-02`
 
-- 正文位置：`paper/main_v2.tex:637`
-- limitations 位置：`paper/main_v2.tex:845`
+- 正文位置：`paper/main_v2.tex:659`
+- limitations 位置：`paper/main_v2.tex:867`
 
 当前最诚实状态：
 
@@ -122,7 +122,7 @@ gantt
 
 ## ✅ 可立即并行推进的写作动作
 
-- [ ] 保持 `lines 637 / 845` 的 `weak-default` 版本，直到 `CLOSE-02` dated artifact 落地
+- [ ] 保持 `lines 659 / 867` 的 `weak-default` 版本，直到 `CLOSE-02` dated artifact 落地
 - [x] 将 baseline setup 句固定为 “DiffuRec 已选定，若结果窗关闭则显式报缺”
 - [x] 从冻结版 `paper/main.tex` 合并 appendix proofs / boundary / first-generation / negative-results 正文
 - [ ] 等 `CLOSE-02` 工件落地后，做最后一轮 artifact-driven 同步
