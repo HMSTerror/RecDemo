@@ -79,18 +79,18 @@ Discrete Preference Diffusion Kernels}
 Discrete preference diffusion recommenders such as PreferGrow corrupt a
 user's preferred item by fading it toward a \emph{proposal distribution}
 and learn to grow the preference back. Personalization in this family
-acts entirely on the \emph{score} side---the transition kernel is shared
+acts entirely on the \emph{score} side: the transition kernel is shared
 by all users. We personalize the kernel, and in doing so surface a
 counterintuitive fact: because the proposal is a \emph{corruption}
 distribution, text evidence can be too good to use. On four benchmarks,
 a train-only measure of how well text similarity predicts the next item
 inversely rank-orders the outcome of text-tilting the kernel in all four
 cases: the tilt helps where text defines informative hard negatives and
-fails where text predicts future positives, turning corruption into
+fails where text predicts future positives; corruption then becomes
 false-negative pollution. We operationalize this with a two-factor,
-history-only gate---a per-user coherence signal calibrated against a
+history-only gate (a per-user coherence signal calibrated against a
 length-matched random-history null, damped by a frozen dataset-level
-utility factor---that interpolates between the host's learned proposal
+utility factor) that interpolates between the host's learned proposal
 and a frozen text anchor. The design is \emph{fallback-safe}: the
 conditioned chain retains Markovianity, detailed balance, and the
 analytic reversal of the host kernel; it reduces \emph{exactly} to the
@@ -99,7 +99,7 @@ total variation. Controls (reliability shuffling, global proposals,
 ungated anchors) show the mechanism requires an \emph{aligned} per-user
 signal, and corruption diagnostics show adaptive backoff as evidence
 degrades. A pre-registered four-dataset validation of the frozen gate
-returned a mixed verdict---the opened gate keeps a small positive gain
+returned a mixed verdict: the opened gate keeps a small positive gain
 and one closed-gate dataset holds parity, while two datasets miss their
 parity bands by margins comparable to run-to-run noise, which we report
 as an open implementation question rather than evidence in either
@@ -115,9 +115,9 @@ safety, not improvement.
 
 Diffusion-based recommenders replace single-step prediction with an
 iterative corrupt-and-reconstruct process. In the discrete
-instantiation---preference fading and growing over the item
+instantiation (preference fading and growing over the item
 vocabulary~\cite{prefergrow}, built on structured discrete kernels and
-score-entropy training~\cite{d3pm,sedd}---corruption acts directly on
+score-entropy training~\cite{d3pm,sedd}), corruption acts directly on
 the object being ranked: the forward kernel fades the preferred item
 into a \emph{proposal distribution} over alternatives, and the reverse
 process grows the preference back under a learned score model.
@@ -131,7 +131,7 @@ existing discrete preference diffusion the proposal is \emph{global}:
 one kernel shared by every user, with personalization entering only
 through the score network and inference-time guidance against a
 ``non-preference user'' branch~\cite{prefergrow}. Meanwhile, item
-text---the most abundant external evidence about items---is routinely
+text, the most abundant external evidence about items, is routinely
 exploited on the representation side of sequential
 recommenders~\cite{recformer,unisrec}, and continuous-diffusion
 recommenders condition denoisers or guidance
@@ -146,7 +146,7 @@ motivated by the observation that uniform masking is
 harmful~\cite{gr-admasked}, with theoretical analysis beginning to
 follow~\cite{gr-mdtheory} on top of the discrete-diffusion
 language-model program~\cite{dllm-llada}. What this wave adapts to,
-however, is model-\emph{internal} signal---confidence and position
+however, is model-\emph{internal} signal: confidence and position
 heuristics. Two ingredients are missing for \emph{external} evidence:
 a train-computable decision rule for whether evidence should be
 allowed to shape corruption at all, and a guarantee for the shaped
@@ -157,12 +157,12 @@ the simplest kernel family where they can be posed cleanly.
 Intuition suggests a monotone rule: the better the text evidence, the
 harder the kernel should lean on it. \emph{Our central empirical
 finding is that this intuition is backwards.} The proposal is a
-corruption distribution---items it favors are treated as ``where
+corruption distribution, so the items it favors are treated as ``where
 preference goes when it fades,'' that is, as negatives. If text
 similarity is informative enough to rank the user's \emph{actual next
 item} highly, a text-tilted proposal concentrates corruption mass on
-likely future positives, manufacturing false negatives in proportion
-to the quality of the evidence---a failure mode the negative-sampling
+likely future positives and manufactures false negatives in proportion
+to the quality of the evidence, a failure mode the negative-sampling
 literature pays dearly to avoid~\cite{srns,debiased}. Measuring
 evidence quality with a train-only statistic $\Uds$ (how well text
 similarity discriminates the next item from sampled negatives), we
@@ -185,12 +185,12 @@ otherwise couples the kernel's operating point to embedding geometry);
 and a frozen dataset-level utility factor $\phids$ that \emph{closes}
 the gate as $\Uds$ enters the false-negative regime. The gated kernel
 interpolates between the host's \emph{learned} global proposal and a
-frozen text anchor, leaving the host's pseudo-item mass untouched.
+frozen text anchor and leaves the host's pseudo-item mass untouched.
 Conditional on the fixed history-derived signals, all structural
 properties of the host chain survive; when the gate closes, the kernel
 \emph{is} the host kernel, exactly; and at any gate value the kernel
 stays within $g$ of the host in total variation. The theory is
-deliberately elementary---rank-one kernel algebra---but it buys a
+deliberately elementary (rank-one kernel algebra), but it buys a
 property that score-side or loss-side side-information injection
 cannot even express: a provable reduction to the host when evidence is
 uninformative \emph{or misleading}. Neither ingredient is tied to the
@@ -263,7 +263,7 @@ and the reverse process uses the analytic stationary-reversal ratio in
 which the proposal appears in closed form (Appendix~\ref{app:proofs}).
 The host learns its proposal: $\pcore=\mathrm{softmax}(p_1)$ with $p_1$
 a free parameter vector, trained jointly. Everything below treats the
-host score model, objective, and schedule as fixed---we modify
+host score model, objective, and schedule as fixed; we modify
 \emph{only} the proposal.
 
 \section{Method: Fallback-Safe Gated Proposals}
@@ -312,14 +312,14 @@ tilting corruption toward that cluster helps. On our production banks
 the median $\ut$ ranks ML1M ($1.43$) $>$ Beauty ($0.80$) $>$ ATG
 ($0.72$) $>$ Steam ($0.11$)
 % artifact: docs/reports/data/2026-07-02-gate0/gate0_u_tilde_summary.csv
----nearly the \emph{opposite} of where text tilt actually helps
+; this is nearly the \emph{opposite} of where text tilt actually helps
 (Sec.~\ref{sec:inversion}). This mismatch is exactly why a second,
 utility-facing factor is required.
 
 \subsection{Dataset factor: frozen text utility}
 \label{sec:uds}
-We measure what the gate actually needs to know---does text similarity
-predict \emph{positives}?---directly on the training split. For sampled
+We measure directly on the training split what the gate actually
+needs to know: does text similarity predict \emph{positives}? For sampled
 train transitions $(h,\text{next})$, $\Uds$ is the probability that the
 anchor similarity ranks the true next item above a popularity-sampled
 negative (an AUC; estimator frozen in Appendix~\ref{app:uds}). Like the
@@ -352,12 +352,12 @@ $g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$,
 and $\pu=(1-g)\pcore+g\,\ch$ when no pseudo-item is used. Three
 deliberate restrictions: (i) the \emph{pseudo-item mass is exactly the
 host's} and the gate never touches it; (ii) $g$ is the \emph{only}
-dial---no evidence-dependent temperature or popularity mixing; (iii) no
+dial, with no evidence-dependent temperature or popularity mixing; (iii) no
 new learnable modules: the only trained parameter in the proposal path
 is the host's own $p_1$, shared with the fallback branch. $\pu$
 replaces the global proposal in \emph{every} kernel-level object:
 forward corruption \eqref{eq:forward}, score-entropy weights, and the
-analytic reverse ratio---not just negative sampling.
+analytic reverse ratio, not just negative sampling.
 
 \subsection{Theory}
 \label{sec:theory}
@@ -378,8 +378,8 @@ replaced by $\pu$.
 \begin{proposition}[Exact reduction / fallback safety]
 \label{prop:reduction}
 If $g=0$ then $\pu=\pcore$, hence $Q_{\pu}=Q_{\pcore}$ and every
-derived object---forward corruption, stationary distribution,
-score-entropy weights, analytic reverse ratio---coincides exactly with
+derived object (forward corruption, stationary distribution,
+score-entropy weights, analytic reverse ratio) coincides exactly with
 the host kernel's.
 \end{proposition}
 \begin{lemma}[Bounded deviation]
@@ -409,7 +409,7 @@ pseudo-item coordinate present in every kernel object
 Table~\ref{tab:inversion} is the paper's central empirical exhibit. For
 each dataset we report the frozen production statistic $\Uds$, the
 resulting gate factor $\phids$, and the outcome of text-tilting the
-kernel \emph{without} a dataset factor---a first-generation,
+kernel \emph{without} a dataset factor: a first-generation,
 user-factor-only instantiation of kernel gating trained before $\phids$
 existed (parameterization differences in Appendix~\ref{app:gen1};
 these numbers motivate the dataset factor and are not a benchmark of
@@ -475,8 +475,8 @@ of the rank statistic $\Uds$ (proof in Appendix~\ref{app:proofs}).
 \end{proposition}
 Opening the gate on a high-utility bank therefore linearly increases
 the rate at which training treats the user's actual next item as
-faded-to noise---in the corruption samples, the score-entropy weights,
-and the reverse reference alike. Collision mass is a channel, not by
+faded-to noise: the increase enters the corruption samples, the
+score-entropy weights, and the reverse reference alike. Collision mass is a channel, not by
 itself a proof of end-metric harm (the score model can partially
 compensate); Table~\ref{tab:inversion} is the empirical arbitration.
 
@@ -538,9 +538,9 @@ support for upgrading the gate claim.
 \label{sec:exp}
 
 \paragraph{Setup.}
-Four sequential-recommendation benchmarks---Steam, ML1M, Amazon Beauty,
+Four sequential-recommendation benchmarks (Steam, ML1M, Amazon Beauty,
 and ATG\pending{official dataset-statistics table from regenerated
-protocol.json}---rebuilt from raw data under a frozen protocol (raw
+protocol.json}), rebuilt from raw data under a frozen protocol (raw
 source, mapping, filtering, dedup, split rules recorded); all methods
 share the regenerated splits and frozen banks. Metrics: HR@10 and
 NDCG@10 under the production checkpoint selector; the host baseline is
@@ -593,8 +593,8 @@ The verdict is mixed and we report it as such. The only opened gate
 $+0.003$ reference magnitude. Beauty held its parity band. ML1M
 ($-0.0151$) and ATG ($-0.0114$) missed their parity bands by
 $0.0051$ and $0.0014$ respectively. Because ML1M and Beauty run at
-$g\equiv 0$---the trained system is \emph{mathematically the host
-kernel} by Prop.~\ref{prop:reduction}---a closed-gate deviation of this
+$g\equiv 0$, where the trained system is \emph{mathematically the host
+kernel} by Prop.~\ref{prop:reduction}, a closed-gate deviation of this
 size measures protocol noise (run-to-run seed variance and best-step
 selection: the host checkpoint selected step 302k, the validation run
 405k), not a property of the gate. We therefore treat the ML1M/ATG
@@ -644,7 +644,7 @@ global proposal bias does not reproduce the gain.}
 
 Three results carry the mechanism story. \emph{Aligned gating is
 load-bearing}: permuting the reliability signal across users
-($u$-shuffle) drops test NDCG@10 from $0.0393$ to $0.0206$---the signal
+($u$-shuffle) drops test NDCG@10 from $0.0393$ to $0.0206$; the signal
 content, not the presence of a user-level dial, drives the effect.
 \emph{Generic biases do not explain it}: a learned global proposal
 without user conditioning reaches only $0.0289$. \emph{The gate backs
@@ -695,8 +695,8 @@ guarantee is expressible.
 
 Our gate acts as a \emph{constant} multiplier along the corruption
 trajectory: the same $g$ applies at every noise level. The validation
-outcomes above---an opened gate that keeps its sign but not its
-reference magnitude, and a pure out-of-sample miss on ASO---are
+outcomes above (an opened gate that keeps its sign but not its
+reference magnitude, and a pure out-of-sample miss on ASO) are
 consistent with this being too blunt an instrument: the value of
 tilting corruption toward content plausibly differs between light
 corruption (where the faded item is nearly recoverable) and heavy
@@ -749,7 +749,7 @@ recommendation, CDRec~\cite{cdrec} shapes transitions with item
 popularity and TDPM~\cite{tdpm} modulates token diffusion with temporal
 preference structure. These are global or item-level signals; none
 condition the kernel per user on evidence signals, none provide a
-reduction guarantee, and none report the utility inversion---that
+reduction guarantee, and none report the utility inversion: that
 \emph{stronger} content evidence can make kernel shaping \emph{worse}.
 
 \paragraph{Guidance and adaptivity.}
@@ -758,7 +758,7 @@ uses~\cite{cfgrec} interpolate conditional and unconditional
 \emph{scores} with a global weight; confidence-adaptive guidance exists
 for language diffusion~\cite{acfg}. Our gate is the kernel-side
 analogue with the weight set by measurable, history-only evidence
-statistics---and with the interpolation target being the host's learned
+statistics; the interpolation target is the host's learned
 proposal, which is what makes the safety property provable.
 
 \paragraph{Reliability and side information in recommendation.}
@@ -775,10 +775,10 @@ negatives is documented in contrastive representation
 learning~\cite{debiased} and in negative sampling for implicit
 collaborative filtering~\cite{srns}, where hard-negative miners must
 avoid future positives. Our inversion transports this failure mode to
-diffusion \emph{kernels}---where the ``negative sampler'' is the
+diffusion \emph{kernels}, where the ``negative sampler'' is the
 transition law itself, entangled with the stationary distribution,
 detailed balance, and the training objective
-(Prop.~\ref{prop:collision})---and supplies a train-only statistic,
+(Prop.~\ref{prop:collision}), and supplies a train-only statistic,
 $\Uds$, that prices the risk before any training run.
 
 \section{Conclusion and Limitations}
@@ -793,8 +793,8 @@ an empirical inversion we believe is of independent interest: because
 kernel proposals are corruption laws, text evidence that predicts
 positives is precisely the evidence a kernel must \emph{not} lean on.
 Deployed this way, evidence conditioning is a bet with bounded
-downside---deviation from the host is capped by the gate, while the
-upside is whatever the opened gates deliver---and $\Uds$ prices that
+downside: deviation from the host is capped by the gate, and the
+upside is whatever the opened gates deliver. $\Uds$ prices that
 bet before a single training run.
 
 \emph{Limitations.} The cross-dataset inversion rests on four points
@@ -809,7 +809,7 @@ prediction (ASO) missed outright, and two closed-gate parity checks
 missed by margins whose attribution awaits a measured host noise floor
 \pending{CLOSE-02 artifact}; until then we make no claim that the
 reduction theorem has been demonstrated end-to-end. By construction a
-closed gate can only match the host---on high-utility datasets the
+closed gate can only match the host: on high-utility datasets the
 method's value is safety, not gains. The mechanism evidence comes from
 the first-generation user-factor instantiation whose parameterization
 differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
@@ -818,7 +818,7 @@ post-hoc reporting-only sweep, remain a coarse hinge on limited
 evidence; the ML1M bank enters with a single fixed-window history
 length, so its null calibration reduces to one length bin; and the
 guarantees are specific to kernels with a stationary
-proposal---mask- or schedule-based discrete diffusions need their own
+proposal; mask- or schedule-based discrete diffusions need their own
 analysis (Sec.~\ref{sec:schedules}). An earlier metadata-sparsity
 hypothesis was not supported and is reported as a negative result in
 Appendix~\ref{app:results}.
