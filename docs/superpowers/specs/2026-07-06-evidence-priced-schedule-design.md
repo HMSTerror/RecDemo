@@ -184,3 +184,26 @@ CLOSE 轨 GPU 需求:CLOSE-01 Steam 余臂(~2 跑)+ CLOSE-02(2-3 跑)+ CLOSE-03(
 ## 8. 申请线接口
 
 BRIDGE-01 一页纸结构(从本 spec 浓缩):¶1 AAAI-27 工作一句话(Family D 主句)+ 4/4 反转;¶2 §1.3 推理链(负结果→调度假设);¶3 §2-§3 方法与理论纲要(L1′/P1′-P3′);¶4 与 Lumina-DiMOO/InternVideo 开放问题的衔接点各一句。中英双语各一页,附于 7 月投递邮件。
+
+## 9. 修订 F(2026-07-09):执行状态快照与范围扩充
+
+> 本节只记录执行事实与用户授权的范围扩充;§1-§5 的设计、主张层级、冻结参数**零改动**。
+
+### 9.1 §5.2 判定链的执行结果(截至 7/9 11:00)
+
+- **CLOSE-02 完成(报告工件待生成)**:三种子 test p2 NDCG@10 = {0.10579, 0.10261, 0.07673},max-pairwise 地板 **0.02906** ≈ 红旗缺口(0.0151)的 2 倍 → **按 CLOSE-05 冻结条款,medium 出口条件满足**(待官方报告工件 + 7/14 Gate-2 文档化 + 用户确认)。seed102(0.0767,194k 早停)以纯宿主跑复现了官方 ours(0.0759):**早停停时方差**是 ML1M 噪声的主导机制(seed 不锁轨迹,patience 重置靠运气,best_step 跨 194k-536k)。摘要 "margins comparable to run-to-run noise" 句验证通过、原样保留。
+- **诊断复跑降级为辅助证据**(medium 已由地板解锁):因与 close04 共卡被拖慢 ~5 倍(教训:双跑共卡对 wall-clock 的影响被低估),仍在爬升(~144k,NEW_BEST 持续),终值如实记录即可,不影响判定。
+- **CLOSE-04 首臂读数**:DiffuRec Steam test NDCG@10 = **0.0738**(宿主 0.0129 的 5.7 倍,亦高于 PreferGrow 原文宣称值)→ "任务实例难"在 Steam 被证伪,**宿主实例在该协议上弱**;处理 = 全量报告 + Setup 正交性框架句(用户 7/8 确认的纪律),within-host 主张不受影响。ML1M/Beauty/ATG 臂进行中。
+- **CLOSE-03**:并行会话新建 `close03_deblocked_queue`(GPU1 轮询式发射);与老 `closeout_run_chain` 存在双发风险,处置规则已记入交接手册 §2。
+- 论文侧 7/6 以来的落地:引言重定位(7/8)、去 AI 化风格重构(29 处,冻结句原样)、两张概念图位预留(fig:method/fig:inversion,提示词见 `docs/reports/2026-07-08-figure-prompts.md`)、tectonic 编译链建立(l20 ~/tools/tectonic,历次 0 错误)。
+
+### 9.2 范围扩充(全部用户授权,均不阻塞投稿、不动冻结层)
+
+| 新行 | 内容 | 授权 | 关键护栏 |
+|---|---|---|---|
+| CLOSE-09 | 经典基线块 GRU4Rec/Caser/SASRec/BERT4Rec + 可选 UniSRec(共享协议) | 7/8 两次 | 全跑全报;仅作 protocol context;图像多模态已评估并否决(文本证据 scope,归 2027 idea-C) |
+| CLOSE-10 | ATG 宿主噪声地板(2-3 种子,小时级) | 7/9 | 7/13 前出数喂 Gate-2,使 medium 覆盖两个失守数据集;跑不出则退 ML1M 地板+跨数据集论证 |
+| CLOSE-11 | Steam 弱宿主诊断族(hybrid vs adaptive / 加大 patience / lr×npr 小扫) | 7/9 | **本周期冻结 Table 2 一个数字不换**(验证后调参毁预注册叙事);产出=附录 post-hoc 透明句 + rebuttal 弹药 + camera-ready 修正案期权 |
+| CLOSE-12 | 消融补强:Steam g_max 剂量响应(post-hoc 标注)+ 选择器鲁棒性表(零 GPU,现有工件汇表) | 7/9 | 既有消融覆盖已足(对照臂/腐蚀/铰链扫描/LOO/注入位置/用户级/ASO),此包为可选加固 |
+
+GPU 排班与优先级见交接手册 §11(CLOSE-10 > 09 ≈ 11 > 12);全部行在 7/20 窗口关闭时按各自 acceptance 记 documented-gap,不追。
