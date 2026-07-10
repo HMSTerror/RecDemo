@@ -1,0 +1,118 @@
+{
+  "run_root": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor",
+  "official_repo_root": "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+  "rows": [
+    {
+      "seed": "100",
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100",
+      "summary_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/checkpoints-meta/ML1M/best_summary_hybrid.json",
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/checkpoints-meta/ML1M/frozen_run_manifest.json",
+      "log_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed100/logs/ml1m_core_seed100.log",
+      "status": "completed",
+      "manifest_exists": "yes",
+      "repo_root": "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+      "manifest_random_seed": "100",
+      "graph_type": "hybrid",
+      "text_side_enabled": "False",
+      "early_stop_metric": "ndcg10",
+      "early_stop_strength": "p5",
+      "write_snapshot_checkpoint": "True",
+      "write_best_checkpoint": "True",
+      "last_logged_step": "541000",
+      "best_step": "536000",
+      "best_metric": "0.1246853303669043",
+      "val_p5_ndcg10": "0.124685330366904",
+      "test_p2_ndcg10": "0.105785303613534",
+      "test_p5_ndcg10": "0.113518733534569",
+      "test_p10_ndcg10": "0.116092629562717"
+    },
+    {
+      "seed": "101",
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed101",
+      "summary_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed101/checkpoints-meta/ML1M/best_summary_hybrid.json",
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed101/checkpoints-meta/ML1M/frozen_run_manifest.json",
+      "log_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed101/logs/ml1m_core_seed101.log",
+      "status": "completed",
+      "manifest_exists": "yes",
+      "repo_root": "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+      "manifest_random_seed": "101",
+      "graph_type": "hybrid",
+      "text_side_enabled": "False",
+      "early_stop_metric": "ndcg10",
+      "early_stop_strength": "p5",
+      "write_snapshot_checkpoint": "True",
+      "write_best_checkpoint": "True",
+      "last_logged_step": "469000",
+      "best_step": "464000",
+      "best_metric": "0.12093581313220847",
+      "val_p5_ndcg10": "0.120935813132208",
+      "test_p2_ndcg10": "0.102614096469748",
+      "test_p5_ndcg10": "0.111240689979095",
+      "test_p10_ndcg10": "0.113402353936557"
+    },
+    {
+      "seed": "102",
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed102",
+      "summary_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed102/checkpoints-meta/ML1M/best_summary_hybrid.json",
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed102/checkpoints-meta/ML1M/frozen_run_manifest.json",
+      "log_path": "/data/Zijian/goal/RecDemoRuns/close02_ml1m_noise_floor/ml1m_core_seed102/logs/ml1m_core_seed102.log",
+      "status": "completed",
+      "manifest_exists": "yes",
+      "repo_root": "/data/Zijian/goal/RecDemo_clean_closeout_chain",
+      "manifest_random_seed": "102",
+      "graph_type": "hybrid",
+      "text_side_enabled": "False",
+      "early_stop_metric": "ndcg10",
+      "early_stop_strength": "p5",
+      "write_snapshot_checkpoint": "True",
+      "write_best_checkpoint": "True",
+      "last_logged_step": "519000",
+      "best_step": "514000",
+      "best_metric": "0.12419431579257832",
+      "val_p5_ndcg10": "0.124194315792578",
+      "test_p2_ndcg10": "0.104959298928549",
+      "test_p5_ndcg10": "0.11345029595008",
+      "test_p10_ndcg10": "0.115472523870577"
+    }
+  ],
+  "pairwise_abs_deltas": [
+    {
+      "seed_a": "100",
+      "seed_b": "101",
+      "abs_delta_test_p2_ndcg10": "0.003171207143786",
+      "abs_delta_test_p5_ndcg10": "0.002278043555474",
+      "abs_delta_test_p10_ndcg10": "0.00269027562616"
+    },
+    {
+      "seed_a": "100",
+      "seed_b": "102",
+      "abs_delta_test_p2_ndcg10": "0.000826004684985",
+      "abs_delta_test_p5_ndcg10": "0.000068437584489",
+      "abs_delta_test_p10_ndcg10": "0.00062010569214"
+    },
+    {
+      "seed_a": "101",
+      "seed_b": "102",
+      "abs_delta_test_p2_ndcg10": "0.002345202458801",
+      "abs_delta_test_p5_ndcg10": "0.002209605970985",
+      "abs_delta_test_p10_ndcg10": "0.00207016993402"
+    }
+  ],
+  "noise_floor_summary": {
+    "completed_seed_count": 3,
+    "expected_seed_count": 3,
+    "max_pairwise_abs_delta_test_p2_ndcg10": 0.003171207143786,
+    "max_pairwise_abs_delta_test_p5_ndcg10": 0.002278043555474,
+    "max_pairwise_abs_delta_test_p10_ndcg10": 0.00269027562616
+  },
+  "gate1_context": {
+    "source_path": "/data/Zijian/goal/RecDemo_clean_closeout_chain/docs/reports/data/2026-07-06-gate1/sprint05_gate1_report.json",
+    "delta_test_p2_ndcg10": -0.015133045070724,
+    "abs_delta_test_p2_ndcg10": 0.015133045070724,
+    "dataset_verdict": "miss"
+  },
+  "decision_line": {
+    "decision_line": "outside_noise_red_flag",
+    "reason": "gate1_ml1m_delta_exceeds_measured_host_noise_floor"
+  }
+}
