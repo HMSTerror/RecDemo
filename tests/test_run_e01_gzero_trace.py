@@ -311,6 +311,9 @@ class E01GZeroTraceTests(unittest.TestCase):
             val_loader=batches,
             device=torch.device("cpu"),
             model=object(),
+            graph=SimpleNamespace(
+                sample_nonpreference=lambda *_args, **_kwargs: torch.zeros((2, 1), dtype=torch.long)
+            ),
             initial_sampling_rng_trace={},
         )
 

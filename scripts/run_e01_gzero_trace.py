@@ -1168,6 +1168,73 @@ def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> 
     )
     original_loader = runtime.val_loader
     original_sampler = runtime.sampling_fns["p2"]["fn"]
+    stage_probe: dict[str, Any] = {
+        "context": None,
+        "graph_initial": None,
+        "categorical_calls": [],
+    }
+
+    def state_metadata() -> dict[str, Any]:
+        return rng_state_metadata(capture_rng_state(include_cuda=include_cuda))
+
+    def run_with_stage_probe(model, batch_dims, history):
+        if stage_probe["context"] is not None:
+            return original_sampler(model, batch_dims, history)
+
+        original_context = getattr(runtime.model, "encode_history_context", None)
+        original_graph_sampler = getattr(runtime.graph, "sample_nonpreference")
+        import sampling as sampling_module
+
+        original_categorical = sampling_module.sample_categorical
+
+        def traced_context(context_history):
+            before = state_metadata()
+            result = original_context(context_history)
+            after = state_metadata()
+            stage_probe["context"] = {
+                "before": before,
+                "after": after,
+                "history_shape": [int(value) for value in context_history.shape],
+            }
+            return result
+
+        def traced_graph_sampler(*args, **kwargs):
+            before = state_metadata()
+            result = original_graph_sampler(*args, **kwargs)
+            after = state_metadata()
+            stage_probe["graph_initial"] = {
+                "before": before,
+                "after": after,
+                "output_shape": [int(value) for value in result.shape],
+            }
+            return result
+
+        def traced_categorical(probabilities, method="hard"):
+            before = state_metadata()
+            result = original_categorical(probabilities, method=method)
+            after = state_metadata()
+            stage_probe["categorical_calls"].append(
+                {
+                    "before": before,
+                    "after": after,
+                    "method": method,
+                    "probability_shape": [int(value) for value in probabilities.shape],
+                    "output_shape": [int(value) for value in result.shape],
+                }
+            )
+            return result
+
+        if original_context is not None:
+            setattr(runtime.model, "encode_history_context", traced_context)
+        setattr(runtime.graph, "sample_nonpreference", traced_graph_sampler)
+        sampling_module.sample_categorical = traced_categorical
+        try:
+            return original_sampler(model, batch_dims, history)
+        finally:
+            if original_context is not None:
+                setattr(runtime.model, "encode_history_context", original_context)
+            setattr(runtime.graph, "sample_nonpreference", original_graph_sampler)
+            sampling_module.sample_categorical = original_categorical
 
     class _RngTracingLoader:
         def __iter__(self):
@@ -1187,7 +1254,7 @@ def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> 
         before = rng_state_metadata(
             capture_rng_state(include_cuda=include_cuda)
         )
-        output = original_sampler(model, batch_dims, history)
+        output = run_with_stage_probe(model, batch_dims, history)
         after = rng_state_metadata(
             capture_rng_state(include_cuda=include_cuda)
         )
@@ -1212,6 +1279,7 @@ def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> 
         capture_rng_state(include_cuda=include_cuda)
     )
     trace["sampling_call_count"] = len(trace["sampling_calls"])
+    trace["first_call_stage_probe"] = stage_probe
     runtime.initial_sampling_rng_trace = trace
     runtime.initial_sampling_metrics = {
         **{f"initial_val_p2_hr_{index}": float(value) for index, value in enumerate(hr)},
