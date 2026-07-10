@@ -1501,11 +1501,18 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
     return report
 
 
-def write_trace_artifacts(output_dir: Path | str, report: Mapping[str, Any]) -> Path:
+def write_trace_artifacts(
+    output_dir: Path | str,
+    report: Mapping[str, Any],
+    *,
+    allow_existing_empty: bool = False,
+) -> Path:
     output_dir = Path(output_dir)
     if output_dir.exists():
-        raise FileExistsError(f"isolated E01 output directory already exists: {output_dir}")
-    output_dir.mkdir(parents=True)
+        if not allow_existing_empty or any(output_dir.iterdir()):
+            raise FileExistsError(f"isolated E01 output directory already exists: {output_dir}")
+    else:
+        output_dir.mkdir(parents=True)
     report_path = output_dir / "e01_gzero_trace.json"
     report_path.write_text(
         json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
@@ -1602,8 +1609,7 @@ def main() -> None:
             },
             "downstream_launch_authorized": False,
         }
-        if not Path(args.output_dir).exists():
-            write_trace_artifacts(args.output_dir, failure_report)
+        write_trace_artifacts(args.output_dir, failure_report, allow_existing_empty=True)
         print(json.dumps(failure_report, indent=2, sort_keys=True))
         raise SystemExit(3) from exc
 

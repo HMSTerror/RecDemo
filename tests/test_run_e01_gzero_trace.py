@@ -520,6 +520,21 @@ class E01GZeroTraceTests(unittest.TestCase):
             self.assertEqual([0, 1, 100, 1000], marker["trace_steps"])
             self.assertEqual(1e-6, marker["fp32_tolerance"])
 
+    def test_failure_trace_writes_structured_report_into_precreated_empty_directory(self) -> None:
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "e01"
+            output_dir.mkdir()
+            failed_report = {
+                "schema_version": 1,
+                "status": "fail",
+                "first_divergence": {"step": None, "category": "preflight_or_execution_error"},
+            }
+            report_path = module.write_trace_artifacts(output_dir, failed_report, allow_existing_empty=True)
+            self.assertEqual(output_dir / "e01_gzero_trace.json", report_path)
+            self.assertTrue(report_path.is_file())
+            self.assertFalse((output_dir / "E01_PASS.json").exists())
+
     def test_cli_requires_explicit_execute_flag_and_exposes_no_tolerance_seed_or_step_override(self) -> None:
         module = load_module()
         parser = module.build_parser()
