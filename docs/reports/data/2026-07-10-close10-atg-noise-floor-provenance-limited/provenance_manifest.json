@@ -1,0 +1,85 @@
+{
+  "manifest_reconstructed": false,
+  "remote_read_only": true,
+  "remote_run_artifacts": [
+    {
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/logs/atg_core_seed100.log",
+        "sha256": "79ce2bde083594e9346095eb743b561653352511ec88047a14375b00d7e74ac5",
+        "size_bytes": 111480
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "seed": 100,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "db5c3df497ab3ee4cfebcfa67fd32fb48428017422bd26d1bb41b8b7be3a70cc",
+        "size_bytes": 2891
+      }
+    },
+    {
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/logs/atg_core_seed101.log",
+        "sha256": "e84eb97c3f276a5f9949cc4998908c6e8febd6f217704ea31c033814813aec7a",
+        "size_bytes": 120863
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "seed": 101,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "2c805c2fdf9e6a5f9785b3f3e242a13ee36ac1027b7a632bb46183529d504379",
+        "size_bytes": 2949
+      }
+    },
+    {
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/logs/atg_core_seed102.log",
+        "sha256": "00941e7539be2d8fcf3b4a776312b2e9e5fb42dbf4a1ca71f65eff9e181fc9b1",
+        "size_bytes": 152138
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "seed": 102,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "654d2d989f20b3eb48288fe288323c14395216520c32348074c1f8cae7509d86",
+        "size_bytes": 2855
+      }
+    }
+  ],
+  "remote_session_log": {
+    "completion_marker_line": "2026-07-10 13:51:04 close10 ALL_SEEDS_DONE",
+    "content_hash_verified": true,
+    "path": "/data/Zijian/goal/RecDemo_clean_closeout_chain/logs/close10_session.log",
+    "sha256": "a3f96449bacad86560a8f764ec308a895a8c3dd693fc874079e02361ac98694d",
+    "size_bytes": 384785
+  },
+  "schema_version": "close10-atg-provenance-limited-v1",
+  "source_artifacts": {
+    "collector_snapshot": {
+      "path": "in-memory snapshot collected from read-only local copies",
+      "sha256": "a27488980c872afe05dbe0044542b239f1d714285b83c499fa482354a794626b",
+      "size_bytes": 1039795
+    },
+    "e0_evaluator_amendment": {
+      "path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-10-evaluator-amendment\\e0_evaluator_amendment.json",
+      "sha256": "da11d9f7307ad4377c9bf02d378fbf69bddae0453be3403502ef7c0ec3c4f9e5",
+      "size_bytes": 88351
+    },
+    "original_gate1_report": {
+      "path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\sprint05_gate1_report.json",
+      "sha256": "a733ab2e351f9c34f5fcc11928fe6850ceb1aa9970ef48c6eaefba8d887e0440",
+      "size_bytes": 23286
+    }
+  }
+}

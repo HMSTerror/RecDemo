@@ -1,0 +1,170 @@
+{
+  "gap_comparisons": {
+    "e0_corrected": {
+      "abs_gap": 0.011505201353104493,
+      "decision": "outside_observed_spread",
+      "gap_to_observed_spread_ratio": 4.371369447319985,
+      "gate_state": "barely_open_phi_0.117375",
+      "recorded_outcome": "miss",
+      "signed_delta": -0.011505201353104493
+    },
+    "original_gate1": {
+      "abs_gap": 0.011410105406507,
+      "decision": "outside_observed_spread",
+      "gap_to_observed_spread_ratio": 4.335238005308492,
+      "recorded_outcome": "miss",
+      "signed_delta": -0.011410105406507
+    }
+  },
+  "generated_at": "2026-07-10T18:27:48+08:00",
+  "limitations": [
+    "All three run directories lack frozen_run_manifest.json.",
+    "No manifest was reconstructed retrospectively.",
+    "Complete configuration parity is not claimed.",
+    "The three completed runs provide an observed spread, not a population-variance estimate."
+  ],
+  "observations": [
+    {
+      "best_metric": 0.028213199503339222,
+      "best_result_line": "BEST_RESULT step=29000 metric=ndcg10 value=0.028213 summary=/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/checkpoints-meta/ATG/best_summary_hybrid.json",
+      "best_step": 29000,
+      "completion_marker_line": "EARLY_STOP_TRIGGERED step=34000 best_step=29000 best_metric=0.028213",
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/logs/atg_core_seed100.log",
+        "sha256": "79ce2bde083594e9346095eb743b561653352511ec88047a14375b00d7e74ac5",
+        "size_bytes": 111480
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100",
+      "seed": 100,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed100/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "db5c3df497ab3ee4cfebcfa67fd32fb48428017422bd26d1bb41b8b7be3a70cc",
+        "size_bytes": 2891
+      },
+      "test_p10_ndcg10": 0.04113261682416249,
+      "test_p2_ndcg10": 0.0397181623215186,
+      "test_p5_ndcg10": 0.040598189839675315,
+      "validation_p5_ndcg10": 0.028213199503339222
+    },
+    {
+      "best_metric": 0.029021099610334278,
+      "best_result_line": "BEST_RESULT step=32000 metric=ndcg10 value=0.029021 summary=/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/checkpoints-meta/ATG/best_summary_hybrid.json",
+      "best_step": 32000,
+      "completion_marker_line": "EARLY_STOP_TRIGGERED step=37000 best_step=32000 best_metric=0.029021",
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/logs/atg_core_seed101.log",
+        "sha256": "e84eb97c3f276a5f9949cc4998908c6e8febd6f217704ea31c033814813aec7a",
+        "size_bytes": 120863
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101",
+      "seed": 101,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed101/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "2c805c2fdf9e6a5f9785b3f3e242a13ee36ac1027b7a632bb46183529d504379",
+        "size_bytes": 2949
+      },
+      "test_p10_ndcg10": 0.04179216441674131,
+      "test_p2_ndcg10": 0.04129374588439805,
+      "test_p5_ndcg10": 0.04217175948074054,
+      "validation_p5_ndcg10": 0.029021099610334278
+    },
+    {
+      "best_metric": 0.029207551260010158,
+      "best_result_line": "BEST_RESULT step=42000 metric=ndcg10 value=0.029208 summary=/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/checkpoints-meta/ATG/best_summary_hybrid.json",
+      "best_step": 42000,
+      "completion_marker_line": "EARLY_STOP_TRIGGERED step=47000 best_step=42000 best_metric=0.029208",
+      "log": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/logs/atg_core_seed102.log",
+        "sha256": "00941e7539be2d8fcf3b4a776312b2e9e5fb42dbf4a1ca71f65eff9e181fc9b1",
+        "size_bytes": 152138
+      },
+      "manifest_exists": false,
+      "manifest_path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "manifest_reconstructed": false,
+      "run_dir": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102",
+      "seed": 102,
+      "summary": {
+        "content_hash_verified": true,
+        "path": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor/atg_core_seed102/checkpoints-meta/ATG/best_summary_hybrid.json",
+        "sha256": "654d2d989f20b3eb48288fe288323c14395216520c32348074c1f8cae7509d86",
+        "size_bytes": 2855
+      },
+      "test_p10_ndcg10": 0.0431246637349604,
+      "test_p2_ndcg10": 0.0423501067251558,
+      "test_p5_ndcg10": 0.04312726912337755,
+      "validation_p5_ndcg10": 0.029207551260010158
+    }
+  ],
+  "observed_spread": {
+    "max_pairwise_test_p2_ndcg10": 0.002631944403637204,
+    "pairwise": [
+      {
+        "abs_test_p2_ndcg10_spread": 0.0015755835628794498,
+        "seed_a": 100,
+        "seed_b": 101
+      },
+      {
+        "abs_test_p2_ndcg10_spread": 0.002631944403637204,
+        "seed_a": 100,
+        "seed_b": 102
+      },
+      {
+        "abs_test_p2_ndcg10_spread": 0.0010563608407577543,
+        "seed_a": 101,
+        "seed_b": 102
+      }
+    ]
+  },
+  "schema_version": "close10-atg-provenance-limited-v1",
+  "scope": {
+    "complete_configuration_parity_claimed": false,
+    "completed_run_count": 3,
+    "label": "provenance-limited observed spread",
+    "manifest_reconstructed": false,
+    "metric": "test-p2 NDCG@10",
+    "population_variance_estimate": false,
+    "training_seed_variance_estimate": false
+  },
+  "source_artifacts": {
+    "collector_snapshot": {
+      "path": "in-memory snapshot collected from read-only local copies",
+      "sha256": "a27488980c872afe05dbe0044542b239f1d714285b83c499fa482354a794626b",
+      "size_bytes": 1039795
+    },
+    "e0_evaluator_amendment": {
+      "path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-10-evaluator-amendment\\e0_evaluator_amendment.json",
+      "sha256": "da11d9f7307ad4377c9bf02d378fbf69bddae0453be3403502ef7c0ec3c4f9e5",
+      "size_bytes": 88351
+    },
+    "original_gate1_report": {
+      "path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-06-gate1\\sprint05_gate1_report.json",
+      "sha256": "a733ab2e351f9c34f5fcc11928fe6850ceb1aa9970ef48c6eaefba8d887e0440",
+      "size_bytes": 23286
+    }
+  },
+  "source_snapshot": {
+    "collected_at": "2026-07-10T18:10:49+08:00",
+    "remote_read_only": true,
+    "run_root": "/data/Zijian/goal/RecDemoRuns/close10_atg_noise_floor",
+    "schema_version": "close10-atg-remote-snapshot-v1",
+    "session_log": {
+      "completion_marker_line": "2026-07-10 13:51:04 close10 ALL_SEEDS_DONE",
+      "content_hash_verified": true,
+      "path": "/data/Zijian/goal/RecDemo_clean_closeout_chain/logs/close10_session.log",
+      "sha256": "a3f96449bacad86560a8f764ec308a895a8c3dd693fc874079e02361ac98694d",
+      "size_bytes": 384785
+    },
+    "source_host": "l20"
+  }
+}
