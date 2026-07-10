@@ -52,15 +52,15 @@ def get_graph(config, device):
         item_num = config.data.Steam.item_num
 
     if config.graph.type == "pair":
-        return PairWise(item_num)
+        return PairWise(item_num).to(device)
     elif config.graph.type == "point":
-        return PointWise(item_num)
+        return PointWise(item_num).to(device)
     elif config.graph.type == "hybrid":
-        return HybridWise(item_num, config.graph.gamma)
+        return HybridWise(item_num, config.graph.gamma).to(device)
     elif config.graph.type == "adaptive":
-        return AdaptiveWise(item_num, config.graph.is_disliked_item)
+        return AdaptiveWise(item_num, config.graph.is_disliked_item).to(device)
     elif config.graph.type == "proposal_adaptive":
-        return ProposalAdaptiveWise(item_num, config.graph.is_disliked_item)
+        return ProposalAdaptiveWise(item_num, config.graph.is_disliked_item).to(device)
     else:
         raise ValueError(f"Graph {config.graph.type} not valid")
 

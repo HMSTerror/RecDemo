@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 import torch
 
@@ -6,6 +7,17 @@ from graph_lib import AdaptiveWise, ProposalAdaptiveWise
 
 
 class GraphSamplingEquivalenceTests(unittest.TestCase):
+    def test_graph_factory_honors_requested_parameter_device(self):
+        config = SimpleNamespace(
+            training=SimpleNamespace(data="Beauty"),
+            data=SimpleNamespace(Beauty=SimpleNamespace(item_num=3)),
+            graph=SimpleNamespace(type="adaptive", is_disliked_item=True),
+        )
+
+        graph = __import__("graph_lib").get_graph(config, torch.device("meta"))
+
+        self.assertEqual("meta", str(graph.p1.device))
+
     def _graphs(self):
         dimension = 7
         host = AdaptiveWise(dimension, True)
