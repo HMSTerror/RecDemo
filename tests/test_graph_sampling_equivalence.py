@@ -71,6 +71,41 @@ class GraphSamplingEquivalenceTests(unittest.TestCase):
         self.assertEqual((4, 3), tuple(sample.shape))
         self.assertTrue(bool(torch.all((sample >= 0) & (sample < proposal.shape[-1]))))
 
+    def test_row_constant_proposal_score_entropy_has_host_gradient_identity(self):
+        host = AdaptiveWise(4, True)
+        proposal_graph = ProposalAdaptiveWise(4, True)
+        values = torch.tensor([0.2, -0.1, 0.4, 0.7, -0.3], dtype=torch.float32)
+        with torch.no_grad():
+            host.p1.copy_(values)
+        proposal_logits = torch.nn.Parameter(values.clone())
+        proposal = torch.softmax(proposal_logits, dim=-1).unsqueeze(0).expand(4, -1)
+        score = torch.tensor(
+            [
+                [[0.20, -0.10, 0.35, 0.05, -0.25]] * 3,
+                [[-0.30, 0.40, -0.15, 0.55, 0.10]] * 3,
+                [[0.15, 0.25, -0.45, 0.30, -0.05]] * 3,
+                [[-0.20, 0.05, 0.10, -0.35, 0.45]] * 3,
+            ],
+            dtype=torch.float32,
+        )
+        int_beta = torch.tensor([[0.37], [0.92], [0.21], [0.63]], dtype=torch.float32)
+        states = torch.tensor([[0, 1, 2], [3, 4, 0], [2, 1, 4], [1, 3, 0]], dtype=torch.long)
+        targets = torch.tensor([1, 2, 4, 0], dtype=torch.long)
+
+        host_loss = host.score_entropy(score, int_beta, states, targets).sum()
+        proposal_loss = proposal_graph.score_entropy(
+            score,
+            int_beta,
+            states,
+            targets,
+            proposal=proposal,
+        ).sum()
+        self.assertTrue(torch.equal(host_loss.detach(), proposal_loss.detach()))
+
+        host_loss.backward()
+        proposal_loss.backward()
+        self.assertTrue(torch.equal(host.p1.grad, proposal_logits.grad))
+
 
 if __name__ == "__main__":
     unittest.main()

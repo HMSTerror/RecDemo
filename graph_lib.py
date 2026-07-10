@@ -1376,6 +1376,55 @@ class ProposalAdaptiveWise(PreferGrow, nn.Module):
         return _sample_probability_rows(proposal_full, batch_dims)
 
     def score_entropy(self, score, int_beta, x, x0, proposal=None):
+        # A closed-gate proposal is a row-constant core softmax.  Use the
+        # exact same broadcast/indexing operations as AdaptiveWise here so
+        # the two parameter copies receive bit-identical gradients; the
+        # general row-varying path below remains unchanged.
+        if (
+            proposal is not None
+            and proposal.dim() == 2
+            and proposal.shape[0] > 0
+            and torch.equal(proposal, proposal[:1].expand_as(proposal))
+        ):
+            hate_probs = proposal[0].to(score.device)
+            x0 = x0.unsqueeze(-1)
+            esigm1 = torch.where(
+                int_beta < 0.5,
+                torch.expm1(int_beta),
+                torch.exp(int_beta) - 1,
+            )
+            ratio_base0 = 1.0 / esigm1
+            ratio_base1 = esigm1 * hate_probs[x]
+            ratio_base2 = 1 - 1.0 / (1 + ratio_base1)
+
+            neg_term_base = (score * hate_probs.unsqueeze(0).unsqueeze(0)).sum(dim=-1)
+            neg_term = torch.where(
+                x == x0,
+                ratio_base2 * neg_term_base,
+                neg_term_base + torch.gather(score, -1, x0.unsqueeze(-1)).squeeze(-1) * ratio_base0,
+            )
+
+            const_base = (hate_probs * hate_probs.log()).sum(dim=-1)
+            const = torch.where(
+                x == x0,
+                ratio_base2
+                * (
+                    const_base
+                    + hate_probs[x] * hate_probs[x].log()
+                    + (hate_probs[x] - 1)
+                    * ((ratio_base1 + 1).log() + ratio_base0.log() - 1)
+                ),
+                const_base
+                + hate_probs[x]
+                + (hate_probs[x0] + ratio_base0)
+                * ((esigm1 * hate_probs[x0] + 1).log() + ratio_base0.log())
+                - (1 + ratio_base0) * (hate_probs[x].log() + 1),
+            )
+
+            sexp = score.exp()
+            pos_term = (sexp.sum(dim=-1) - 1) * hate_probs[x]
+            return pos_term - neg_term + const
+
         proposal_full = self._expand_proposal(proposal, x)
         x0 = x0.unsqueeze(-1)
         esigm1 = torch.where(
