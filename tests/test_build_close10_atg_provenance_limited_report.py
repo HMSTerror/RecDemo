@@ -425,6 +425,23 @@ class Close10AtgProvenanceLimitedReportTests(unittest.TestCase):
                 (output_dir / "provenance/session/close10_session.log").read_bytes(),
             )
 
+    def test_report_disables_text_normalization_for_raw_provenance(self) -> None:
+        module = self.require_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot_path, gate1_path, e0_path = write_inputs(root)
+            output_dir = root / "report"
+            module.write_report(
+                snapshot_path=snapshot_path,
+                gate1_report_path=gate1_path,
+                e0_report_path=e0_path,
+                output_dir=output_dir,
+            )
+            self.assertEqual(
+                "provenance/** -text -diff\n",
+                (output_dir / ".gitattributes").read_text(encoding="utf-8"),
+            )
+
     def test_sha256sums_covers_every_other_output_and_verifies(self) -> None:
         module = self.require_module()
         with tempfile.TemporaryDirectory() as tmp:

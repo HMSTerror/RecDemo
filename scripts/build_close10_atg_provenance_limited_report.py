@@ -764,6 +764,7 @@ def write_package_files(
     chinese_path = staging_dir / "close10_atg_provenance_limited_report_zh.md"
     manifest_path = staging_dir / "provenance_manifest.json"
     audit_path = staging_dir / "capability_use_audit.md"
+    attributes_path = staging_dir / ".gitattributes"
 
     write_csv(csv_path, report["observations"])
     json_path.write_text(
@@ -778,6 +779,7 @@ def write_package_files(
         encoding="utf-8",
     )
     audit_path.write_text(render_capability_audit(report), encoding="utf-8")
+    attributes_path.write_text("provenance/** -text -diff\n", encoding="utf-8")
     write_raw_provenance(staging_dir, snapshot)
 
     validate_claim_language(
