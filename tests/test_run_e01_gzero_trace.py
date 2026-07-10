@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import torch
@@ -205,6 +206,52 @@ class E01GZeroTraceTests(unittest.TestCase):
         self.assertEqual(first[1], second[1])
         self.assertTrue(torch.equal(first[2], second[2]))
         self.assertEqual(64, len(metadata["combined_sha256"]))
+
+    def test_trace_start_rng_normalization_preserves_constructor_provenance(self) -> None:
+        module = load_module()
+        construction_states = {}
+        for arm, burn_count in (("host", 0), ("final_v2_closed_gate_full", 7), ("global_p", 13)):
+            random.seed(100)
+            np.random.seed(100)
+            torch.manual_seed(100)
+            for _ in range(burn_count):
+                random.random()
+                np.random.rand()
+                torch.rand(1)
+            construction_states[arm] = module.capture_rng_state(include_cuda=False)
+
+        runtimes = {
+            arm: SimpleNamespace(name=arm, rng_state=state)
+            for arm, state in construction_states.items()
+        }
+        random.seed(100)
+        np.random.seed(100)
+        torch.manual_seed(100)
+        trace_start_state = module.capture_rng_state(include_cuda=False)
+
+        evidence = module.normalize_trace_start_rng(
+            runtimes,
+            trace_start_state=trace_start_state,
+        )
+
+        construction_hashes = {
+            arm: evidence["construction"][arm]["combined_sha256"]
+            for arm in module.ARM_NAMES
+        }
+        normalized_hashes = {
+            arm: module.rng_state_metadata(runtimes[arm].rng_state)["combined_sha256"]
+            for arm in module.ARM_NAMES
+        }
+        self.assertEqual(3, len(set(construction_hashes.values())))
+        self.assertEqual(1, len(set(normalized_hashes.values())))
+        self.assertEqual(
+            evidence["trace_start"]["combined_sha256"],
+            next(iter(normalized_hashes.values())),
+        )
+        self.assertEqual(
+            evidence["trace_start"]["combined_sha256"],
+            runtimes["host"].trace_start_rng_metadata["combined_sha256"],
+        )
 
     def test_sampling_probe_uses_a_common_forked_rng_without_advancing_training_rng(self) -> None:
         module = load_module()

@@ -178,6 +178,45 @@ def rng_state_metadata(state: Mapping[str, Any]) -> dict[str, Any]:
     return metadata
 
 
+def normalize_trace_start_rng(
+    runtimes: Mapping[str, Any],
+    *,
+    trace_start_state: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Normalize the shared trace boundary without hiding constructor consumption.
+
+    Each production arm may consume a different amount of RNG while constructing
+    its model, graph, optimizer, and loaders.  That construction provenance is
+    retained in the evidence, but the first comparable trace operation must start
+    from one immutable RNG state.  This helper copies that state independently to
+    every runtime so probes and training cannot mutate a shared object.
+    """
+
+    if set(runtimes) != set(ARM_NAMES):
+        raise ValueError(
+            "trace-start RNG normalization requires exactly the registered arms: "
+            f"expected={ARM_NAMES}, got={tuple(runtimes)}"
+        )
+    if trace_start_state is None:
+        trace_start_state = capture_rng_state(include_cuda=torch.cuda.is_available())
+
+    trace_start_metadata = rng_state_metadata(trace_start_state)
+    construction_metadata: dict[str, dict[str, Any]] = {}
+    for arm in ARM_NAMES:
+        runtime = runtimes[arm]
+        construction = rng_state_metadata(runtime.rng_state)
+        construction_metadata[arm] = construction
+        runtime.construction_rng_metadata = deepcopy(construction)
+        runtime.trace_start_rng_metadata = deepcopy(trace_start_metadata)
+        runtime.rng_state = deepcopy(trace_start_state)
+
+    return {
+        "normalization": "shared_post_construction_trace_start",
+        "trace_start": trace_start_metadata,
+        "construction": construction_metadata,
+    }
+
+
 def run_forked_sampling_probe(
     *,
     model: Any,
@@ -786,6 +825,8 @@ class ArmRuntime:
     eval_step_fn: Any
     sampling_fns: dict[str, Any]
     rng_state: dict[str, Any]
+    construction_rng_metadata: dict[str, Any] = field(default_factory=dict)
+    trace_start_rng_metadata: dict[str, Any] = field(default_factory=dict)
     train_iter: Any = None
     batch_hashes: list[str] = field(default_factory=list)
     last_gradients: dict[str, Any] = field(default_factory=dict)
@@ -1385,6 +1426,8 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
     initialization_evidence["canonical_parameter_sha256"] = (
         _require_identical_initial_values(runtimes)
     )
+
+    initialization_evidence["rng_boundary"] = normalize_trace_start_rng(runtimes)
 
     # single_train.py performs a p2 validation sampler pass before its first
     # training batch whenever snapshot_sampling=True.  Replay it per arm under
