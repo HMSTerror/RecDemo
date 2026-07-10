@@ -1,0 +1,145 @@
+{
+  "entries": [
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_steam/host_steam_steam_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/host_steam.json",
+      "sha256": "954a4f9e11396f7499e086fabe7724e7e8a09b6f0fd50a5188e44b43d311c7a6"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_ml1m/host_ml1m_ml1m_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/host_ml1m.json",
+      "sha256": "d892b6cb0f006fb7a22caea5c13edcff9a44b6200029cb732137e93277969ce4"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_beauty/host_beauty_beauty_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/host_beauty.json",
+      "sha256": "a57d81ffbd81624f41c306275cea614a4514063f8f128c7e06b8da749b31fecc"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_atg/host_atg_atg_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/host_atg.json",
+      "sha256": "ea60f03ca754cb8cff1c78a78d1061a32bc3658abda48674f997761e248884cf"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_steam/ours_full_steam_steam_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/ours_full_steam.json",
+      "sha256": "4782c577f9ca12488511ef10545dc6506c8476dcc2e2d81e99835d9824ece7e0"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_ml1m/ours_full_ml1m_ml1m_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/ours_full_ml1m.json",
+      "sha256": "ed665bdfe7e2274d18be8765c021ce85f140254547f5929c1569103dbf31c149"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_beauty/ours_full_beauty_beauty_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/ours_full_beauty.json",
+      "sha256": "d54c9585703baadef2df7526962086bda1040ecee6c9abdd28f9e49bdcb26620"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_atg/ours_full_atg_atg_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/ours_full_atg.json",
+      "sha256": "fad7078b72fffe15495259fee9625dc2ba40fc6a82c84bd661cddae4cf723286"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/global_p_steam/global_p_steam_steam_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/global_p_steam.json",
+      "sha256": "53ac6636bf5d67a0dba1b24c9b4b08a5358363ad7f5c9761118813240f2a7663"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/u_shuffle_steam/u_shuffle_steam_steam_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/u_shuffle_steam.json",
+      "sha256": "49030595eb4fc94b874b70e67f455e3aeb30607d769a7a14ffd677fcf4f5d814"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/text_anchor_only_steam/text_anchor_only_steam_steam_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/text_anchor_only_steam.json",
+      "sha256": "86950d6d8c5b0f45029b6baa148fbb4f900fbc422ad5d0b0802972baf1768207"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/global_p_beauty/global_p_beauty_beauty_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/global_p_beauty.json",
+      "sha256": "6d84b0e825f767749c2fcd985f02ed694e40c03761334ae0b2f344d77ea40e60"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/u_shuffle_beauty/u_shuffle_beauty_beauty_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/u_shuffle_beauty.json",
+      "sha256": "2213dea4aaafdaa3c88de0d0ce9043eacc38d25d6dc6611dc01dc64ad61b26fd"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/text_anchor_only_beauty/text_anchor_only_beauty_beauty_p2_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/text_anchor_only_beauty.json",
+      "sha256": "b13f579b451dc7fac14361bd2b6b348e82cc6c6dfdd14202f9a25ef4e7cd5fba"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_steam/diffurec_steam_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/diffurec_steam.json",
+      "sha256": "8d3b13c0a547b8ac077f122210b378c8075a88dd6a4195c78ae72ac25d381a63"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_ml1m/diffurec_ml1m_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/diffurec_ml1m.json",
+      "sha256": "c4f24d3a61afef9c12f8c13ed97f56fae6fd5cdd53c6a3bac21662bf2c171e3c"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_beauty/diffurec_beauty_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/diffurec_beauty.json",
+      "sha256": "f0e2794531ff3f27e8e18e3fb4f889411276b36ba55c4e748d28076ad78bd69e"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_atg/diffurec_atg_evalseed100_e0_eval.json",
+      "relative_path": "provenance/e0_results/diffurec_atg.json",
+      "sha256": "c8ab354b7cf936eb365388650283100994989f32d8328e6193e68ad2c71f134f"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/logs/e0_shard0_gpu0.log",
+      "relative_path": "provenance/execution_logs/shard0.log",
+      "sha256": "9ac726f01b5f97b06b81a7a20e06201cc1d026c459556b0d507b2fff78169a35"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/logs/e0_shard1_gpu1.log",
+      "relative_path": "provenance/execution_logs/shard1.log",
+      "sha256": "c7882b8139f3a541a687a83ef438a530047918a03c42dbb52883e66a6b8ecbf8"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/docs/reports/data/2026-07-02-gate0/gate0_u_tilde_report.json",
+      "relative_path": "provenance/frozen_inputs/gate0_original.json",
+      "sha256": "a72c9edf5da57eabc196cb901fc0da6636fc14807c6dde228a2713fcb5928b73"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/docs/reports/data/2026-07-02-gate0/gate0_v2_frozen_verdict.json",
+      "relative_path": "provenance/frozen_inputs/gate0_v2.json",
+      "sha256": "7e7df01755b6a4cb0591c3ac4caeee868084eed61c8273083bf819a2d3741632"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/docs/reports/data/2026-07-06-gate1/sprint05_gate1_report.json",
+      "relative_path": "provenance/frozen_inputs/gate1_legacy.json",
+      "sha256": "fafe7c003bfc475d7b6d5c9891920ba11bd1921f475ec146a0af9963c6f2c11e"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/docs/reports/data/2026-07-07-close04-diffurec/close04_diffurec_comparison.csv",
+      "relative_path": "provenance/frozen_inputs/diffurec_legacy_comparison.csv",
+      "sha256": "a3c925485aecf1c614c40ebaf184e82343996b455ab9c91bb4817ee69c3239b7"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/scripts/build_e0_evaluator_amendment.py",
+      "relative_path": "provenance/code/build_e0_evaluator_amendment.py",
+      "sha256": "10a701b6cbf6139f99338eb8722044d8a6101b1e5466cbaed3b0d80f4ee17295"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/scripts/evaluate_frozen_checkpoint.py",
+      "relative_path": "provenance/code/evaluate_frozen_checkpoint.py",
+      "sha256": "d7b6b6e5715351bb3b617c74ff7b6a86a32ada171d52fecc446d2010d0bd819f"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/scripts/evaluate_frozen_diffurec.py",
+      "relative_path": "provenance/code/evaluate_frozen_diffurec.py",
+      "sha256": "9153e340adfb0e481db318f8afeab539b1c85009c0399b5bb96bb602d1ad530e"
+    },
+    {
+      "original_source_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/scripts/run_e0_fulltail_matrix.sh",
+      "relative_path": "provenance/code/run_e0_fulltail_matrix.sh",
+      "sha256": "005bec139367303fef7bc20b88955ccfd410d60cd346aa72476ac93c6d718965"
+    }
+  ],
+  "schema_version": 1
+}

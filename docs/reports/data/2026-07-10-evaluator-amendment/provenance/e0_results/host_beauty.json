@@ -1,0 +1,69 @@
+{
+  "best_step": 20000,
+  "checkpoint_selector_protocol": "legacy_tail_skipping_validation",
+  "dataset": "Beauty",
+  "method_id": "host_beauty",
+  "metric_contract": {
+    "aggregation_weight": "row",
+    "candidate_policy": "first-M-zero-based",
+    "eval_seed": 100,
+    "legacy_model_catalog_mismatch_authorized": false,
+    "model_item_count": 12101,
+    "non_candidate_model_item_slots": 0,
+    "tail_batch_included": true,
+    "test_item_domain": {
+      "history_pad_maps_to_non_candidate_model_slot": false,
+      "history_pad_occurrences": 9392,
+      "history_pad_rows": 1941,
+      "history_pad_semantics": "disliked_state",
+      "history_pad_value": 12101,
+      "maximum_history_item_id": 12101,
+      "maximum_target_item_id": 12099,
+      "minimum_history_item_id": 0,
+      "minimum_target_item_id": 13
+    },
+    "topk": [
+      1,
+      5,
+      10,
+      20,
+      50
+    ],
+    "valid_item_count": 12101,
+    "version": "e0_full_tail_v2"
+  },
+  "random_seed": 100,
+  "schema_version": 1,
+  "selection_bias_not_recomputed": true,
+  "sources": {
+    "checkpoint_path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Beauty/checkpoint_adaptive_best.pth",
+    "checkpoint_sha256": "7861123831ed496c5019cb9959793ceff3e8d3096ecffee179e701f91c8fadfd",
+    "log_path": "/data/Zijian/goal/RecDemo/logs/beauty_adaptive_earlystop.log",
+    "log_sha256": "3ff9b94ff29fd7313f3c40bbe7378ac166efe04b177ca45747c507b7eac9ae52",
+    "split_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/test_data.df",
+    "split_sha256": "94805afca343ff505e978b3d8eff1f7e8a97920f340ca3a9dd6e92cf02de814b",
+    "summary_path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Beauty/best_summary_adaptive.json",
+    "summary_sha256": "2071d281cb33fe18f26e03dbc5e84592d233fc731bd24e1c21c3ad11c05b211a"
+  },
+  "strength": "p2",
+  "test": {
+    "evaluated_rows": 2237,
+    "expected_rows": 2237,
+    "hr": [
+      0.011175681716584712,
+      0.04425569959767546,
+      0.05006705409029951,
+      0.05856057219490389,
+      0.07554760840411265
+    ],
+    "hr10": 0.05006705409029951,
+    "ndcg": [
+      0.011175681716584712,
+      0.02977851786672826,
+      0.03160298154847333,
+      0.03375282157414981,
+      0.03707871277399787
+    ],
+    "ndcg10": 0.03160298154847333
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "best_step": 405000,
+  "checkpoint_selector_protocol": "legacy_tail_skipping_validation",
+  "dataset": "ML1M",
+  "method_id": "ours_full_ml1m",
+  "metric_contract": {
+    "aggregation_weight": "row",
+    "candidate_policy": "first-M-zero-based",
+    "eval_seed": 100,
+    "legacy_model_catalog_mismatch_authorized": false,
+    "model_item_count": 3706,
+    "non_candidate_model_item_slots": 0,
+    "tail_batch_included": true,
+    "test_item_domain": {
+      "history_pad_maps_to_non_candidate_model_slot": false,
+      "history_pad_occurrences": 0,
+      "history_pad_rows": 0,
+      "history_pad_semantics": "disliked_state",
+      "history_pad_value": 3706,
+      "maximum_history_item_id": 3705,
+      "maximum_target_item_id": 3705,
+      "minimum_history_item_id": 0,
+      "minimum_target_item_id": 0
+    },
+    "topk": [
+      1,
+      5,
+      10,
+      20,
+      50
+    ],
+    "valid_item_count": 3706,
+    "version": "e0_full_tail_v2"
+  },
+  "random_seed": 100,
+  "schema_version": 1,
+  "selection_bias_not_recomputed": true,
+  "sources": {
+    "checkpoint_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/checkpoint_proposal_adaptive_best.pth",
+    "checkpoint_sha256": "e1bdf6555040d7588d56ad8191bb42f42dad529f1573b67fcbb2628b52dc0d30",
+    "log_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/logs/ml1m_proposal_adaptive_mainpath.log",
+    "log_sha256": "5e3e5cb2194595f0523c3133fd401439ae187a45bcfb0ad898b264f97b2e10bf",
+    "manifest_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/frozen_run_manifest.json",
+    "manifest_sha256": "47e6a85b841df4bc0069758c1dadf5b3469715f2d90273bbb5a48b4386e283f3",
+    "split_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M/test_data.df",
+    "split_sha256": "92944bba9dc300a188eda0d2f2f794c16720ab0542bf406f65d3161ea854a3a4",
+    "summary_path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/best_summary_proposal_adaptive.json",
+    "summary_sha256": "3f64d85d9599994fd5de20cf4ba8ba92c239163de58115e874efe48f5a0cf9b4"
+  },
+  "strength": "p2",
+  "test": {
+    "evaluated_rows": 85405,
+    "expected_rows": 85405,
+    "hr": [
+      0.003430712487559276,
+      0.10268719629998244,
+      0.1692992213570634,
+      0.2580059715473333,
+      0.40618230782741055
+    ],
+    "hr10": 0.1692992213570634,
+    "ndcg": [
+      0.003430712487559276,
+      0.0546976295839738,
+      0.0760856856087867,
+      0.09841592249135382,
+      0.12780240002494453
+    ],
+    "ndcg10": 0.0760856856087867
+  }
+}

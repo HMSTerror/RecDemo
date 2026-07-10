@@ -1,0 +1,58 @@
+{
+  "best_epoch": 170,
+  "checkpoint_selector_protocol": "legacy_equal_batch_mean_validation",
+  "dataset": "ML1M",
+  "method_id": "diffurec",
+  "metric_contract": {
+    "aggregation_weight": "row",
+    "candidate_policy": "exclude-padding-id-0",
+    "eval_seed": 100,
+    "tail_batch_included": true,
+    "version": "e0_full_tail_v2"
+  },
+  "model_config": {
+    "diffusion_steps": 32,
+    "dropout": 0.1,
+    "emb_dropout": 0.3,
+    "hidden_size": 128,
+    "lambda_uncertainty": 0.001,
+    "loss_lambda": 0.001,
+    "lr": 0.001,
+    "noise_schedule": "trunc_lin",
+    "num_blocks": 4,
+    "rescale_timesteps": true,
+    "schedule_sampler_name": "lossaware",
+    "weight_decay": 0.0
+  },
+  "random_seed": 100,
+  "schema_version": 1,
+  "selection_bias_not_recomputed": true,
+  "sources": {
+    "checkpoint_path": "/data/Zijian/goal/RecDemoRuns/close04_diffurec/ml1m_diffurec_seed100/checkpoints-meta/ML1M/checkpoint_diffurec_best.pt",
+    "checkpoint_sha256": "50389383a345fc9eb2e4d5c798ead66137ba7942b60170d369762a793366634c",
+    "evaluator_runner_path": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62/scripts/run_close04_diffurec.py",
+    "evaluator_runner_sha256": "ad75c7999761f1c7a520e71ba1ceb716146d80d03aa1353c93eaaf30fe32800f",
+    "manifest_path": "/data/Zijian/goal/RecDemoRuns/close04_diffurec/ml1m_diffurec_seed100/checkpoints-meta/ML1M/diffurec_run_manifest.json",
+    "manifest_sha256": "bba0c6dce277ca6f68be066714cd722868a8af5d6bb895e9eeafbc0826614b8a",
+    "split_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M/test_data.df",
+    "split_sha256": "92944bba9dc300a188eda0d2f2f794c16720ab0542bf406f65d3161ea854a3a4",
+    "summary_path": "/data/Zijian/goal/RecDemoRuns/close04_diffurec/ml1m_diffurec_seed100/checkpoints-meta/ML1M/best_summary_diffurec.json",
+    "summary_sha256": "151b82624e8cbc88c67a846e19607328185289202782319d3d5e44a60ac00e57",
+    "upstream_revision": "f6f70c9d78477591742c71c9ed83e5f1269530e8"
+  },
+  "test": {
+    "evaluated_rows": 85405,
+    "expected_rows": 85405,
+    "hr10": 0.25808793396467794,
+    "metrics": {
+      "HR@10": 0.25808793396467794,
+      "HR@20": 0.37490779228870946,
+      "HR@5": 0.170153972251962,
+      "NDCG@10": 0.1412486074368566,
+      "NDCG@20": 0.17065201257348694,
+      "NDCG@5": 0.11294419320513846
+    },
+    "ndcg10": 0.1412486074368566
+  },
+  "training_wrapper_revision": "f644a62933319a281076b23a01e7b9fd60954e06"
+}

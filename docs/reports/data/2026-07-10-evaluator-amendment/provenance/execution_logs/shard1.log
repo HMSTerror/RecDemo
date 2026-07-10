@@ -1,0 +1,79 @@
+E0_SHARD_START shard=1 gpu=1 code_revision=d1b6664178b5880989c2ee2d3959c1ec6d1c67c4
+0, NVIDIA L20, 9 MiB, 0 %
+1, NVIDIA L20, 9 MiB, 0 %
+E0_ITEM_START id=diffurec_beauty dataset=Beauty family=diffurec
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_beauty/diffurec_beauty_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=diffurec_beauty dataset=Beauty family=diffurec
+E0_ITEM_START id=diffurec_ml1m dataset=ML1M family=diffurec
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_ml1m/diffurec_ml1m_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=diffurec_ml1m dataset=ML1M family=diffurec
+E0_ITEM_START id=diffurec_atg dataset=ATG family=diffurec
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_atg/diffurec_atg_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=diffurec_atg dataset=ATG family=diffurec
+E0_ITEM_START id=host_ml1m dataset=ML1M family=core
+True
+3707
+ACC        ACC        ACC        
+0.035935   0.035935   0.035935  
+HR@5       HR@10      HR@20      HR@50     
+0.109455   0.165225   0.244447   0.370833  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.073037   0.090936   0.110858   0.135941  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.061112   0.068421   0.073832   0.077861  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_ml1m/host_ml1m_ml1m_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=host_ml1m dataset=ML1M family=core
+E0_ITEM_START id=ours_full_ml1m dataset=ML1M family=core
+True
+3707
+ACC        ACC        ACC        
+0.003431   0.003431   0.003431  
+HR@5       HR@10      HR@20      HR@50     
+0.102687   0.169299   0.258006   0.406182  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.054698   0.076086   0.098416   0.127802  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.038882   0.047620   0.053699   0.058410  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_ml1m/ours_full_ml1m_ml1m_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=ours_full_ml1m dataset=ML1M family=core
+E0_ITEM_START id=host_atg dataset=ATG family=core
+True
+11925
+ACC        ACC        ACC        
+0.032956   0.032956   0.032956  
+HR@5       HR@10      HR@20      HR@50     
+0.044284   0.046859   0.054068   0.064882  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.039546   0.040360   0.042230   0.044414  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.037925   0.038250   0.038788   0.039154  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_atg/host_atg_atg_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=host_atg dataset=ATG family=core
+E0_ITEM_START id=ours_full_atg dataset=ATG family=core
+True
+11922
+ACC        ACC        ACC        
+0.008239   0.008239   0.008239  
+HR@5       HR@10      HR@20      HR@50     
+0.041195   0.044799   0.049434   0.065396  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.027639   0.028855   0.030019   0.033158  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.022966   0.023496   0.023811   0.024303  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_atg/ours_full_atg_atg_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=ours_full_atg dataset=ATG family=core
+E0_SHARD_DONE shard=1 gpu=1

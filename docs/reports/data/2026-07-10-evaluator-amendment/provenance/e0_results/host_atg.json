@@ -1,0 +1,69 @@
+{
+  "best_step": 39000,
+  "checkpoint_selector_protocol": "legacy_tail_skipping_validation",
+  "dataset": "ATG",
+  "method_id": "host_atg",
+  "metric_contract": {
+    "aggregation_weight": "row",
+    "candidate_policy": "first-M-zero-based",
+    "eval_seed": 100,
+    "legacy_model_catalog_mismatch_authorized": true,
+    "model_item_count": 11924,
+    "non_candidate_model_item_slots": 3,
+    "tail_batch_included": true,
+    "test_item_domain": {
+      "history_pad_maps_to_non_candidate_model_slot": true,
+      "history_pad_occurrences": 9098,
+      "history_pad_rows": 1822,
+      "history_pad_semantics": "ordinary_non_candidate_legacy_model_slot",
+      "history_pad_value": 11921,
+      "maximum_history_item_id": 11921,
+      "maximum_target_item_id": 11920,
+      "minimum_history_item_id": 0,
+      "minimum_target_item_id": 24
+    },
+    "topk": [
+      1,
+      5,
+      10,
+      20,
+      50
+    ],
+    "valid_item_count": 11921,
+    "version": "e0_full_tail_v2"
+  },
+  "random_seed": 100,
+  "schema_version": 1,
+  "selection_bias_not_recomputed": true,
+  "sources": {
+    "checkpoint_path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ATG/checkpoint_hybrid_best.pth",
+    "checkpoint_sha256": "e5b0831ae3e06412971efbf7d0c417ca65d5ab7c8f85e154fb713973f8e95ff7",
+    "log_path": "/data/Zijian/goal/RecDemo/logs/atg_hybrid_earlystop.log",
+    "log_sha256": "7f043aad06baed491e4dd841779dbe8df6e3debd87b610a3491ed8d6336575be",
+    "split_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG/test_data.df",
+    "split_sha256": "c1bf2e988193879af84ae4a23828defd1e6b7afb4940ce99295e41e64b5472d7",
+    "summary_path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ATG/best_summary_hybrid.json",
+    "summary_sha256": "ae800dfd538745c211b966b10a68920e000ad17fcf6d28770002ea1a02142a38"
+  },
+  "strength": "p2",
+  "test": {
+    "evaluated_rows": 1942,
+    "expected_rows": 1942,
+    "hr": [
+      0.032955715756951595,
+      0.044284243048403706,
+      0.04685890834191555,
+      0.054067971163748715,
+      0.06488156539649846
+    ],
+    "hr10": 0.04685890834191555,
+    "ndcg": [
+      0.032955715756951595,
+      0.039546476946285145,
+      0.0403604137836112,
+      0.04223019643379064,
+      0.04441373209558559
+    ],
+    "ndcg10": 0.0403604137836112
+  }
+}

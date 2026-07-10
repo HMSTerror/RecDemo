@@ -1,0 +1,159 @@
+E0_SHARD_START shard=0 gpu=0 code_revision=d1b6664178b5880989c2ee2d3959c1ec6d1c67c4
+0, NVIDIA L20, 9 MiB, 0 %
+1, NVIDIA L20, 9 MiB, 0 %
+E0_ITEM_START id=host_beauty dataset=Beauty family=core
+True
+12102
+ACC        ACC        ACC        
+0.011176   0.011176   0.011176  
+HR@5       HR@10      HR@20      HR@50     
+0.044256   0.050067   0.058561   0.075548  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.029779   0.031603   0.033753   0.037079  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.024877   0.025598   0.026190   0.026704  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_beauty/host_beauty_beauty_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=host_beauty dataset=Beauty family=core
+E0_ITEM_START id=diffurec_steam dataset=Steam family=diffurec
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/diffurec_steam/diffurec_steam_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=diffurec_steam dataset=Steam family=diffurec
+E0_ITEM_START id=host_steam dataset=Steam family=core
+True
+9266
+ACC        ACC        ACC        
+0.000781   0.000781   0.000781  
+HR@5       HR@10      HR@20      HR@50     
+0.016553   0.029572   0.051841   0.103037  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.008680   0.012841   0.018426   0.028464  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.006108   0.007796   0.009306   0.010869  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/host_steam/host_steam_steam_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=host_steam dataset=Steam family=core
+E0_ITEM_START id=ours_full_steam dataset=Steam family=core
+True
+9266
+ACC        ACC        ACC        
+0.000818   0.000818   0.000818  
+HR@5       HR@10      HR@20      HR@50     
+0.018425   0.035127   0.060036   0.116663  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.009616   0.014983   0.021231   0.032369  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.006741   0.008936   0.010625   0.012373  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_steam/ours_full_steam_steam_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=ours_full_steam dataset=Steam family=core
+E0_ITEM_START id=global_p_steam dataset=Steam family=core
+True
+9266
+ACC        ACC        ACC        
+0.000930   0.000930   0.000930  
+HR@5       HR@10      HR@20      HR@50     
+0.016664   0.031047   0.053415   0.104438  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.008805   0.013408   0.019022   0.029037  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.006239   0.008112   0.009631   0.011194  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/global_p_steam/global_p_steam_steam_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=global_p_steam dataset=Steam family=core
+E0_ITEM_START id=u_shuffle_steam dataset=Steam family=core
+True
+9266
+ACC        ACC        ACC        
+0.001004   0.001004   0.001004  
+HR@5       HR@10      HR@20      HR@50     
+0.017247   0.033019   0.056912   0.109410  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.009181   0.014216   0.020206   0.030522  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.006543   0.008582   0.010200   0.011815  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/u_shuffle_steam/u_shuffle_steam_steam_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=u_shuffle_steam dataset=Steam family=core
+E0_ITEM_START id=text_anchor_only_steam dataset=Steam family=core
+True
+9266
+ACC        ACC        ACC        
+0.001413   0.001413   0.001413  
+HR@5       HR@10      HR@20      HR@50     
+0.039132   0.068604   0.110550   0.194120  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.020531   0.030004   0.040537   0.057050  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.014431   0.018307   0.021160   0.023783  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/text_anchor_only_steam/text_anchor_only_steam_steam_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=text_anchor_only_steam dataset=Steam family=core
+E0_ITEM_START id=ours_full_beauty dataset=Beauty family=core
+True
+12102
+ACC        ACC        ACC        
+0.000447   0.000447   0.000447  
+HR@5       HR@10      HR@20      HR@50     
+0.044256   0.050067   0.056772   0.073312  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.026076   0.027898   0.029598   0.032868  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.019826   0.020544   0.021013   0.021534  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/ours_full_beauty/ours_full_beauty_beauty_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=ours_full_beauty dataset=Beauty family=core
+E0_ITEM_START id=global_p_beauty dataset=Beauty family=core
+True
+12102
+ACC        ACC        ACC        
+0.000447   0.000447   0.000447  
+HR@5       HR@10      HR@20      HR@50     
+0.044256   0.050067   0.056772   0.073312  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.026076   0.027898   0.029598   0.032868  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.019826   0.020544   0.021013   0.021534  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/global_p_beauty/global_p_beauty_beauty_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=global_p_beauty dataset=Beauty family=core
+E0_ITEM_START id=u_shuffle_beauty dataset=Beauty family=core
+True
+12102
+ACC        ACC        ACC        
+0.010729   0.010729   0.010729  
+HR@5       HR@10      HR@20      HR@50     
+0.042021   0.050961   0.058114   0.073759  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.028745   0.031606   0.033403   0.036434  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.024214   0.025379   0.025866   0.026321  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/u_shuffle_beauty/u_shuffle_beauty_beauty_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=u_shuffle_beauty dataset=Beauty family=core
+E0_ITEM_START id=text_anchor_only_beauty dataset=Beauty family=core
+True
+12102
+ACC        ACC        ACC        
+0.001341   0.001341   0.001341  
+HR@5       HR@10      HR@20      HR@50     
+0.043809   0.050961   0.057667   0.075548  
+NDCG@5     NDCG@10    NDCG@20    NDCG@50   
+0.025934   0.028199   0.029894   0.033502  
+MRR@5      MRR@10     MRR@20     MRR@50    
+0.019818   0.020726   0.021191   0.021798  
+{
+  "output_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e0_fulltail_v3_20260710_d1b6664/final/text_anchor_only_beauty/text_anchor_only_beauty_beauty_p2_evalseed100_e0_eval.json"
+}
+E0_ITEM_FINISH id=text_anchor_only_beauty dataset=Beauty family=core
+E0_SHARD_DONE shard=0 gpu=0
