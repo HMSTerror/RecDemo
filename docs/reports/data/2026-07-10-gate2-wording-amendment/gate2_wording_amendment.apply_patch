@@ -1,0 +1,527 @@
+*** Begin Patch
+*** Update File: paper/main_v2.tex
+@@
+ %%   - Supersedes paper/main.tex (frozen as backup; do not edit it).
+ %%   - Claim tier: Family D baseline per
+ %%     docs/reports/2026-07-04-family-d-claim-freeze-cn.md, PLUS the
+-%%     2026-07-06 Gate-1 readout consequences: ML1M/ATG parity misses are
+-%%     reported as an implementation red flag (host noise floor pending,
+-%%     CLOSE-02); Prop.-6 EMPIRICAL wording stays paused; only the weak
+-%%     Gate-2 exit is presently reachable. Upgrades only via documented
+-%%     amendment (CLOSE-05).
++%%     Gate-2 amendment: one closed-gate ML1M miss plus one barely-open
++%%     ATG miss remain open implementation questions. ML1M exceeds its
++%%     measured host floor; ATG exceeds only a provenance-limited observed
++%%     three-run spread because the run manifests are absent. E1 found a
++%%     step-0 optimizer-ownership mismatch, so end-to-end empirical
++%%     reduction wording stays paused.
+ %%   - Repositioning (spec 2026-07-06 section 5.1): intro paragraph and a
+ %%     fifth related-work axis situate the paper against the discrete-
+ %%     diffusion generative-recommendation wave; claim sentences unchanged.
+@@
+ history-only gate (a per-user coherence signal calibrated against a
+ length-matched random-history null, damped by a frozen dataset-level
+ utility factor) that interpolates between the host's learned proposal
+-and a frozen text anchor. The design is \emph{fallback-safe}: the
+-conditioned chain retains Markovianity, detailed balance, and the
+-analytic reversal of the host kernel; it reduces \emph{exactly} to the
+-host when the gate closes; and it deviates by at most the gate value in
+-total variation. Controls (reliability shuffling, global proposals,
+-ungated anchors) show the mechanism requires an \emph{aligned} per-user
+-signal, and corruption diagnostics show adaptive backoff as evidence
+-degrades. A pre-registered four-dataset validation of the frozen gate
+-returned a mixed verdict: the opened gate keeps a small positive gain
+-and one closed-gate dataset holds parity, while two datasets miss their
+-parity bands by margins comparable to run-to-run noise, which we report
+-as an open implementation question rather than evidence in either
+-direction. The cross-dataset inversion rests on four points; gains are
+-selective by design---where text utility is high the method's value is
+-safety, not improvement.
++and a frozen text anchor. The design is \emph{fallback-safe} at the
++kernel level: the conditioned chain retains Markovianity, detailed
++balance, and the analytic reversal of the host kernel; it reduces
++\emph{exactly} to the host when the gate closes. The bounded-deviation
++claim concerns only the proposal and one forward transition row:
++$\TV(\pu,\pcore)\le g$ and
++$\TV(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot))\le
++(1-\alpha_\sigma)g$; it is not a bound on end-to-end recommendation
++loss. Controls show that the mechanism requires an \emph{aligned}
++per-user signal. A pre-registered four-dataset validation returned a
++mixed single-run observation: fully open Steam kept a small positive
++gain, closed-gate Beauty held its parity band, while the closed-gate
++ML1M miss exceeded its measured host noise floor. The barely-open ATG
++($\phids{=}0.117$) miss was $4.37\times$ a provenance-limited observed
++three-run spread, but all three run manifests are absent, so we do not
++call that spread a fully manifested noise floor. E1 also found a step-0
++optimizer-ownership mismatch between the production paths. We report
++the two misses as open implementation questions rather than evidence
++in either direction about gate efficacy. The cross-dataset inversion rests on four points;
++where text utility is high, the design closes the kernel toward the
++host rather than promising an empirical gain.
+ % Frozen Family D main + boundary sentences implemented above; freeze memo:
+ % docs/reports/2026-07-04-family-d-claim-freeze-cn.md (upgrade only via
+ % documented amendment at CLOSE-05).
+@@
+ interpolates between the host's \emph{learned} global proposal and a
+ frozen text anchor and leaves the host's pseudo-item mass untouched.
+ Conditional on the fixed history-derived signals, all structural
+-properties of the host chain survive; when the gate closes, the kernel
+-\emph{is} the host kernel, exactly; and at any gate value the kernel
+-stays within $g$ of the host in total variation. The theory is
++properties of the host chain survive; when the gate closes, the
++proposal and its derived kernel objects reduce exactly to the host.
++For nonzero gates, Lemma~\ref{lem:tv} bounds the proposal and each
++one-step forward transition row in total variation; it does not bound
++the trained score model or recommendation metrics. The theory is
+ deliberately elementary (rank-one kernel algebra), but it buys a
+ property that score-side or loss-side side-information injection
+ cannot even express: a provable reduction to the host when evidence is
+@@
+ the gate and its guarantees are stated for rank-one absorbing kernels
+ rather than for one architecture. A pre-registered four-dataset
+ validation and mechanism controls then test the design under a frozen
+-protocol, and we report the outcome as it fell: directional gain where
+-the gate opens, parity where it closes, and the remaining readouts
+-held open as an implementation question rather than evidence in
+-either direction.
++protocol. The single-run readout contains one closed-gate parity hit
++(Beauty), one closed-gate miss (ML1M), one barely-open miss (ATG,
++$\phids{=}0.117$), and a fully open directional gain that misses its
++reference magnitude (Steam). We keep the two misses as open
++implementation questions and do not treat them as an end-to-end
++demonstration of exact reduction.
+ 
+ Our contributions:
+ \begin{itemize}
+   \item \textbf{The utility-inversion finding.} A train-only text
+   utility statistic inversely rank-orders the outcome of text-tilting a
+-  discrete preference-diffusion kernel on all four benchmarks
+-  ($4/4$; probability $1/24$ under a random-ordering null), with a
+-  mechanism-level account: corruption proposals reward hard negatives
+-  and punish predicted positives (Sec.~\ref{sec:inversion}). We
++  discrete preference-diffusion kernel on all four benchmarks. Under
++  exchangeability, one specified order among $4!$ equally likely label
++  orders gives the descriptive fraction $1/4!=1/24$; this is not a
++  confirmatory p-value. We give a mechanism-level account: corruption
++  proposals reward hard negatives and punish predicted positives
++  (Sec.~\ref{sec:inversion}). We
+   further propose $\Uds$ as a train-only \emph{preflight} statistic
+   for any scheme that mines negatives from content similarity; our
+   kernel results are its first evidence.
+@@
+   kernel is conditioned per user by an explicit, history-only evidence
+   signal; conditional Markovianity, the stationary proposal, detailed
+   balance, and the analytic reverse ratio all carry over
+-  (Prop.~\ref{prop:validity}), with an exact-reduction guarantee
+-  (Prop.~\ref{prop:reduction}) and a total-variation bound
+-  (Lemma~\ref{lem:tv}).
++  (Prop.~\ref{prop:validity}), with exact reduction at $g=0$
++  (Prop.~\ref{prop:reduction}) and nonzero-gate bounds limited to
++  proposal TV and one-step forward transition-row TV
++  (Lemma~\ref{lem:tv}), not end-to-end recommendation performance.
+   \item \textbf{Calibration methodology.} A length-matched
+   random-history null for user-level coherence---raw and even
+   null-calibrated coherence mismeasure utility, which is why the
+@@
+   before any retraining (pre-registered thresholds,
+   Appendix~\ref{app:uds}).
+   \item \textbf{Mechanism evidence.} Controls (reliability shuffle,
+-  global proposal, ungated anchor) and text-corruption diagnostics
+-  showing that aligned per-user gating is load-bearing and that the
+-  kernel backs off adaptively as evidence degrades
++  global proposal, ungated anchor) show that aligned per-user gating is
++  load-bearing. First-generation corruption diagnostics are reported as
++  limited observations rather than evidence for a final-v2
++  corruption-response claim
+   (Sec.~\ref{sec:mechanism}).
+ \end{itemize}
+ 
+@@
+ history-only gate $g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$
+ interpolates the corruption proposal between the host's learned
+ $\pcore$ and $\ch$. When the gate closes ($g{=}0$) the kernel is
+-exactly the host's (Prop.~\ref{prop:reduction}); at any gate value the
+-deviation is bounded by $g$ in total variation (Lemma~\ref{lem:tv}).}
++exactly the host's (Prop.~\ref{prop:reduction}); otherwise,
++Lemma~\ref{lem:tv} bounds proposal TV by $g$ and each one-step forward
++transition-row TV by $(1-\alpha_\sigma)g$. These are kernel-level
++bounds, not bounds on NDCG or complete-trajectory behavior.}
+ \label{fig:method}
+ \end{figure}
+ 
+@@
+ \end{tabular}
+ \caption{Train-only text utility $\Uds$ (popularity-negative AUC)
+ inversely rank-orders the test outcome of user-gated kernel tilting
+-relative to the host, $4/4$ (probability $1/24$ under a
+-random-ordering null). The frozen hinge $\phids$ closes the gate
++relative to the host, $4/4$. If the four dataset labels are
++exchangeable and all $4!$ orders are treated as equally likely, one
++specified order has the descriptive fraction $1/24$; this is not a
++confirmatory p-value. The frozen hinge $\phids$ closes the gate
+ precisely where tilting hurt.}
+ % artifacts: docs/reports/data/2026-07-02-gate0/gate0_text_utility_summary.csv
+ %            docs/reports/data/2026-07-01-text-side-vs-core-main-table-remote-v77.csv
+@@
+ Three readings. \emph{First}, the ordering is perfectly inverted: the
+ only clear gain (Steam, $+0.0064$) occurs at the \emph{lowest} text
+ utility, and the severe loss (ML1M, $-0.0622$) at the \emph{highest}.
+-With four datasets this is suggestive rather than conclusive
+-($p{=}1/24$ under exchangeability), but it is train-computable,
++With four datasets this is suggestive rather than conclusive. Under
++exchangeability, one specified order among $4!$ equally likely label
++orders gives the descriptive calculation $1/24$; no confirmatory
++inference is attached to that number. The ordering is train-computable,
+ pre-registered into $\phids$, and mechanistically expected: a proposal
+ is a corruption law, so evidence that predicts positives converts tilt
+ into false-negative pollution, while evidence that merely structures
+@@
+ NDCG@10 under the production checkpoint selector; the host baseline is
+ the frozen PreferGrow run set. External baseline: DiffuRec, selected as
+ the single external closeout baseline and executed through a local
+-wrapper that reads the regenerated shared protocol artifacts directly.
+-Its current table is marked \emph{provisional-comparability} pending the
+-dated all-method evaluator amendment in E0;
+-if the dated four-dataset comparison table does not land before the
+-compute window closes, we report that absence explicitly rather than
+-backfilling from prior papers~\cite{diffurec,recformer}.
+-% artifact: docs/reports/data/2026-07-07-close04-diffurec-choice-note.md
+-% artifact: docs/reports/data/2026-07-09-close04-protocol-audit.md
++wrapper that reads the regenerated shared-protocol artifacts directly.
++The dated E0 amendment confirms DiffuRec test-evaluator comparability
++on all four datasets under the corrected common full-tail, row-weighted,
++real-item test contract. This confirmation is limited to legacy-selected
++frozen checkpoints under corrected test evaluation: validation
++selection was not recomputed, and checkpoint-selection equivalence is
++not claimed. Table~\ref{tab:validation} remains frozen in this cycle;
++any later numeric replacement must move all systems together under the
++same evaluator rather than selectively backfill one method~\cite{diffurec}.
++% artifact: docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json
+ Hyperparameters ($\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$; frozen
+ $\phi$ per Eq.~\eqref{eq:phi}) and infrastructure in
+ Appendix~\ref{app:impl}.
+@@
+ \subsection{Frozen-gate validation across four datasets}
+ \label{sec:validation}
+ 
+-Under the frozen gate, $\phids$ opens Steam ($1.0$), barely opens ATG
+-($0.117$), and closes Beauty and ML1M ($0$). The validation is a bet
+-with bounded downside: by Lemma~\ref{lem:tv} the kernel can deviate
+-from the host by at most $g$ per row, and on the frozen artifacts the
+-gate admits all of the observed first-generation gain and none of the
+-observed harm (Sec.~\ref{sec:inversion}). The pre-registered
++Under the frozen gate, $\phids$ fully opens Steam ($1.0$), barely opens
++ATG ($0.117$), and closes Beauty and ML1M ($0$). Lemma~\ref{lem:tv}
++bounds the proposal and one-step transition rows in total variation;
++it does not bound end-to-end metric degradation. The pre-registered
+ predictions were fixed before launch: \emph{no-loss} on closed-gate
+-datasets (ML1M, Beauty run at $g\equiv 0$:
+-$|\Delta\text{NDCG@10}|<0.01$), near-parity on ATG, and preserved gain
+-on Steam ($\Delta>0$, reference magnitude $\ge +0.003$).
++datasets, near-parity under the barely-open ATG gate, and preserved
++gain on fully open Steam.
+ 
+ \begin{table}[t]
+ \centering
+@@
+ Dataset ($\phids$) & Host & Ours & $\Delta$ & vs.\ prediction \\
+ \midrule
+ Steam (1.00)  & 0.0129 & 0.0149 & $+0.0020$ & sign \checkmark, mag.\ $\times$ \\
+-ATG (0.12)    & 0.0419 & 0.0305 & $-0.0114$ & parity $\times$ \\
++ATG (0.12)    & 0.0419 & 0.0305 & $-0.0114$ & barely-open parity $\times$ \\
+ Beauty (0.00) & 0.0333 & 0.0294 & $-0.0039$ & parity \checkmark \\
+ ML1M (0.00)   & 0.0910 & 0.0759 & $-0.0151$ & parity $\times$ \\
+ \bottomrule
+@@
+ \label{tab:validation}
+ \end{table}
+ 
+-The verdict is mixed and we report it as such. The only opened gate
+-(Steam) kept a positive sign ($+0.0020$) but fell short of the
+-$+0.003$ reference magnitude. Beauty held its parity band. ML1M
+-($-0.0151$) and ATG ($-0.0114$) missed their parity bands by
+-$0.0051$ and $0.0014$ respectively. Because ML1M and Beauty run at
+-$g\equiv 0$, where the trained system is \emph{mathematically the host
+-kernel} by Prop.~\ref{prop:reduction}, a closed-gate deviation of this
+-size measures protocol noise (run-to-run seed variance and best-step
+-selection: the host checkpoint selected step 302k, the validation run
+-405k), not a property of the gate. We therefore treat the ML1M/ATG
+-misses as an \emph{implementation red flag under investigation}
+-\pending{host run-to-run noise floor from 2--3 core seeds (CLOSE-02);
+-resolve the red flag to either within-noise or implementation-issue
+-wording, citing the artifact}, and we pause any claim that the exact
+-reduction has been \emph{empirically} demonstrated end-to-end. The
+-theoretical reduction (Prop.~\ref{prop:reduction}) is unaffected; the
+-offline numeric equivalence suite (identical $p_1$, matched corruption
+-rows, score-entropy terms, and reversal ratios at $g{=}0$) passed
+-before any launch.
+-% artifact: docs/reports/data/g0_equivalence_report.csv
+-% GATE-2 UPGRADE (documented amendment only): if CLOSE-02 shows the
+-% ML1M/ATG deltas within the measured host noise floor, upgrade to:
+-% "closed-gate runs are statistically indistinguishable from the host,
+-% as the reduction theorem predicts."
++The verdict is mixed and we report it as such. Fully open Steam kept a
++positive sign but fell short of the reference magnitude; closed-gate
++Beauty held its parity band. The closed-gate ML1M single-run miss
++exceeds its measured host floor. The barely-open ATG single-run miss is
++$4.37\times$ the provenance-limited observed spread across three
++completed host runs; because all three frozen run manifests are absent,
++that spread does not establish complete configuration parity or a fully
++manifested noise floor. E0's corrected common test contract preserves
++both miss decisions. Proposition~\ref{prop:reduction} is a statement about
++the kernel objects at $g=0$; it does not by itself certify identity of
++the complete training, selection, and evaluation implementation. We
++therefore report one closed-gate implementation miss plus one
++barely-open ATG miss as open implementation questions, and make no
++claim that exact reduction has been demonstrated end-to-end. E1 instead
++found the first production-path divergence at step 0: the canonical
++core proposal parameter has different optimizer ownership in the host
++and final-v2 paths. The downstream E2 attribution controls therefore
++were not launched in this sprint. The theoretical proposition is
++unaffected, and the pre-launch offline numeric suite matched $p_1$,
++corruption rows, score-entropy terms, and reversal ratios at $g=0$.
++% artifacts: docs/reports/data/2026-07-07-close02-ml1m-noise-floor/close02_ml1m_noise_floor_report.json
++%            docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json
++%            docs/reports/data/2026-07-10-e01-gzero-production-trace/e01_hard_stop.json
++%            docs/reports/data/2026-07-10-close10-atg-noise-floor-provenance-limited/close10_atg_provenance_limited_report.json
+ 
+ \subsection{Controls and mechanism evidence}
+ \label{sec:mechanism}
+@@
+ \label{tab:controls}
+ \end{table}
+ 
+-Three results carry the mechanism story. \emph{Aligned gating is
++The first-generation controls provide three bounded observations.
++\emph{Aligned gating is
+ load-bearing}: permuting the reliability signal across users
+ ($u$-shuffle) drops test NDCG@10 from $0.0393$ to $0.0206$; the signal
+ content, not the presence of a user-level dial, drives the effect.
+ \emph{Generic biases do not explain it}: a learned global proposal
+-without user conditioning reaches only $0.0289$. \emph{The gate backs
+-off adaptively}: under description-blanking corruption the mean
+-reliability drops by $0.0134$ with a matching rise in fallback mass,
+-monotonically in the user's clean reliability; under semantic token
+-dropout the same direction holds ($-0.0031$), and the gated variant
+-degrades $5\times$ less than the ungated anchor from clean to corrupted
+-test conditions ($-0.0008$ vs.\ $-0.0043$ NDCG@10).
++without user conditioning reaches only $0.0289$. Under
++description-blanking corruption, mean reliability drops by $0.0134$
++with a corresponding rise in fallback mass; semantic token dropout has
++the same direction ($-0.0031$), and the gated first-generation variant
++degrades less than the ungated anchor from clean to corrupted test
++conditions ($-0.0008$ vs.\ $-0.0043$ NDCG@10). These corruption
++readouts do not validate a final-v2 corruption-response claim; the preregistered
++E3 test was not launched after the E1 hard stop.
+ % artifacts: 2026-06-28-beauty-description-blank-corruption.md,
+ %            2026-06-28-beauty-token-dropout-end-to-end.md
+ Under the frozen two-factor gate, the clean-root v2 controls separate
+@@
+ rises to $0.0302$ on Steam and sits slightly below full on Beauty.
+ % artifact: docs/reports/data/2026-07-06-sprint07/sprint07_control_table.csv
+ 
+-\pfig{Backoff mechanism: clean-vs-corrupted shift of the gate and
+-reliability, bucketed by clean reliability (regenerate from archived
+-diagnostics with the figure toolchain).}
++\pfig{First-generation corruption diagnostic: clean-vs-corrupted shift
++of the gate and reliability, bucketed by clean reliability (regenerate
++from archived diagnostics with the figure toolchain).}
+ 
+ \subsection{Injection-site analysis}
+ \label{sec:threeway}
+@@
+ results are complementary and cautionary: we give pre-registered
+ evidence that the value of evidence-shaped corruption can
+ \emph{invert} with evidence quality, a train-only statistic that
+-prices it before training, and a conditioning construction whose
+-safety is provable. We view this as the reliability layer that
++prices it before training, and a conditioning construction with exact
++reduction at $g=0$ plus proposal and one-step transition-row TV bounds.
++We view this as the reliability layer that
+ adaptive-corruption recommenders will need.
+ 
+ \paragraph{Shaped transition kernels in discrete diffusion.}
+@@
+ for language diffusion~\cite{acfg}. Our gate is the kernel-side
+ analogue with the weight set by measurable, history-only evidence
+ statistics; the interpolation target is the host's learned
+-proposal, which is what makes the safety property provable.
++proposal, which is what makes exact reduction and the stated
++kernel-level TV bounds provable.
+ 
+ \paragraph{Reliability and side information in recommendation.}
+ Reliability-aware recommenders act at the representation, optimization,
+@@
+ \label{sec:conclusion}
+ 
+ We personalized the transition kernel of discrete preference diffusion
+-with a two-factor, history-only evidence gate, anchored to the host's
+-learned proposal so that the conditioning is fallback-safe: exact
+-reduction when the gate closes, bounded deviation otherwise, full
+-inheritance of the host chain's structure. The design is built around
++with a two-factor, history-only evidence gate anchored to the host's
++learned proposal. The formal fallback guarantee has a precise scope:
++exact kernel reduction at $g=0$, proposal TV at most $g$, and one-step
++forward transition-row TV at most $(1-\alpha_\sigma)g$. It is not an
++end-to-end performance-downside guarantee. The design is built around
+ an empirical inversion we believe is of independent interest: because
+ kernel proposals are corruption laws, text evidence that predicts
+ positives is precisely the evidence a kernel must \emph{not} lean on.
+-Deployed this way, evidence conditioning is a bet with bounded
+-downside: deviation from the host is capped by the gate, and the
+-upside is whatever the opened gates deliver. $\Uds$ prices that
+-bet before a single training run.
++$\Uds$ prices whether the kernel should admit the evidence before a
++single training run.
+ 
+-\emph{Limitations.} The cross-dataset inversion rests on four points
+-($p{=}1/24$), and the within-dataset per-user follow-up does not
++\emph{Limitations.} The cross-dataset inversion rests on four points.
++Under exchangeability, $1/24$ is only the descriptive fraction for one
++specified order among $4!$ equally likely label orders, not a
++confirmatory p-value. The within-dataset per-user follow-up does not
+ reproduce it: on ML1M and Steam, the utility-vs-%
+ $\Delta\mathrm{NDCG}@10$ association is weak and slightly positive
+ ($\rho=0.028$ and $0.046$), so the inversion remains a dataset-level
+ observation rather than a user-level mechanism law. The frozen-gate
+-validation returned a mixed verdict: the opened gate kept its sign but
+-not its reference magnitude, one pre-registered out-of-sample
+-prediction (ASO) missed outright, and two closed-gate parity checks
+-missed by margins whose attribution awaits a measured host noise floor
+-\pending{CLOSE-02 artifact}; until then we make no claim that the
+-reduction theorem has been demonstrated end-to-end. By construction a
+-closed gate can only match the host: on high-utility datasets the
+-method's value is safety, not gains. The mechanism evidence comes from
++validation returned a mixed verdict: fully open Steam kept its sign but
++not its reference magnitude, ASO missed outright, and the readout
++contains one closed-gate miss (ML1M) plus one barely-open ATG
++($\phids{=}0.117$) miss. The ML1M miss exceeds its measured host floor.
++The ATG miss is $4.37\times$ a provenance-limited observed three-run
++spread, but missing manifests preclude a complete configuration-parity
++or fully manifested floor claim. E1 found a step-0 optimizer-ownership
++divergence and consequently blocked E2 in this sprint. We do not claim
++an end-to-end empirical demonstration of exact reduction or a stronger
++causal attribution. The mechanism evidence comes from
+ the first-generation user-factor instantiation whose parameterization
+ differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
+ thresholds, while pre-registered and robust across $65\%$ of a
+@@
+ tilt on the highest-utility bank. The final system replaces the three
+ dials with the single gate $g$, freezes the pseudo-item mass to the
+ host's, and adds $\phids$. First-generation numbers are therefore
+-evidence about the \emph{mechanism} (aligned user gating, adaptive
+-backoff) and about \emph{failure modes}, not a benchmark of the final
+-system.
++evidence about aligned user gating, limited corruption responses, and
++failure modes, not evidence of a final-v2 corruption-response claim or a benchmark
++of the final system.
+ 
+ \section{Implementation and infrastructure}
+ \label{app:impl}
+@@
+ sentence-t5-xl, frozen and hash-recorded; splits regenerated from raw
+ data under a recorded protocol; all validation runs carry manifests
+ recording config, seed, bank/null-curve/split/$\Uds$-artifact hashes.
++Model selection used validation only; test metrics were logged during
++development. Accordingly, we do not describe the test split as an
++untouched final holdout.
+ Code and data for reproducibility accompany the submission as
+ supplementary material per AAAI-27 policy; the reproducibility
+ checklist is submitted separately. A fallback compile validation has
+*** Update File: paper/main_v2_zh.md
+@@
+ 
+ ## 摘要
+ 
+-PreferGrow 一类离散偏好扩散推荐器把用户偏好物品向一个**proposal 分布**褪色腐蚀,再学习把偏好长回来。该家族的个性化完全作用在 **score 侧**——转移核对所有用户共享。我们对核做个性化,并由此揭示一个反直觉事实:**因为 proposal 是腐蚀分布,文本证据可能"好到不能用"**。在四个基准上,一个 train-only 的"文本相似度能否预测下一物品"统计量,与文本倾斜核的结果呈 4/4 完美逆序:文本定义了信息性 hard negative 的地方倾斜有益;文本能预测未来正例的地方倾斜失败——腐蚀变成 false-negative 污染。我们用一个两因子、history-only 的门控实现这一认识:经长度匹配随机历史零点校准的用户连贯性信号,乘以冻结的数据集级效用因子,在宿主可学习 proposal 与冻结文本锚点之间插值。设计是 **fallback-safe** 的:条件化链保持宿主核的马氏性、细致平衡与解析反演;门关闭时**精确**还原宿主;任意门值下与宿主的总变差距离不超过门值。对照组(可靠性重排/全局 proposal/无门锚点)表明机制需要**对齐的**用户级信号;腐蚀诊断显示门随证据退化自适应回退。预注册的四数据集冻结门验证结果混合——开门数据集保持小幅正增益、一个关门数据集保持平价,另两个数据集以与 run-to-run 噪声量级相当的差距未达平价带,我们将其作为**待查的实现问题**报告,而非任一方向的证据。跨数据集逆序仅有四个点;收益按设计是选择性的——文本效用高的地方,方法的价值是安全性而非提升。
++PreferGrow 一类离散偏好扩散推荐器把用户偏好物品向一个 **proposal 分布**褪色腐蚀,再学习把偏好长回来。该家族的个性化完全作用在 score 侧——转移核对所有用户共享。我们对核做个性化,并由此揭示一个反直觉事实:因为 proposal 是腐蚀分布,文本证据可能“好到不能用”。在四个基准上,一个 train-only 的“文本相似度能否预测下一物品”统计量,与文本倾斜核的结果呈 4/4 逆序:文本定义信息性 hard negative 时倾斜有益;文本能预测未来正例时倾斜失败,腐蚀因而变成 false-negative 污染。我们用两因子、history-only 门控在宿主可学习 proposal 与冻结文本锚点之间插值。fallback 保证严格限于核级:`g=0` 时 proposal 与派生核对象精确归约到宿主;非零门下仅有 `TV(p_u,p_core)≤g` 与单步前向转移行 `TV≤(1−α_σ)g`,不构成端到端推荐指标的下行界。四数据集验证是单次运行观察:全开 Steam 保持小幅正增益,关门 Beauty 守住平价带。关门 ML1M miss 超过测得的宿主噪声地板;barely-open（勉强开门）的 ATG（`φ=0.117`）miss 为 provenance-limited 三次运行观测 spread 的 4.37 倍,但三次运行均缺冻结 manifest,不能把该 spread 写成完整 manifest 支撑的噪声地板。E1 又在 step 0 发现生产路径 optimizer ownership 差异。后两项作为开放实现问题报告,不作为门有效性的任一方向证据。
+ 
+ ## 1. 引言(2026-07-08 与英文版同步重写)
+ 
+@@
+ 
+ 直觉给出单调规则:文本证据越好,核越该倚重它。**我们的中心实证发现是这个直觉是反的。**Proposal 是腐蚀分布——它偏爱的物品被当作"偏好褪色时去的地方",即负例。若文本相似度好到能把用户**真实的下一物品**排到前面,文本倾斜的 proposal 就把腐蚀质量集中到可能的未来正例上,按证据质量的比例制造假负例——这正是负采样文献花大代价规避的失败模式(SRNS/去偏采样)。用 train-only 统计量 U_ds(文本相似度区分下一物品与采样负例的能力)度量证据质量,我们发现 U_ds 在全部四个基准上与倾斜结果**逆序**(4/4):最大增益出现在下一物品文本信号**最弱**的数据集,重损失出现在**最强**的数据集。
+ 
+-这一反转决定了核条件化的可靠性信号必须度量什么,并导出我们的设计 **fallback-safe 证据条件化**:低容量门 g = g_max·φ(U_ds)·clip(ũ,0,1),两个 history-only 因子——经长度匹配随机历史零点校准的用户连贯性 ũ(原始连贯性有高且数据集相关的地板,否则核的工作点会被嵌入几何绑架),和在 U_ds 进入假负例区时**关门**的冻结数据集效用因子 φ。门控核在宿主**学到的**全局 proposal 与冻结文本锚点之间插值,伪物品质量不动。给定固定的历史信号,宿主链全部结构性质保留;门关死时核**精确等于**宿主核;任意门值下核与宿主的总变差距离 ≤ g。理论刻意初等(秩一核代数),但换来 score/loss 侧注入根本无法表达的性质:证据无信息**或误导**时可证明地还原宿主。**两个组件都不绑定宿主**:U_ds 只用证据 bank 和训练转移,门与其保证是对秩一吸收核这一类陈述的,不是对某个架构。随后预注册的四数据集验证与机制对照在冻结协议下检验设计,结果如实报告:门开处方向性增益,门关处平价,其余读数作为实现问题悬置、不作任一方向的证据。
++这一反转决定了核条件化的可靠性信号必须度量什么,并导出我们的设计 **fallback-safe 证据条件化**:低容量门 g = g_max·φ(U_ds)·clip(ũ,0,1),两个 history-only 因子——经长度匹配随机历史零点校准的用户连贯性 ũ(原始连贯性有高且数据集相关的地板,否则核的工作点会被嵌入几何绑架),和在 U_ds 进入假负例区时**关门**的冻结数据集效用因子 φ。门控核在宿主**学到的**全局 proposal 与冻结文本锚点之间插值,伪物品质量不动。给定固定的历史信号，门关闭时 proposal 与派生核对象精确归约到宿主；非零门下只约束 proposal 与单步前向转移行的 TV，不约束训练后的 score 模型或推荐指标。预注册四数据集验证与机制对照按冻结协议执行。单次运行读出包括一个关门平价命中（Beauty）、一个关门 miss（ML1M）、一个 barely-open ATG（`φ=0.117`）miss，以及一个全开但未达参考量级的方向命中（Steam）。ML1M 与 ATG 继续作为开放实现问题，不写成精确归约的端到端经验演示。
+ 
+-**四条贡献**(冻结措辞,与英文版逐字对应):①效用逆序发现(4/4,p=1/24)+机制解释+U_ds 作为任何"从内容相似度挖负例"方案的 train-only 预检统计量;②带 fallback 安全性的核侧个性化(命题 1 有效性/命题 2 精确归约/引理 1 TV 界);③校准方法论(长度匹配随机历史零点;连贯性即使校准后也错测效用,故数据集因子直接从效用估计并在重训前冻结);④机制证据(对照组+腐蚀回退诊断)。
++**四条贡献**(冻结措辞,与英文版逐字对应):①效用逆序发现(4/4;exchangeability 假设下 `1/24` 仅为某一指定全序的描述性组合比例,不是确认性 p 值)+机制解释+U_ds 作为任何“从内容相似度挖负例”方案的 train-only 预检统计量;②核侧个性化的 fallback 保证限于 `g=0` 精确归约,以及 proposal/单步前向转移行的 TV 界,不延伸到端到端推荐性能;③校准方法论(长度匹配随机历史零点;连贯性即使校准后也错测效用,故数据集因子直接从效用估计并在重训前冻结);④机制证据(对照组与第一代腐蚀响应,不升级为 final-v2 腐蚀响应证据)。
+ 
+ ## 2. 预备:离散偏好扩散
+ 
+@@
+ 
+ ## 3. 方法:Fallback-Safe 门控 Proposal
+ 
+-**[图 1 位已预留(fig:method)]** 方法总览图:冻结文本 bank → 内容锚点 c_h;两因子门 g = g_max·φ(U_ds)·clip(ũ,0,1) 在宿主 p_core 与锚点间插值;安全性标注(g=0 精确归约、TV≤g)。生图提示词见 `docs/reports/2026-07-08-figure-prompts.md` 图 1。
++**[图 1 位已预留(fig:method)]** 方法总览图:冻结文本 bank → 内容锚点 c_h;两因子门 g = g_max·φ(U_ds)·clip(ũ,0,1) 在宿主 p_core 与锚点间插值;边界标注为 `g=0` 精确归约、proposal TV `≤g`、单步前向转移行 TV `≤(1−α_σ)g`,并注明不作 NDCG 或完整轨迹下行保证。生图提示词见 `docs/reports/2026-07-08-figure-prompts.md` 图 1。
+ 
+ **3.1 证据锚点**:每数据集一个冻结文本 bank(题名/品牌/类目/描述),现成编码器一次性嵌入、不微调。历史均值向量 ē_h 定义内容锚点 c_h(i) ∝ exp(⟨ē_h, e_i⟩/τ0),缺文本物品降权。锚点提出**内容上说得通的替代物**,从不替换宿主的 score 表征。
+ 
+@@
+ - **命题 2(精确归约/fallback 安全)**:g=0 ⇒ p_u=p_core ⇒ 一切导出对象与宿主核**逐一相等**。
+ - **引理 1(有界偏离)**:TV(p_u,p_core)≤g;前向转移每行 TV ≤ (1−α_σ)g。
+ - **注记(为什么核是正确的注入位置)**:encoder/loss 级注入不存在命题 2 的类比——"零可靠性下带文本特征的 encoder"没有"就是宿主模型"的意义。归约保证只在条件化进入转移律本身时可表达。注入位置对比因此是 regime 分析,不是安全主张的依据。
++该界只约束 proposal 与单步转移行的核级分布差异,不约束训练后的 loss、NDCG 或完整轨迹差异。
+ 
+ ## 4. 效用逆序分析(论文中心展品)
+ 
+@@
+ | Beauty | 0.712 | 0.000 | −0.0006 |
+ | ML1M | 0.754 | 0.000 | −0.0622 |
+ 
+-三个读法:①排序完美倒置(唯一明确增益在**最低**效用处,严重损失在**最高**效用处;四点 p=1/24,提示性而非结论性,但 train-only、预注册进 φ、机制上可预期);②逆序对连贯性不可见(ML1M 用户相对其零点**最**连贯,中位 ũ=1.43——连贯性门救不了它,φ 必须来自效用);③流行度解释不了信号(uniform 负例变体给出相同排序 0.799/0.692/0.717/0.565)。
++三个读法:①排序在四个观测数据集上倒置;若在 exchangeability 假设下把 `4!` 种标签全序视为等可能,某一指定全序对应的 `1/24` 只是一项描述性组合计算,不是确认性 p 值;ATG 的 `φ=0.117` 始终称为 barely-open（勉强开门）;②逆序对连贯性不可见;③流行度解释不了信号(uniform 负例变体给出相同排序 0.799/0.692/0.717/0.565)。
+ 
+ **命题 3(目标碰撞随锚点效用增长)**:前向腐蚀把褪色偏好重定位到真实下一物品 y 的概率 = (1−ᾱ_t)p_u(y),对 g 仿射且当 c_h(y)>p̃_core(y) 时严格递增;对用户平均后斜率为 E_h[c_h(y_h)−p̃_core(y_h)]——U_ds 的质量形式类比。碰撞质量是通道而非终指标伤害的证明(score 模型可部分补偿);表 1 是经验仲裁。
+ 
+@@
+ 
+ ## 5. 实验
+ 
+-**设置**:四基准(Steam/ML1M/Beauty/ATG)从原始数据按冻结协议重建，row-level split 统计已由 dated artifact 固定为：Steam `9265 / 988517 / 81695 / 80651`、ML1M `3706 / 755782 / 98622 / 85405`、Beauty `12101 / 17890 / 2236 / 2237`、ATG `11921 / 15529 / 1941 / 1942`（顺序为 `items / train / val / test`）；指标 HR@10/NDCG@10,生产选择器;宿主基线=冻结 PreferGrow 跑集。外部 baseline 选定为 **DiffuRec**:它通过本地 wrapper 直接读取共享 regenerated protocol 工件；当前表在 E0 的全方法 evaluator 修正案落地前标为 **provisional-comparability（可比性暂定）**；如果四数据集的 dated 对照表未能在算力窗口关闭前落地，我们将显式报告该缺失，而不是从既有论文中回填结果。超参 τ0=0.2、g_max=0.5、k=2.0、φ(0.70,0.10) 冻结。
++**设置**:四基准(Steam/ML1M/Beauty/ATG)从原始数据按冻结协议重建，row-level split 统计已由 dated artifact 固定为：Steam `9265 / 988517 / 81695 / 80651`、ML1M `3706 / 755782 / 98622 / 85405`、Beauty `12101 / 17890 / 2236 / 2237`、ATG `11921 / 15529 / 1941 / 1942`。指标为 HR@10/NDCG@10,模型按验证指标选择。DiffuRec 通过本地 wrapper 读取共享协议工件;E0 dated 修正案已在修正后的共同 full-tail、row-weighted、real-item 测试契约下确认其四域 test-evaluator 可比性。该确认只覆盖“历史验证选择的冻结 checkpoint + 修正后的测试评估”;验证 checkpoint 未重新选择,也不声称 checkpoint-selection equivalence。表 2 本周期保持冻结,后续若换数必须让全部系统在同一 evaluator 下整体替换,不作选择性回填。
+ 
+ **5.1 冻结门四数据集验证(表 2,真实数字,test NDCG@10,p2 选择器,单种子)**:
+ 
+ | 数据集(φ) | 宿主 | 本文 | Δ | 对照预注册预测 |
+ |---|---|---|---|---|
+ | Steam(1.00) | 0.0129 | 0.0149 | +0.0020 | 方向 ✓,量级 ×(参考 ≥+0.003) |
+-| ATG(0.12) | 0.0419 | 0.0305 | −0.0114 | 平价 × |
++| ATG(0.12) | 0.0419 | 0.0305 | −0.0114 | barely-open（勉强开门）平价 × |
+ | Beauty(0.00) | 0.0333 | 0.0294 | −0.0039 | 平价 ✓ |
+ | ML1M(0.00) | 0.0910 | 0.0759 | −0.0151 | 平价 × |
+ 
+-**判读(混合结果,如实报告)**:唯一开门的 Steam 保持正号(+0.0020)但未达 +0.003 参考量级;Beauty 守住平价带;ML1M(−0.0151)与 ATG(−0.0114)分别以 0.0051、0.0014 超出平价带。由于 ML1M/Beauty 在 g≡0 下运行——按命题 2,训练系统**在数学上就是宿主核**——关门数据集的这种偏差度量的是协议噪声(run-to-run 种子方差与最优步选择:宿主选中 30.2 万步,验证跑选中 40.5 万步),而非门的性质。我们因此把 ML1M/ATG 未中作为**待查实现红灯**处理 **[待填:CLOSE-02 宿主噪声地板(2-3 个 core 种子);据其把红灯归因为噪声内或实现问题]**,并**暂停**"精确归约已被端到端经验演示"的表述。理论命题不受影响;上线前的离线数值等价套件(相同 p1 下腐蚀行/score-entropy 项/反演比率逐项匹配)已通过。
+-*(注释中保留 GATE-2 升级句:若 CLOSE-02 显示偏差在宿主噪声地板内,升级为"关门跑与宿主统计不可区分,正如归约定理所预测"。)*
++**判读(混合结果,如实报告)**:全开 Steam 保持正号但未达参考量级,关门 Beauty 守住平价带。关门 ML1M 的单次运行 miss 超过测得的宿主噪声地板;barely-open ATG（`φ=0.117`）的单次运行 miss 为 provenance-limited 三次运行观测 spread 的 4.37 倍,但三次运行均缺冻结 manifest,不能据此声称配置仅有 seed 不同或把 spread 当作完整 manifest 支撑的噪声地板。E0 修正后的共同测试契约没有翻转这两个 miss。E1 生产路径 trace 在 step 0 发现 canonical core proposal 参数的 optimizer ownership 不同,因此本轮没有启动 E2 归因对照。命题 2 约束 `g=0` 时的核对象,不单独认证完整训练、选择和评估实现相同。本文报告的是“一个关门实现 miss 加一个 barely-open ATG miss”,两者均作为开放实现问题;不声称精确归约已被端到端经验演示。
+ 
+-**5.2 对照与机制证据(第一代实例化,Beauty token-dropout 语境)**:表 3 冻结数字——aligned 门控 0.0393 / 无门锚点 0.0366 / u-shuffle 0.0206 / global-p 0.0289(test NDCG@10)。三个结论:对齐门控是承重的(shuffle 崩到 0.0206);通用偏置解释不了(global-p 仅 0.0289);门自适应回退(描述置空腐蚀下可靠性均值 −0.0134 且回退质量对应上升;token dropout 同向 −0.0031;门控变体从干净到腐蚀退化小 5 倍:−0.0008 vs −0.0043)。冻结两因子门的 clean-root v2 对照臂把“关门平价”和“开门机制”分开了: 对 Beauty,由于 $\phi(U_{ds})=0$, `global_p` 与 full 在 test NDCG@10 上数值完全相同(均 0.0294),`u-shuffle` 也未使其下降(0.0330),与数据集级门保持关闭一致;对 Steam,由于 $\phi(U_{ds})=1$,打乱用户可靠性信号会让 test NDCG@10 相对 full 下降 0.0011,而 `global_p` 仅比宿主高 0.00035 且仍低于 full,因此 full 的微弱正增益不能用数据集无关的通用偏置单独解释。`text_anchor_only` 只作为高方差参考对照报告,不当作门控方法的替代:它在 Steam 上升到 0.0302,在 Beauty 上则略低于 full。**[图待生成:回退机制图]**
++**5.2 对照与机制证据(第一代实例化,Beauty token-dropout 语境)**:表 3 冻结数字——aligned 门控 0.0393 / 无门锚点 0.0366 / u-shuffle 0.0206 / global-p 0.0289(test NDCG@10)。对齐门控是承重的(shuffle 降至 0.0206),通用偏置也不能复现该结果(global-p 仅 0.0289)。描述置空时可靠性均值变化 −0.0134,token dropout 同向变化 −0.0031;门控第一代变体从干净到腐蚀的变化为 −0.0008,无门锚点为 −0.0043。这些只作为第一代腐蚀响应记录,不构成 final-v2 腐蚀响应证据;E1 触发硬停止后,预注册 E3 未启动。冻结两因子门的 clean-root v2 对照臂把“关门平价”和“开门机制”分开了: 对 Beauty,由于 $\phi(U_{ds})=0$, `global_p` 与 full 在 test NDCG@10 上数值完全相同(均 0.0294),`u-shuffle` 也未使其下降(0.0330),与数据集级门保持关闭一致;对 Steam,由于 $\phi(U_{ds})=1$,打乱用户可靠性信号会让 test NDCG@10 相对 full 下降 0.0011,而 `global_p` 仅比宿主高 0.00035 且仍低于 full,因此 full 的微弱正增益不能用数据集无关的通用偏置单独解释。`text_anchor_only` 只作为高方差参考对照报告,不当作门控方法的替代:它在 Steam 上升到 0.0302,在 Beauty 上则略低于 full。**[图待生成:第一代腐蚀响应图]**
+ 
+ **5.3 注入位置分析(限定表述)**:相同信号注入三个位置(encoder/loss/kernel)。第一代跑中,较早注入位置在干净 regime 有竞争力,核侧条件化在腐蚀下最强;**作为限定于该实例化的 regime 观察报告,不主张核位置一贯获胜**。按注记,核位置的论点不是全 regime 取胜,而是唯一能表达 fallback 保证的位置。*(v2 三方重跑已于 2026-07-06 剪枝取消;不做跨位置优越性主张。)*
+ 
+@@
+ 
+ ## 7. 相关工作(五轴)
+ 
+-①**扩散推荐器**(连续:DreamRec/DiffuRec/PreferDiff;离散:PreferGrow/LLaDA-Rec;我们补宿主的核侧一半);②**[新增]离散扩散 LM 与生成式推荐的自适应腐蚀**(LLaDA/SEDD 底座;LLaDA-Rec 并行 SID、DiffGRM 置信度任意序解码、2601.19501 位置自适应掩码、2511.23021 分析——它们自适应于模型内生信号,无外部证据定价、无误导信号下的归约保证;本文是互补且警示性的:第一份预注册证据表明证据塑造腐蚀的价值会随证据质量**倒置**,并给出训练前定价统计量与可证安全的条件化构造——我们视之为自适应腐蚀推荐器将需要的**可靠性层**);③**塑形转移核**(D3PM/CDRec/TDPM:全局或物品级信号,无按用户证据条件化、无归约保证、无效用逆序报告);④**Guidance 与自适应**(CFG 及其推荐应用、语言扩散的置信度自适应 guidance:score 侧全局权重;我们是核侧类比,权重由可测的 history-only 证据统计量设定,插值目标是宿主可学习 proposal——这正是安全性可证的原因);⑤**推荐中的可靠性与侧信息 / 负采样中的假负例**(UGR/TruthSR、RecFormer/UniSRec;对比学习与隐式 CF 中的 FN 文献:我们把该失败模式搬运到扩散**核**——"负采样器"就是转移律本身,与平稳分布、细致平衡、训练目标纠缠——并提供训练前定价统计量 U_ds)。
++①**扩散推荐器**(连续:DreamRec/DiffuRec/PreferDiff;离散:PreferGrow/LLaDA-Rec;我们补宿主的核侧一半);②**[新增]离散扩散 LM 与生成式推荐的自适应腐蚀**(LLaDA/SEDD 底座;LLaDA-Rec 并行 SID、DiffGRM 置信度任意序解码、2601.19501 位置自适应掩码、2511.23021 分析——它们自适应于模型内生信号,无外部证据定价、无误导信号下的归约保证;本文是互补且警示性的:第一份预注册证据表明证据塑造腐蚀的价值会随证据质量**倒置**,并给出训练前定价统计量,以及具有 `g=0` 精确归约和 proposal/单步转移行 TV 界的条件化构造——我们视之为自适应腐蚀推荐器将需要的**可靠性层**);③**塑形转移核**(D3PM/CDRec/TDPM:全局或物品级信号,无按用户证据条件化、无归约保证、无效用逆序报告);④**Guidance 与自适应**(CFG 及其推荐应用、语言扩散的置信度自适应 guidance:score 侧全局权重;我们是核侧类比,权重由可测的 history-only 证据统计量设定,插值目标是宿主可学习 proposal——这正是精确归约与上述核级 TV 界可证的原因);⑤**推荐中的可靠性与侧信息 / 负采样中的假负例**(UGR/TruthSR、RecFormer/UniSRec;对比学习与隐式 CF 中的 FN 文献:我们把该失败模式搬运到扩散**核**——"负采样器"就是转移律本身,与平稳分布、细致平衡、训练目标纠缠——并提供训练前定价统计量 U_ds)。
+ 
+ ## 8. 结论与限制
+ 
+-(结论段:冻结措辞——核侧两因子 history-only 证据门、fallback-safe 三件套、逆序发现的独立价值、"有界下行的赌注"框架、U_ds 训练前定价。)
++(结论段:冻结措辞——核侧两因子 history-only 证据门、`g=0` 精确归约、proposal 与单步前向转移行的核级 TV 界、U_ds 训练前定价;明确不作端到端性能下行保证。)
+ 
+-**限制(如实)**:跨数据集逆序仅四点(p=1/24),用户级不复现(ρ=0.028/0.046,弱且略正)——逆序保持数据集级观察,非用户级机制律;冻结门验证混合——开门保号未达参考量级、ASO out-of-sample 直接未中、两个关门平价检查以待归因的差距未中 **[待填:CLOSE-02 噪声地板]**——在此之前**不主张归约定理已被端到端演示**;关门只能与宿主持平——高效用数据集上方法价值是安全而非增益;机制证据来自参数化不同的第一代实例化;φ 铰链粗糙(尽管预注册且 65% 平台稳健);ML1M 单长度桶;保证限于平稳 proposal 核——掩码/调度型离散扩散需要自己的分析(见第 6 节);metadata-sparsity 假设未获支持,作为负结果入附录。
++**限制(如实)**:跨数据集逆序仅有四个点;exchangeability 假设下的 `1/24` 只是描述性组合计算。用户级读出不复现该逆序。冻结门验证包含一个关门 miss（ML1M）与一个 barely-open ATG（`φ=0.117`）miss。ML1M 超过测得的宿主噪声地板;ATG 为 provenance-limited 三次运行观测 spread 的 4.37 倍,但缺失 manifest 阻止完整配置平价与噪声地板声明。E1 已在 step 0 发现 optimizer ownership 差异并阻断本轮 E2,因此不作更强归因,也不声称归约定理已被端到端经验演示。理论保证限于平稳 proposal 下的 `g=0` 精确归约及 proposal/单步转移行 TV 界,不延伸到端到端性能。
+ 
+ ## 附录(骨架,CLOSE-07 从冻结稿合并全文)
+ 
+-A 证明(秩一代数/闭式/细致平衡/反演/碰撞恒等式)| B 范围与边界条件(history-only、自重采样腐蚀、伪物品坐标)| C U_ds 估计量与预注册(4000 转移/seed 7/100 流行度负例;(0.70,0.10) 先冻结后计算)| D 第一代实例化(机制证据与失败模式记录,非最终系统基准)| E 实现与基建(冻结超参/选择器/manifest 哈希链;可复现性材料随补充材料提交,checklist 单独上传)| F 负结果(metadata-sparsity)
++A 证明(秩一代数/闭式/细致平衡/反演/碰撞恒等式)| B 范围与边界条件(history-only、自重采样腐蚀、伪物品坐标)| C U_ds 估计量与预注册(4000 转移/seed 7/100 流行度负例;(0.70,0.10) 先冻结后计算)| D 第一代实例化(机制证据与失败模式记录,非最终系统基准)| E 实现与基建(冻结超参/选择器/manifest 哈希链;模型选择仅使用验证集,开发过程中记录了测试指标,因此本文不把测试集称为未触碰的最终留出集;可复现性材料随补充材料提交)| F 负结果(metadata-sparsity)
+ 
+ ---
+ 
+*** End Patch

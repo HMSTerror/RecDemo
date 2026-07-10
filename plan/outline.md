@@ -1,0 +1,11 @@
+# Gate-2 amendment outline
+
+1. Revise the English abstract and mirrored Chinese overview.
+2. Restrict all TV-bound language to proposal and one-step transition-row kernels.
+3. Treat `1/24` as a descriptive exchangeability calculation, not a confirmatory p-value.
+4. State one closed-gate ML1M miss and one barely-open ATG (`phi=0.117`) miss.
+5. Record E1's step-0 optimizer-ownership hard stop and prohibit end-to-end exact-reduction claims.
+6. Describe CLOSE-10 as a provenance-limited observed three-run spread; do not call it a fully manifested noise floor.
+7. Confirm DiffuRec evaluator comparability only under the corrected common test contract.
+8. Add the validation-only model-selection and development-time test-logging disclosure in English and Chinese.
+9. Preserve frozen Table 2 metric cells and synchronize both language versions.

@@ -1,0 +1,54 @@
+{
+  "schema_version": "gate2-wording-amendment-v2",
+  "amendment_date": "2026-07-10",
+  "execution_status": "applied",
+  "manuscript_files": [
+    "paper/main_v2.tex",
+    "paper/main_v2_zh.md"
+  ],
+  "claim_families": [
+    {
+      "id": "tv_scope",
+      "policy": "exact reduction at g=0; nonzero-gate bounds only for proposal and one-step forward transition rows; no end-to-end metric bound"
+    },
+    {
+      "id": "descriptive_1_over_24",
+      "policy": "under exchangeability, one specified order among 4! equally likely label orders gives descriptive fraction 1/24; not a confirmatory p-value"
+    },
+    {
+      "id": "gate_status",
+      "policy": "Beauty closed-gate parity hit; ML1M closed-gate miss; ATG barely-open phi=0.117 miss; Steam fully-open directional hit/reference-magnitude miss"
+    },
+    {
+      "id": "e1_hard_stop",
+      "policy": "step-0 optimizer-ownership mismatch; no end-to-end exact-reduction demonstration; E2/E3/E4/E5/E8 not launched"
+    },
+    {
+      "id": "atg_observed_spread",
+      "policy": "gap is 4.3713694473 times provenance-limited observed three-run spread; three manifests absent; no fully manifested floor or complete configuration-parity claim"
+    },
+    {
+      "id": "diffurec_scope",
+      "policy": "corrected common test-evaluator comparability only for legacy validation-selected frozen checkpoints; no checkpoint-selection-equivalence claim"
+    },
+    {
+      "id": "reproducibility",
+      "policy": "validation-only model selection; test metrics logged during development; test not described as untouched final holdout"
+    },
+    {
+      "id": "final_v2_corruption",
+      "policy": "E3 not launched after E1 hard stop; first-generation corruption readouts remain limited observations and do not establish a final-v2 corruption-response claim"
+    },
+    {
+      "id": "table2_freeze",
+      "policy": "all four frozen metric rows unchanged; ATG interpretation label only"
+    }
+  ],
+  "evidence": {
+    "e0_sha256": "da11d9f7307ad4377c9bf02d378fbf69bddae0453be3403502ef7c0ec3c4f9e5",
+    "e1_sha256": "b19d9473c8864028aec2de0421971f14c31603a14f510966fde3dd654ff8e43a",
+    "e7_sha256": "1bde287a1fa3b4a6753dd7dde2739d436895ead46f4469a9016ea53c22e9d8d7",
+    "close02_sha256": "37b6cfbb69f7a0435a76fd6d140c8eba186f1694595df2959e6579cbc378655c",
+    "close10_sha256": "cf615cdf2bb6392e6fef62e7e44a1c5bbed75edece3b9a3fdc4ec3a69d6e2dc0"
+  }
+}

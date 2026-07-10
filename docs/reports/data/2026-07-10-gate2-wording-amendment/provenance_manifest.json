@@ -1,0 +1,89 @@
+{
+  "schema_version": "gate2-wording-amendment-provenance-v2",
+  "amendment_date": "2026-07-10",
+  "execution_status": "applied",
+  "base_revision": "d110a338c64709b53646f5d648101d993984a92c",
+  "policy": {
+    "table2_metric_cells_replaced": false,
+    "bilingual_sync": true,
+    "new_training_runs": 0,
+    "new_evaluation_runs": 0,
+    "e1_downstream_launch_authorized": false,
+    "atg_fully_manifested_noise_floor_claimed": false,
+    "end_to_end_exact_reduction_demonstration_claimed": false
+  },
+  "source_artifacts": [
+    {
+      "path": "docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json",
+      "sha256": "da11d9f7307ad4377c9bf02d378fbf69bddae0453be3403502ef7c0ec3c4f9e5"
+    },
+    {
+      "path": "docs/reports/data/2026-07-10-e01-gzero-production-trace/e01_hard_stop.json",
+      "sha256": "b19d9473c8864028aec2de0421971f14c31603a14f510966fde3dd654ff8e43a"
+    },
+    {
+      "path": "docs/reports/data/2026-07-10-e07-u-ds-bootstrap-evidence-gate/e07_evidence_gate.json",
+      "sha256": "1bde287a1fa3b4a6753dd7dde2739d436895ead46f4469a9016ea53c22e9d8d7"
+    },
+    {
+      "path": "docs/reports/data/2026-07-07-close02-ml1m-noise-floor/close02_ml1m_noise_floor_report.json",
+      "sha256": "37b6cfbb69f7a0435a76fd6d140c8eba186f1694595df2959e6579cbc378655c"
+    },
+    {
+      "path": "docs/reports/data/2026-07-10-close10-atg-noise-floor-provenance-limited/close10_atg_provenance_limited_report.json",
+      "sha256": "cf615cdf2bb6392e6fef62e7e44a1c5bbed75edece3b9a3fdc4ec3a69d6e2dc0"
+    }
+  ],
+  "applied_manuscripts": [
+    {
+      "path": "paper/main_v2.tex",
+      "size_bytes": 57105,
+      "sha256": "db435b5b04e5ef668729d3f6c887fefd7b6775598efbdfe3bf07d4d26c99ebf0"
+    },
+    {
+      "path": "paper/main_v2_zh.md",
+      "size_bytes": 21431,
+      "sha256": "3b6c5bb2cab5027be7b468e369a1fef935453e41d2f180ffd31c20c9544f7da7"
+    }
+  ],
+  "package_files": [
+    {
+      "path": "gate2_wording_amendment_memo.md",
+      "size_bytes": 6381,
+      "sha256": "16ecb216cf9fa9dc879aa5d0e4b4a52daf400bfc43d9469607b94793bac83df5"
+    },
+    {
+      "path": "gate2_wording_amendment.apply_patch",
+      "size_bytes": 49027,
+      "sha256": "47de563b311f9b77d1e6362a350e966a8bd23d7b66afceaf7c8936ebfa18087e"
+    },
+    {
+      "path": "gate2_wording_hit_inventory.json",
+      "size_bytes": 2409,
+      "sha256": "05c16b8a8b9b86937976fdca623e232bb8dc8fd9064ebce5495aa8f64ca9f886"
+    },
+    {
+      "path": "task_packet.md",
+      "size_bytes": 2388,
+      "sha256": "1a1417a938217c6962c8007fd3fccbc78b32964d77a977b84f205f38efeac82c"
+    },
+    {
+      "path": "capability_use_audit.md",
+      "size_bytes": 3683,
+      "sha256": "bcc58b951fbc923f64684d5168bcd64b55fa7f50c25c697f67ac34d4624046a1"
+    }
+  ],
+  "verification": {
+    "patch_replay_blocks": {
+      "english": 20,
+      "chinese": 7
+    },
+    "table2_metric_rows_unchanged": {
+      "english": 4,
+      "chinese": 4
+    },
+    "latex_structure": "pass",
+    "fresh_pdf_compile": "not_run_no_local_engine_or_aaai_style_files",
+    "style_check": "exit_0_with_manual_existing-format_notices"
+  }
+}
