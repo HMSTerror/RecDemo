@@ -27,6 +27,15 @@ class RunE0FulltailMatrixTests(unittest.TestCase):
         self.assertIn("5709c6283cb127d727f6b769d8409343f4aae824", text)
         self.assertNotIn("single_train.py", text)
 
+    def test_only_legacy_host_atg_receives_explicit_catalog_mismatch_allowance(self) -> None:
+        text = SCRIPT_PATH.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            text,
+            r"run_core host_atg ATG .* 1942 - allow_legacy_catalog_mismatch",
+        )
+        self.assertEqual(1, text.count("--allow-legacy-model-catalog-mismatch"))
+
 
 if __name__ == "__main__":
     unittest.main()

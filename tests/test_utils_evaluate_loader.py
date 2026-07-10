@@ -53,8 +53,10 @@ class EvaluateLoaderTailBatchTest(unittest.TestCase):
         def sampling_fn(_model, _shape, history):
             scores = torch.arange(101, dtype=torch.float32).repeat(len(history), 1)
             scores[:, 0] = 1_000.0
-            pseudo_scores = torch.full((len(history), 1), 2_000.0)
-            return torch.cat([scores, pseudo_scores], dim=1).unsqueeze(1)
+            phantom_scores = torch.tensor(
+                [2_000.0, 3_000.0, 4_000.0], dtype=torch.float32
+            ).repeat(len(history), 1)
+            return torch.cat([scores, phantom_scores], dim=1).unsqueeze(1)
 
         with contextlib.redirect_stdout(io.StringIO()):
             hr_list, ndcg_list = utils.evaluate_loader(

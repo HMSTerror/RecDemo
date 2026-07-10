@@ -34,6 +34,7 @@ run_core() {
   local checkpoint_path="$6"
   local expected_rows="$7"
   local manifest_path="$8"
+  local catalog_contract_mode="${9:-strict_catalog_match}"
   local output_dir="$OUTPUT_ROOT/final/$identifier"
   local args=(
     "$PYTHON_BIN" "$CODE_ROOT/scripts/evaluate_frozen_checkpoint.py"
@@ -52,6 +53,12 @@ run_core() {
   )
   if [[ "$manifest_path" != "-" ]]; then
     args+=(--manifest-path "$manifest_path")
+  fi
+  if [[ "$catalog_contract_mode" == "allow_legacy_catalog_mismatch" ]]; then
+    args+=(--allow-legacy-model-catalog-mismatch)
+  elif [[ "$catalog_contract_mode" != "strict_catalog_match" ]]; then
+    echo "invalid E0 catalog contract mode: $catalog_contract_mode" >&2
+    exit 5
   fi
   echo "E0_ITEM_START id=$identifier dataset=$dataset family=core"
   "${args[@]}"
@@ -98,7 +105,7 @@ case "$SHARD" in
     run_diff diffurec_atg ATG /data/Zijian/goal/RecDemoRuns/close04_diffurec/atg_diffurec_seed100/checkpoints-meta/ATG/diffurec_run_manifest.json /data/Zijian/goal/RecDemoRuns/close04_diffurec/atg_diffurec_seed100/checkpoints-meta/ATG/checkpoint_diffurec_best.pt 1942
     run_core host_ml1m ML1M /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M /data/Zijian/goal/RecDemo/logs/ml1m_hybrid_earlystop.log /data/Zijian/goal/RecDemo/checkpoints-meta/ML1M/best_summary_hybrid.json /data/Zijian/goal/RecDemo/checkpoints-meta/ML1M/checkpoint_hybrid_best.pth 85405 -
     run_core ours_full_ml1m ML1M /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ML1M /data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/logs/ml1m_proposal_adaptive_mainpath.log /data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/best_summary_proposal_adaptive.json /data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/checkpoint_proposal_adaptive_best.pth 85405 /data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/frozen_run_manifest.json
-    run_core host_atg ATG /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG /data/Zijian/goal/RecDemo/logs/atg_hybrid_earlystop.log /data/Zijian/goal/RecDemo/checkpoints-meta/ATG/best_summary_hybrid.json /data/Zijian/goal/RecDemo/checkpoints-meta/ATG/checkpoint_hybrid_best.pth 1942 -
+    run_core host_atg ATG /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG /data/Zijian/goal/RecDemo/logs/atg_hybrid_earlystop.log /data/Zijian/goal/RecDemo/checkpoints-meta/ATG/best_summary_hybrid.json /data/Zijian/goal/RecDemo/checkpoints-meta/ATG/checkpoint_hybrid_best.pth 1942 - allow_legacy_catalog_mismatch
     run_core ours_full_atg ATG /data/Zijian/goal/RecDemo/dataset/paper_raw_v1/ATG /data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/logs/atg_proposal_adaptive_mainpath.log /data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/best_summary_proposal_adaptive.json /data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/checkpoint_proposal_adaptive_best.pth 1942 /data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/frozen_run_manifest.json
     ;;
   *)

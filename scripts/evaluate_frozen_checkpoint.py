@@ -150,6 +150,138 @@ def validate_expected_rows(dataset_name: str, split_name: str, *, actual: int, e
     return actual
 
 
+def resolve_item_count_contract(
+    logged_config: dict[str, Any],
+    *,
+    checkpoint_model_state: dict[str, Any],
+    dataset_name: str,
+    dataset_dir: Path,
+    allow_legacy_model_catalog_mismatch: bool = False,
+) -> dict[str, Any]:
+    """Separate the frozen model vocabulary from the real candidate catalog.
+
+    Legacy checkpoints must be reconstructed with the item count serialized in
+    their training log.  The regenerated dataset protocol independently fixes
+    how many real items may enter paper-facing top-k evaluation.
+    """
+
+    try:
+        model_item_count = int(logged_config["data"][dataset_name]["item_num"])
+        is_disliked_item = bool(logged_config["graph"]["is_disliked_item"])
+        checkpoint_weight = checkpoint_model_state["vocab_embed.embedding.weight"]
+        checkpoint_vocab_rows = int(checkpoint_weight.shape[0])
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError) as exc:
+        raise ValueError("unable to resolve frozen checkpoint item-count contract") from exc
+
+    valid_item_count = dataset_runtime.infer_runtime_item_num(dataset_dir)
+    if valid_item_count is None or int(valid_item_count) <= 0:
+        raise ValueError(f"unable to resolve real candidate item count for {dataset_name}")
+    valid_item_count = int(valid_item_count)
+
+    padding_rows = 1
+    expected_checkpoint_vocab_rows = (
+        model_item_count + (1 if is_disliked_item else 0) + padding_rows
+    )
+    if checkpoint_vocab_rows != expected_checkpoint_vocab_rows:
+        raise ValueError(
+            "checkpoint vocabulary rows do not match the serialized training config: "
+            f"expected {expected_checkpoint_vocab_rows}, got {checkpoint_vocab_rows}"
+        )
+    if valid_item_count > model_item_count:
+        raise ValueError(
+            "real candidate item count exceeds frozen model item count: "
+            f"candidates={valid_item_count}, model={model_item_count}"
+        )
+
+    text_side_enabled = bool(logged_config.get("text_side", {}).get("enabled", False))
+    if text_side_enabled and valid_item_count != model_item_count:
+        raise ValueError(
+            "text-side item count mismatch: frozen model and real candidate catalog must agree; "
+            f"model={model_item_count}, candidates={valid_item_count}"
+        )
+    if valid_item_count != model_item_count and not allow_legacy_model_catalog_mismatch:
+        raise ValueError(
+            "frozen model/catalog item count differs; an explicit legacy mismatch allowance "
+            "is required for this evaluator invocation: "
+            f"model={model_item_count}, candidates={valid_item_count}"
+        )
+
+    return {
+        "model_item_count": model_item_count,
+        "valid_item_count": valid_item_count,
+        "non_candidate_model_item_slots": model_item_count - valid_item_count,
+        "checkpoint_vocab_rows": checkpoint_vocab_rows,
+        "legacy_model_catalog_mismatch_authorized": bool(
+            allow_legacy_model_catalog_mismatch and valid_item_count != model_item_count
+        ),
+    }
+
+
+def inspect_test_item_domain(
+    test_dataset: Any,
+    *,
+    valid_item_count: int,
+    model_item_count: int,
+) -> dict[str, Any]:
+    history_min: int | None = None
+    history_max: int | None = None
+    target_min: int | None = None
+    target_max: int | None = None
+    history_pad_occurrences = 0
+    history_pad_rows = 0
+
+    seq_data = list(getattr(test_dataset, "seq_data", []))
+    next_data = list(getattr(test_dataset, "next_data", []))
+    if not seq_data or len(seq_data) != len(next_data):
+        raise ValueError("test dataset item-domain audit requires aligned non-empty seq/next rows")
+
+    for sequence in seq_data:
+        values = torch.as_tensor(sequence).detach().cpu().reshape(-1)
+        if values.numel() == 0:
+            raise ValueError("test history contains an empty sequence")
+        row_min = int(values.min().item())
+        row_max = int(values.max().item())
+        if row_min < 0 or row_max > valid_item_count:
+            raise ValueError(
+                "history item id outside real-item-or-pad domain: "
+                f"min={row_min}, max={row_max}, pad={valid_item_count}"
+            )
+        pad_count = int((values == valid_item_count).sum().item())
+        history_pad_occurrences += pad_count
+        history_pad_rows += int(pad_count > 0)
+        history_min = row_min if history_min is None else min(history_min, row_min)
+        history_max = row_max if history_max is None else max(history_max, row_max)
+
+    for target in next_data:
+        value = int(torch.as_tensor(target).detach().cpu().item())
+        if value < 0 or value >= valid_item_count:
+            raise ValueError(
+                "target item id outside real candidate catalog: "
+                f"target={value}, valid range=[0,{valid_item_count - 1}]"
+            )
+        target_min = value if target_min is None else min(target_min, value)
+        target_max = value if target_max is None else max(target_max, value)
+
+    pad_maps_to_non_candidate_slot = bool(
+        model_item_count > valid_item_count and history_pad_occurrences > 0
+    )
+    return {
+        "history_pad_value": valid_item_count,
+        "history_pad_occurrences": history_pad_occurrences,
+        "history_pad_rows": history_pad_rows,
+        "history_pad_maps_to_non_candidate_model_slot": pad_maps_to_non_candidate_slot,
+        "history_pad_semantics": (
+            "ordinary_non_candidate_legacy_model_slot"
+            if pad_maps_to_non_candidate_slot
+            else "disliked_state"
+        ),
+        "minimum_history_item_id": history_min,
+        "maximum_history_item_id": history_max,
+        "minimum_target_item_id": target_min,
+        "maximum_target_item_id": target_max,
+    }
+
+
 def build_result_payload(
     *,
     method_id: str,
@@ -166,9 +298,14 @@ def build_result_payload(
     random_seed: int,
     eval_seed: int,
     valid_item_count: int,
+    model_item_count: int | None = None,
+    legacy_model_catalog_mismatch_authorized: bool = False,
+    test_item_domain: dict[str, Any] | None = None,
     summary_path: Path | None = None,
     manifest_path: Path | None = None,
 ) -> dict[str, Any]:
+    if model_item_count is None:
+        model_item_count = valid_item_count
     sources = {
         "checkpoint_path": str(checkpoint_path),
         "checkpoint_sha256": sha256_file(checkpoint_path),
@@ -199,6 +336,12 @@ def build_result_payload(
             "eval_seed": eval_seed,
             "candidate_policy": "first-M-zero-based",
             "valid_item_count": valid_item_count,
+            "model_item_count": model_item_count,
+            "non_candidate_model_item_slots": model_item_count - valid_item_count,
+            "legacy_model_catalog_mismatch_authorized": bool(
+                legacy_model_catalog_mismatch_authorized
+            ),
+            "test_item_domain": test_item_domain or {},
             "topk": [1, 5, 10, 20, 50],
         },
         "test": {
@@ -229,7 +372,6 @@ def prepare_config(
     cfg_dict["training"]["batch_size"] = int(batch_size)
     cfg_dict["data"][dataset_name]["path"] = str(dataset_dir)
     cfg = OmegaConf.create(cfg_dict)
-    dataset_runtime.reconcile_runtime_dataset_config(cfg)
     return cfg
 
 
@@ -257,6 +399,16 @@ def evaluate_frozen_checkpoint(args: argparse.Namespace) -> Path:
             random_seed=args.random_seed,
         )
 
+    device = torch.device(args.device)
+    checkpoint = torch.load(args.checkpoint_path, map_location=device, weights_only=False)
+    item_count_contract = resolve_item_count_contract(
+        logged_config,
+        checkpoint_model_state=checkpoint["model"],
+        dataset_name=args.dataset_name,
+        dataset_dir=args.dataset_dir,
+        allow_legacy_model_catalog_mismatch=args.allow_legacy_model_catalog_mismatch,
+    )
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
     cfg = prepare_config(
         logged_config,
@@ -267,12 +419,10 @@ def evaluate_frozen_checkpoint(args: argparse.Namespace) -> Path:
         random_seed=args.random_seed,
     )
     reset_evaluation_seed(args.random_seed)
-    device = torch.device(args.device)
 
     graph = graph_lib.get_graph(cfg, device)
     score_model = SEDD4REC(cfg).to(device)
     ema = ExponentialMovingAverage(score_model.parameters(), decay=float(cfg.training.ema))
-    checkpoint = torch.load(args.checkpoint_path, map_location=device, weights_only=False)
     checkpoint_step = int(checkpoint["step"])
     validate_best_summary(summary, checkpoint_step=checkpoint_step)
     load_model_state_strict(score_model, checkpoint["model"])
@@ -287,7 +437,12 @@ def evaluate_frozen_checkpoint(args: argparse.Namespace) -> Path:
         raise ValueError(f"unsupported strength: {args.strength}")
 
     _, _, test_loader = data.get_seqdataloader(cfg)
-    valid_item_count = int(getattr(cfg.data, args.dataset_name).item_num)
+    valid_item_count = int(item_count_contract["valid_item_count"])
+    test_item_domain = inspect_test_item_domain(
+        test_loader.dataset,
+        valid_item_count=valid_item_count,
+        model_item_count=int(item_count_contract["model_item_count"]),
+    )
     validate_expected_rows(
         args.dataset_name,
         "test",
@@ -326,6 +481,11 @@ def evaluate_frozen_checkpoint(args: argparse.Namespace) -> Path:
         random_seed=args.random_seed,
         eval_seed=args.eval_seed,
         valid_item_count=valid_item_count,
+        model_item_count=int(item_count_contract["model_item_count"]),
+        legacy_model_catalog_mismatch_authorized=bool(
+            item_count_contract["legacy_model_catalog_mismatch_authorized"]
+        ),
+        test_item_domain=test_item_domain,
         summary_path=args.summary_path,
         manifest_path=args.manifest_path,
     )
@@ -351,6 +511,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-seed", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--strength", choices=("base", "p2", "p5", "p10"), default="p2")
+    parser.add_argument(
+        "--allow-legacy-model-catalog-mismatch",
+        action="store_true",
+        help=(
+            "Explicitly allow a frozen non-text model whose logged model item count exceeds "
+            "the regenerated real candidate catalog; the mismatch is recorded in the output."
+        ),
+    )
     parser.add_argument("--device", default="cuda:0" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
 

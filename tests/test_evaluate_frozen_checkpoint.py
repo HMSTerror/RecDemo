@@ -27,6 +27,140 @@ def load_module():
 
 
 class EvaluateFrozenCheckpointTests(unittest.TestCase):
+    def test_separates_legacy_model_vocabulary_from_real_candidate_catalog(self) -> None:
+        module = load_module()
+        self.assertTrue(hasattr(module, "resolve_item_count_contract"))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            dataset_dir = root / "ATG"
+            output_dir = root / "output"
+            dataset_dir.mkdir(parents=True)
+            (dataset_dir / "protocol.json").write_text(
+                json.dumps({"counts": {"item_num": 11_921}}),
+                encoding="utf-8",
+            )
+            logged_config = {
+                "random_seed": 100,
+                "training": {"data": "ATG", "batch_size": 256},
+                "data": {
+                    "ATG": {
+                        "path": str(dataset_dir),
+                        "item_num": 11_924,
+                        "seq_len": 10,
+                    }
+                },
+                "graph": {"is_disliked_item": True},
+                "text_side": {"enabled": False},
+            }
+            checkpoint_model_state = {
+                "vocab_embed.embedding.weight": torch.zeros(11_926, 256),
+            }
+
+            with self.assertRaisesRegex(ValueError, "explicit legacy mismatch allowance"):
+                module.resolve_item_count_contract(
+                    logged_config,
+                    checkpoint_model_state=checkpoint_model_state,
+                    dataset_name="ATG",
+                    dataset_dir=dataset_dir,
+                )
+            contract = module.resolve_item_count_contract(
+                logged_config,
+                checkpoint_model_state=checkpoint_model_state,
+                dataset_name="ATG",
+                dataset_dir=dataset_dir,
+                allow_legacy_model_catalog_mismatch=True,
+            )
+            cfg = module.prepare_config(
+                logged_config,
+                dataset_name="ATG",
+                dataset_dir=dataset_dir,
+                output_dir=output_dir,
+                batch_size=256,
+                random_seed=100,
+            )
+
+        self.assertEqual(11_924, contract["model_item_count"])
+        self.assertEqual(11_921, contract["valid_item_count"])
+        self.assertEqual(3, contract["non_candidate_model_item_slots"])
+        self.assertEqual(11_926, contract["checkpoint_vocab_rows"])
+        self.assertTrue(contract["legacy_model_catalog_mismatch_authorized"])
+        self.assertEqual(11_924, int(cfg.data.ATG.item_num))
+
+    def test_item_count_contract_rejects_checkpoint_or_text_asset_mismatch(self) -> None:
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dataset_dir = Path(tmpdir) / "ATG"
+            dataset_dir.mkdir(parents=True)
+            (dataset_dir / "protocol.json").write_text(
+                json.dumps({"counts": {"item_num": 11_921}}),
+                encoding="utf-8",
+            )
+            logged_config = {
+                "data": {"ATG": {"path": str(dataset_dir), "item_num": 11_924}},
+                "graph": {"is_disliked_item": True},
+                "text_side": {"enabled": False},
+            }
+            wrong_checkpoint_state = {
+                "vocab_embed.embedding.weight": torch.zeros(11_923, 256),
+            }
+            with self.assertRaisesRegex(ValueError, "checkpoint vocabulary rows"):
+                module.resolve_item_count_contract(
+                    logged_config,
+                    checkpoint_model_state=wrong_checkpoint_state,
+                    dataset_name="ATG",
+                    dataset_dir=dataset_dir,
+                )
+
+            logged_config["text_side"]["enabled"] = True
+            matching_legacy_state = {
+                "vocab_embed.embedding.weight": torch.zeros(11_926, 256),
+            }
+            with self.assertRaisesRegex(ValueError, "text-side item count mismatch"):
+                module.resolve_item_count_contract(
+                    logged_config,
+                    checkpoint_model_state=matching_legacy_state,
+                    dataset_name="ATG",
+                    dataset_dir=dataset_dir,
+                    allow_legacy_model_catalog_mismatch=True,
+                )
+
+    def test_records_legacy_history_pad_semantics_and_rejects_candidate_targets(self) -> None:
+        module = load_module()
+
+        class FakeDataset:
+            seq_data = [
+                torch.tensor([11_921, 11_921, 3]),
+                torch.tensor([4, 5, 6]),
+            ]
+            next_data = [torch.tensor(7), torch.tensor(11_920)]
+
+        domain = module.inspect_test_item_domain(
+            FakeDataset(),
+            valid_item_count=11_921,
+            model_item_count=11_924,
+        )
+
+        self.assertEqual(11_921, domain["history_pad_value"])
+        self.assertEqual(2, domain["history_pad_occurrences"])
+        self.assertEqual(1, domain["history_pad_rows"])
+        self.assertTrue(domain["history_pad_maps_to_non_candidate_model_slot"])
+        self.assertEqual(
+            "ordinary_non_candidate_legacy_model_slot",
+            domain["history_pad_semantics"],
+        )
+        self.assertEqual(11_920, domain["maximum_target_item_id"])
+
+        class InvalidTargetDataset(FakeDataset):
+            next_data = [torch.tensor(11_921)]
+            seq_data = [torch.tensor([1, 2, 3])]
+
+        with self.assertRaisesRegex(ValueError, "target item id outside real candidate catalog"):
+            module.inspect_test_item_domain(
+                InvalidTargetDataset(),
+                valid_item_count=11_921,
+                model_item_count=11_924,
+            )
+
     def test_rejects_ema_shadow_shape_or_count_mismatch(self) -> None:
         module = load_module()
         self.assertTrue(hasattr(module, "validate_ema_state"))
@@ -218,6 +352,19 @@ class EvaluateFrozenCheckpointTests(unittest.TestCase):
                 random_seed=100,
                 eval_seed=10_010,
                 valid_item_count=9_265,
+                model_item_count=9_268,
+                legacy_model_catalog_mismatch_authorized=True,
+                test_item_domain={
+                    "history_pad_value": 9_265,
+                    "history_pad_occurrences": 10,
+                    "history_pad_rows": 4,
+                    "history_pad_maps_to_non_candidate_model_slot": True,
+                    "history_pad_semantics": "ordinary_non_candidate_legacy_model_slot",
+                    "minimum_history_item_id": 0,
+                    "maximum_history_item_id": 9_265,
+                    "minimum_target_item_id": 0,
+                    "maximum_target_item_id": 9_264,
+                },
             )
 
         self.assertEqual("e0_full_tail_v2", payload["metric_contract"]["version"])
@@ -228,6 +375,17 @@ class EvaluateFrozenCheckpointTests(unittest.TestCase):
         self.assertEqual(10_010, payload["metric_contract"]["eval_seed"])
         self.assertEqual("first-M-zero-based", payload["metric_contract"]["candidate_policy"])
         self.assertEqual(9_265, payload["metric_contract"]["valid_item_count"])
+        self.assertEqual(9_268, payload["metric_contract"]["model_item_count"])
+        self.assertEqual(3, payload["metric_contract"]["non_candidate_model_item_slots"])
+        self.assertTrue(payload["metric_contract"]["legacy_model_catalog_mismatch_authorized"])
+        self.assertTrue(
+            payload["metric_contract"]["test_item_domain"]
+            ["history_pad_maps_to_non_candidate_model_slot"]
+        )
+        self.assertEqual(
+            "ordinary_non_candidate_legacy_model_slot",
+            payload["metric_contract"]["test_item_domain"]["history_pad_semantics"],
+        )
         self.assertEqual(80_651, payload["test"]["evaluated_rows"])
         self.assertEqual(0.3, payload["test"]["hr10"])
         self.assertEqual(0.03, payload["test"]["ndcg10"])
