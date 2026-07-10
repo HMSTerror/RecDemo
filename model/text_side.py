@@ -565,6 +565,11 @@ class TextSideProposalBuilder(nn.Module):
             proposal = anchor_proposal
         else:
             proposal = adaptive_proposal
+        closed_gate = self.injection_mode == "kernel" and (
+            self.gate_dataset_scale == 0.0 or self.ablation_mode == "global_p"
+        )
+        if closed_gate:
+            proposal = p_core_full
 
         return {
             "temperature_scale": torch.ones_like(g),

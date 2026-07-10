@@ -177,6 +177,38 @@ class TextSideProposalTests(unittest.TestCase):
         self.assertGreater(float(builder.p1.grad[:-1].abs().sum()), 0.0)
         self.assertGreater(float(builder.p1.grad[-1].abs()), 0.0)
 
+    def test_kernel_closed_gate_proposal_has_core_softmax_gradient_identity(self) -> None:
+        module = load_module()
+        builder = module.TextSideProposalBuilder(
+            item_embeddings=torch.tensor(
+                [[1.0, 0.0], [0.9, 0.1], [0.0, 1.0], [-1.0, 0.0]],
+                dtype=torch.float32,
+            ),
+            item_completeness=torch.ones(4),
+            item_num=4,
+            is_disliked_item=True,
+            kernel_version="v2",
+            injection_mode="kernel",
+            gate_dataset_scale=0.0,
+        )
+        with torch.no_grad():
+            builder.p1.copy_(torch.tensor([0.4, -0.3, 0.8, 0.1, -0.2]))
+        history = torch.tensor([[0, 1, 2, 4], [2, 3, 0, 4]], dtype=torch.long)
+        weights = torch.tensor(
+            [[1.0, -0.5, 0.25, 0.75, -0.25], [0.3, 0.8, -0.4, 0.2, 0.6]]
+        )
+
+        proposal = builder.encode_history_context(history)["proposal"]
+        (proposal * weights).sum().backward()
+        observed = builder.p1.grad.detach().clone()
+
+        builder.p1.grad = None
+        core = torch.softmax(builder.p1, dim=-1).unsqueeze(0).expand_as(proposal)
+        (core * weights).sum().backward()
+        expected = builder.p1.grad.detach().clone()
+
+        self.assertTrue(torch.equal(observed, expected))
+
     def test_v2_from_files_uses_length_matched_null_curve_lookup(self) -> None:
         self.assertTrue(MODULE_PATH.exists(), f"missing module: {MODULE_PATH}")
         module = load_module()
