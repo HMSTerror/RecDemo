@@ -21,6 +21,21 @@ fi
 export CUDA_VISIBLE_DEVICES="$GPU_INDEX"
 mkdir -p "$OUTPUT_ROOT/logs"
 exec > >(tee -a "$OUTPUT_ROOT/logs/e0_shard${SHARD}_gpu${GPU_INDEX}.log") 2>&1
+LOGGER_PID="$!"
+
+finalize_logger() {
+  local task_status=$?
+  trap - EXIT
+  set +e
+  exec 1>&- 2>&-
+  wait "$LOGGER_PID"
+  local logger_status=$?
+  if (( task_status != 0 )); then
+    exit "$task_status"
+  fi
+  exit "$logger_status"
+}
+trap finalize_logger EXIT
 
 echo "E0_SHARD_START shard=$SHARD gpu=$GPU_INDEX code_revision=$actual_revision"
 nvidia-smi --query-gpu=index,name,memory.used,utilization.gpu --format=csv,noheader
