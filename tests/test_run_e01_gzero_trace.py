@@ -398,6 +398,28 @@ class E01GZeroTraceTests(unittest.TestCase):
             "torch.float32",
         )
 
+    def test_execution_failure_report_preserves_traceback_and_context(self) -> None:
+        module = load_module()
+        try:
+            raise NotImplementedError("amp backend probe")
+        except NotImplementedError as exc:
+            report = module.build_execution_failure_report(
+                exc,
+                context={
+                    "phase": "training",
+                    "arm": "host",
+                    "trace_step": 1,
+                    "device": "cuda:1",
+                    "scaler_enabled": True,
+                },
+            )
+
+        self.assertEqual("NotImplementedError", report["exception"]["type"])
+        self.assertIn("amp backend probe", report["exception"]["message"])
+        self.assertIn("test_execution_failure_report_preserves_traceback", report["exception"]["traceback"])
+        self.assertEqual("training", report["execution_context"]["phase"])
+        self.assertEqual(1, report["execution_context"]["trace_step"])
+
     def test_asset_fingerprints_bind_bank_split_null_curve_and_utility(self) -> None:
         module = load_module()
         with tempfile.TemporaryDirectory() as tmpdir:

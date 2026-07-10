@@ -51,6 +51,12 @@ PROTOCOL_SCOPE_DECISION = (
     "excluded because its frozen host uses the hybrid graph; this trace does not "
     "claim ML1M equivalence."
 )
+LAST_EXECUTION_CONTEXT: dict[str, Any] = {
+    "phase": "startup",
+    "arm": None,
+    "trace_step": None,
+    "training_started": False,
+}
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -533,6 +539,60 @@ def _stable_value(value: Any) -> Any:
 
 def _value_sha256(value: Any) -> str:
     return _json_sha256(_stable_value(value))
+
+
+def _set_execution_context(**updates: Any) -> dict[str, Any]:
+    """Update non-random provenance for the current production boundary."""
+
+    global LAST_EXECUTION_CONTEXT
+    LAST_EXECUTION_CONTEXT = {**LAST_EXECUTION_CONTEXT, **updates}
+    return deepcopy(LAST_EXECUTION_CONTEXT)
+
+
+def _parameter_device_counts(parameters: Any) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for parameter in parameters:
+        device = str(getattr(parameter, "device", "unknown"))
+        counts[device] = counts.get(device, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def build_execution_failure_report(
+    exc: BaseException,
+    *,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    import traceback
+
+    execution_context = dict(LAST_EXECUTION_CONTEXT if context is None else context)
+    return {
+        "schema_version": 1,
+        "report_name": "AAAI-E01 deterministic production-path g-zero trace",
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "status": "fail",
+        "protocol": {
+            "dataset": DATASET_NAME,
+            "random_seed": RANDOM_SEED,
+            "trace_steps": list(TRACE_STEPS),
+            "fp32_tolerance": FP32_TOLERANCE,
+            "scope_decision": PROTOCOL_SCOPE_DECISION,
+        },
+        "first_divergence": {
+            "step": execution_context.get("trace_step"),
+            "category": "preflight_or_execution_error",
+            "key": type(exc).__name__,
+            "detail": str(exc),
+        },
+        "exception": {
+            "type": type(exc).__name__,
+            "message": str(exc),
+            "traceback": "".join(
+                traceback.format_exception(type(exc), exc, exc.__traceback__)
+            ),
+        },
+        "execution_context": execution_context,
+        "downstream_launch_authorized": False,
+    }
 
 
 def _tensor_layout_metadata(value: torch.Tensor) -> dict[str, Any]:
@@ -1412,6 +1472,13 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
     from model.ema import ExponentialMovingAverage
     from model.transformer import SEDD4REC
 
+    _set_execution_context(
+        phase="preflight",
+        arm=None,
+        trace_step=None,
+        device=str(args.device),
+        training_started=False,
+    )
     output_dir = Path(args.output_dir)
     if output_dir.exists():
         raise FileExistsError(
@@ -1446,6 +1513,13 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
 
     for arm in ARM_NAMES:
         cfg = configs[arm]
+        _set_execution_context(
+            phase="construction",
+            arm=arm,
+            trace_step=0,
+            device=str(device),
+            training_started=False,
+        )
         single_train.setup_seed(RANDOM_SEED)
         dataset_runtime.reconcile_runtime_dataset_config(cfg)
         if int(cfg.data.Beauty.item_num) != EXPECTED_ITEM_COUNT:
@@ -1511,11 +1585,19 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
                 raise RuntimeError("host noise must initialize first")
             noise.load_state_dict(host_noise.state_dict(), strict=True)
 
-        optimizer = losses.get_optimizer(
-            cfg,
-            compose_optimizer_parameters(model, graph, noise),
-        )
+        optimizer_parameters = compose_optimizer_parameters(model, graph, noise)
+        optimizer = losses.get_optimizer(cfg, optimizer_parameters)
         scaler = torch.cuda.amp.GradScaler()
+        _set_execution_context(
+            scaler_enabled=bool(scaler.is_enabled()),
+            scaler_scale=float(scaler.get_scale()) if scaler.is_enabled() else None,
+            model_parameter_devices=_parameter_device_counts(model.parameters()),
+            graph_parameter_devices=_parameter_device_counts(graph.parameters()),
+            noise_parameter_devices=_parameter_device_counts(noise.parameters()),
+            optimizer_parameter_devices=_parameter_device_counts(optimizer_parameters),
+            optimizer_class=optimizer.__class__.__qualname__,
+            optimizer_param_group_count=len(optimizer.param_groups),
+        )
         state = {
             "optimizer": optimizer,
             "scaler": scaler,
@@ -1621,6 +1703,12 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
     # training batch whenever snapshot_sampling=True.  Replay it per arm under
     # the arm-local RNG stream so step-0 RNG metadata matches production.
     for arm in ARM_NAMES:
+        _set_execution_context(
+            phase="initial_sampling",
+            arm=arm,
+            trace_step=0,
+            training_started=False,
+        )
         _run_initial_production_sampling(runtimes[arm], utils)
     initialization_evidence["initial_sampling_rng_trace"] = {
         arm: deepcopy(runtimes[arm].initial_sampling_rng_trace)
@@ -1668,6 +1756,31 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
         batch_hash_by_arm: dict[str, str] = {}
         for arm in ARM_NAMES:
             runtime = runtimes[arm]
+            _set_execution_context(
+                phase="training",
+                arm=arm,
+                trace_step=step,
+                device=str(runtime.device),
+                training_started=True,
+                scaler_enabled=bool(runtime.scaler.is_enabled()),
+                scaler_scale=float(runtime.scaler.get_scale())
+                if runtime.scaler.is_enabled()
+                else None,
+                model_parameter_devices=_parameter_device_counts(
+                    runtime.model.parameters()
+                ),
+                graph_parameter_devices=_parameter_device_counts(
+                    runtime.graph.parameters()
+                ),
+                noise_parameter_devices=_parameter_device_counts(
+                    runtime.noise.parameters()
+                ),
+                optimizer_parameter_devices=_parameter_device_counts(
+                    parameter
+                    for group in runtime.optimizer.param_groups
+                    for parameter in group["params"]
+                ),
+            )
             restore_rng_state(runtime.rng_state)
             runtime.graph_trace.reset()
             runtime.noise_trace.reset()
@@ -1694,6 +1807,13 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
             latest_proposals[arm] = proposal.detach().cpu().clone()
 
             if step == TRACE_STEPS[-1]:
+                _set_execution_context(
+                    phase="step1000_eval",
+                    arm=arm,
+                    trace_step=step,
+                    device=str(runtime.device),
+                    training_started=True,
+                )
                 _run_step_1000_production_boundary(
                     runtime,
                     single_train_module=single_train,
@@ -1824,26 +1944,7 @@ def main() -> None:
     try:
         report = run_production_trace(args)
     except Exception as exc:
-        failure_report = {
-            "schema_version": 1,
-            "report_name": "AAAI-E01 deterministic production-path g-zero trace",
-            "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-            "status": "fail",
-            "protocol": {
-                "dataset": DATASET_NAME,
-                "random_seed": RANDOM_SEED,
-                "trace_steps": list(TRACE_STEPS),
-                "fp32_tolerance": FP32_TOLERANCE,
-                "scope_decision": PROTOCOL_SCOPE_DECISION,
-            },
-            "first_divergence": {
-                "step": None,
-                "category": "preflight_or_execution_error",
-                "key": type(exc).__name__,
-                "detail": str(exc),
-            },
-            "downstream_launch_authorized": False,
-        }
+        failure_report = build_execution_failure_report(exc)
         write_trace_artifacts(args.output_dir, failure_report, allow_existing_empty=True)
         print(json.dumps(failure_report, indent=2, sort_keys=True))
         raise SystemExit(3) from exc
