@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 from pathlib import Path
 from typing import Any
@@ -120,6 +121,20 @@ def build_corruption_bank(
         raise ValueError("corruption changed embedding row norms")
     output_dir.mkdir(parents=True)
     np.save(output_dir / "embeddings.npy", corrupted, allow_pickle=False)
+    try:
+        import torch
+    except ImportError as exc:  # pragma: no cover - production queue environment supplies torch
+        raise RuntimeError("torch is required to emit a training-compatible corruption bank") from exc
+    torch_buffer = io.BytesIO()
+    torch.save(
+        {
+            "embeddings": torch.as_tensor(corrupted, dtype=torch.float32),
+            "item_ids": [int(item_id) for item_id in manifest_item_ids],
+        },
+        torch_buffer,
+    )
+    write_bytes_exclusive(output_dir / "embeddings.pt", torch_buffer.getvalue())
+    atomic_write_json(output_dir / "item_ids.json", [int(item_id) for item_id in manifest_item_ids])
     manifest = {
         "schema_version": 1,
         "dataset": str(dataset),
@@ -127,6 +142,12 @@ def build_corruption_bank(
         "corruption_seed": int(corruption_seed),
         "eligible_real_item_count": int(clean.shape[0]),
         "embedding_shape": list(clean.shape),
+        "embedding_artifacts": {
+            "numpy_filename": "embeddings.npy",
+            "numpy_sha256": sha256_file(output_dir / "embeddings.npy"),
+            "torch_filename": "embeddings.pt",
+            "torch_sha256": sha256_file(output_dir / "embeddings.pt"),
+        },
         "strata_count": len(strata),
         "strata": [
             {
@@ -155,14 +176,21 @@ def build_corruption_bank(
         "row_norm_max_abs_diff": float(np.max(np.abs(row_norms_before - row_norms_after))),
         "candidate_policy": "real_item_embeddings_only; no_padding_or_pseudo_item_rows",
     }
-    manifest["bank_sha256"] = stable_sha256({"manifest": manifest, "embedding_sha256": sha256_file(output_dir / "embeddings.npy")})
+    manifest["bank_sha256"] = stable_sha256(
+        {
+            "manifest": manifest,
+            "numpy_sha256": sha256_file(output_dir / "embeddings.npy"),
+            "torch_sha256": sha256_file(output_dir / "embeddings.pt"),
+            "item_ids_sha256": sha256_file(output_dir / "item_ids.json"),
+        }
+    )
     atomic_write_json(output_dir / "bank_manifest.json", manifest)
     atomic_write_json(output_dir / "permutation.json", {"mapping": permutation, "selected_count": len(selected_ids), "fixed_points": fixed_points})
-    atomic_write_json(output_dir / "item_ids.json", [int(item_id) for item_id in manifest_item_ids])
     write_bytes_exclusive(
         output_dir / "SHA256SUMS",
         (
             f"{sha256_file(output_dir / 'embeddings.npy')}  embeddings.npy\n"
+            f"{sha256_file(output_dir / 'embeddings.pt')}  embeddings.pt\n"
             f"{sha256_file(output_dir / 'bank_manifest.json')}  bank_manifest.json\n"
             f"{sha256_file(output_dir / 'item_ids.json')}  item_ids.json\n"
         ).encode("ascii"),

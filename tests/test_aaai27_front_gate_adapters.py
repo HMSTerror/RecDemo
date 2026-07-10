@@ -432,6 +432,9 @@ class FrontGateAdapterTests(unittest.TestCase):
             flattened_strata = [item_id for stratum in report["strata"] for item_id in stratum["item_ids"]]
             self.assertEqual(sorted(item_ids), sorted(flattened_strata))
             self.assertTrue(report["item_id_mapping"]["sha256"])
+            torch_payload = torch.load(root / "bank" / "embeddings.pt", map_location="cpu", weights_only=False)
+            self.assertEqual(item_ids, [int(value) for value in torch_payload["item_ids"]])
+            self.assertEqual([10, 3], list(torch_payload["embeddings"].shape))
 
     def test_preregistration_freezes_thresholds_or_writes_no_go(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
