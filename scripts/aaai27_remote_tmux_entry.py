@@ -95,6 +95,8 @@ def ensure_session(
             return "terminal"
 
     if has_session.returncode == 0:
+        if not existing:
+            raise RuntimeError("live tmux session metadata missing")
         return "already_running"
 
     root = queue_root.resolve(strict=False)

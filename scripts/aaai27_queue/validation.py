@@ -70,8 +70,11 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: only seed 100 is permitted")
     if task.kind == "gpu" and task.seed != 100:
         raise ManifestError(f"{task.task_id}: GPU tasks require seed 100")
-    if (task.model or "").casefold() == "diffurec":
+    model_name = (task.model or "").casefold()
+    if model_name == "diffurec":
         raise ManifestError(f"{task.task_id}: DiffuRec is excluded")
+    if model_name == "bert4rec":
+        raise ManifestError(f"{task.task_id}: BERT4Rec is excluded")
     if task.max_attempts != 1:
         raise ManifestError(f"{task.task_id}: max_attempts must equal 1")
     if task.failure_policy != "fail_closed":

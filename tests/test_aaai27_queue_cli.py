@@ -98,6 +98,25 @@ class QueueCliTests(unittest.TestCase):
             self.assertFalse((root / "runs").exists())
             self.assertFalse(list(root.rglob("*.pth")))
 
+    def test_status_reports_manifest_hash_branch_and_task_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "queue"
+            manifest_path = root / "queue" / "queue_seed100.json"
+            manifest_path.parent.mkdir(parents=True)
+            write_manifest(manifest_path)
+
+            result = self.run_cli("status", "--queue-root", str(root), "--json")
+
+            self.assertEqual(0, result.returncode)
+            payload = json.loads(result.stdout)
+            self.assertEqual("present", payload["status"])
+            self.assertTrue(payload["manifest_present"])
+            self.assertEqual(22, payload["task_count"])
+            self.assertEqual("common", payload["branch"])
+            self.assertEqual(22, payload["task_counts"]["pending"])
+            self.assertEqual(0, payload["task_counts"]["running"])
+            self.assertEqual(64, len(payload["manifest_sha256"]))
+
     def test_validate_is_read_only_and_reports_manifest_count(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir) / "queue"

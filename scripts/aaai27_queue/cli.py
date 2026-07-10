@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import time
@@ -10,9 +11,9 @@ from typing import Any, Sequence
 
 from .controller import QueueController, linux_process_matches
 from .models import GateSnapshot, QueueManifest
-from .runtime import LinuxFlockBackend, ProcessSupervisor, QueueRuntime
+from .runtime import LinuxFlockBackend, ProcessSupervisor, QueueRuntime, linux_process_start_token
 from .scheduler import select_active_branch
-from .storage import atomic_create_json, load_json
+from .storage import atomic_create_json, load_json, sha256_file
 from .validation import validate_manifest
 
 
@@ -65,6 +66,54 @@ def _dry_run_command(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _read_task_records(root: Path) -> dict[str, dict[str, Any]]:
+    records_dir = root / "state" / "tasks"
+    if not records_dir.is_dir():
+        return {}
+    records: dict[str, dict[str, Any]] = {}
+    for path in sorted(records_dir.glob("*.json")):
+        raw = load_json(path)
+        task_id = raw.get("task_id")
+        if not isinstance(task_id, str) or task_id in records:
+            raise ValueError(f"invalid or duplicate task record: {path.name}")
+        records[task_id] = raw
+    return records
+
+
+def _read_gate_snapshot(root: Path) -> tuple[GateSnapshot, str]:
+    markers = root / "markers"
+    pass_path = markers / "RISK-02_PASS.json"
+    fail_path = markers / "RISK-02_FAIL.json"
+    if pass_path.is_file() and fail_path.is_file():
+        raise ValueError("ambiguous RISK-02 markers")
+    e1_outcome = "pass" if pass_path.is_file() else "fail" if fail_path.is_file() else None
+    risk08_path = markers / "RISK-08_EXIT.json"
+    risk08_exit = None
+    if risk08_path.is_file():
+        raw = load_json(risk08_path)
+        value = raw.get("exit")
+        if not isinstance(value, str):
+            raise ValueError("RISK-08 exit marker must contain a string exit")
+        risk08_exit = value
+    gates = GateSnapshot(e1_outcome, risk08_exit)
+    return gates, select_active_branch(gates)
+
+
+def _latest_event_at(root: Path) -> str | None:
+    events_path = root / "logs" / "events.jsonl"
+    if not events_path.is_file():
+        return None
+    lines = events_path.read_text(encoding="utf-8").splitlines()
+    if not lines:
+        return None
+    try:
+        event = json.loads(lines[-1])
+    except json.JSONDecodeError:
+        return None
+    value = event.get("at")
+    return value if isinstance(value, str) else None
+
+
 def _status_payload(root: Path) -> dict[str, Any]:
     if not root.exists():
         return {"status": "absent", "queue_root": str(root), "stop_requested": False}
@@ -83,15 +132,100 @@ def _status_payload(root: Path) -> dict[str, Any]:
         }
 
     manifest_path = root / "queue" / "queue_seed100.json"
-    records_dir = root / "state" / "tasks"
-    record_count = len(list(records_dir.glob("*.json"))) if records_dir.is_dir() else 0
-    return {
+    records = _read_task_records(root)
+    payload: dict[str, Any] = {
         "status": "present",
         "queue_root": str(root),
         "stop_requested": stop_requested,
-        "record_count": record_count,
         "manifest_present": manifest_path.is_file(),
+        "record_count": len(records),
+        "free_disk_gib": _free_disk_gib(root),
+        "latest_event_at": _latest_event_at(root),
+        "paths": {
+            "manifest": str(manifest_path),
+            "state": str(root / "state"),
+            "events": str(root / "logs" / "events.jsonl"),
+            "markers": str(root / "markers"),
+            "runs": str(root / "runs"),
+        },
     }
+    payload["controller"] = None
+    payload["tmux"] = None
+    for name in ("controller.json", "tmux_session.json"):
+        path = root / "state" / name
+        if path.is_file():
+            key = name.removesuffix(".json")
+            value = load_json(path)
+            if key == "controller" and value.get("status") == "running":
+                pid = value.get("pid")
+                token = value.get("process_start_time")
+                value["liveness"] = (
+                    linux_process_matches(pid, token)
+                    if isinstance(pid, int) and isinstance(token, str)
+                    else False
+                )
+            payload[key] = value
+    if not manifest_path.is_file():
+        return payload
+
+    payload["manifest_sha256"] = sha256_file(manifest_path)
+    try:
+        manifest = _load_manifest(manifest_path)
+        gates, branch = _read_gate_snapshot(root)
+    except Exception as exc:
+        payload["status"] = "invalid_manifest"
+        payload["error"] = str(exc)
+        return payload
+
+    statuses = {"pending": 0, "ready": 0, "running": 0, "passed": 0, "failed": 0, "blocked": 0, "stopped": 0, "interrupted_unverified": 0}
+    passed: set[str] = set()
+    for task in manifest.tasks:
+        raw = records.get(task.task_id)
+        if raw is None:
+            statuses["pending"] += 1
+            continue
+        status = raw.get("status")
+        if status not in statuses:
+            statuses["blocked"] += 1
+            continue
+        statuses[status] += 1
+        if status == "passed":
+            passed.add(task.task_id)
+    if not stop_requested and branch != "terminal_stop":
+        for task in manifest.tasks:
+            if task.task_id not in records and task.branch in {"common", branch} and set(task.dependencies).issubset(passed):
+                statuses["ready"] += 1
+        statuses["pending"] = max(0, statuses["pending"] - statuses["ready"])
+
+    actual_gpu_hours = sum(float(raw.get("gpu_seconds", 0.0)) for raw in records.values()) / 3600.0
+    forecast_gpu_hours = actual_gpu_hours + sum(
+        task.gpu_hours_high for task in manifest.tasks if task.task_id not in records
+    )
+    current_gpu: dict[str, dict[str, Any]] = {}
+    for raw in records.values():
+        if raw.get("status") == "running" and raw.get("gpu_id") is not None:
+            current_gpu[str(raw["gpu_id"])] = {
+                "task_id": raw.get("task_id"),
+                "pid": raw.get("pid"),
+                "started_at": raw.get("started_at"),
+                "process_start_time": raw.get("process_start_time"),
+            }
+    payload.update(
+        {
+            "queue_id": manifest.queue_id,
+            "task_count": len(manifest.tasks),
+            "branch": branch,
+            "gate_e1_outcome": gates.e1_outcome,
+            "gate_risk08_exit": gates.risk08_exit,
+            "task_counts": statuses,
+            "current_gpu_tasks": current_gpu,
+            "actual_gpu_hours": actual_gpu_hours,
+            "forecast_gpu_hours": forecast_gpu_hours,
+            "gpu_budget_hours": manifest.gpu_budget_hours,
+            "min_free_disk_gib": manifest.min_free_disk_gib,
+        }
+    )
+    return payload
 
 
 def _status_command(args: argparse.Namespace) -> tuple[dict[str, Any], int]:
@@ -144,7 +278,24 @@ def _run_command(args: argparse.Namespace) -> dict[str, Any]:
     controller_lock = lock_backend.try_acquire(root / "state" / "controller.lock")
     if controller_lock is None:
         raise RuntimeError("controller lock is already held")
+    controller_state_path = root / "state" / "controller.json"
     try:
+        try:
+            process_start_time = linux_process_start_token(os.getpid())
+        except (OSError, RuntimeError, ValueError):
+            process_start_time = f"unverified:{os.getpid()}"
+        from .storage import atomic_write_json
+
+        atomic_write_json(
+            controller_state_path,
+            {
+                "status": "running",
+                "pid": os.getpid(),
+                "process_start_time": process_start_time,
+                "queue_root": str(root),
+                "manifest_sha256": sha256_file(args.manifest),
+            },
+        )
         runtime = QueueRuntime(
             queue_root=root,
             supervisor=ProcessSupervisor(),
@@ -165,6 +316,19 @@ def _run_command(args: argparse.Namespace) -> dict[str, Any]:
             time.sleep(args.poll_seconds)
         return {"status": "running", "queue_root": str(root), "ticks": ticks}
     finally:
+        try:
+            from .storage import atomic_write_json
+
+            atomic_write_json(
+                controller_state_path,
+                {
+                    "status": "stopped",
+                    "pid": os.getpid(),
+                    "queue_root": str(root),
+                },
+            )
+        except Exception:
+            pass
         controller_lock.close()
 
 

@@ -73,6 +73,22 @@ class QueueLaunchTests(unittest.TestCase):
         self.assertEqual("already_running", result)
         self.assertFalse(any("kill-session" in item for call in runner.call_args_list for item in call.args[0]))
 
+    def test_remote_entry_refuses_live_session_without_metadata(self) -> None:
+        module = load("aaai27_remote_tmux_entry")
+        runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "", ""))
+        with mock.patch.object(module.socket, "gethostname", return_value="ubuntu"):
+            with self.assertRaisesRegex(RuntimeError, "metadata missing"):
+                module.ensure_session(
+                    session="aaai27_seed100_queue",
+                    queue_root=Path("/srv/queue"),
+                    manifest=Path("/srv/queue/queue/queue_seed100.json"),
+                    python_bin=Path("/opt/venv/bin/python"),
+                    controller_entry=Path("/srv/bundle/scripts/aaai27_resident_queue.py"),
+                    runner=runner,
+                    metadata=None,
+                    manifest_sha256="a" * 64,
+                )
+
     def test_remote_entry_rejects_mismatched_live_metadata(self) -> None:
         module = load("aaai27_remote_tmux_entry")
         runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "", ""))

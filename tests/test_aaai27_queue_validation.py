@@ -83,6 +83,7 @@ class QueueValidationTests(unittest.TestCase):
 
     def test_rejects_diffurec_risk12_retry_and_non_fail_closed(self) -> None:
         self.assert_invalid(make_task(task_id="bad.diffurec", model="DiffuRec"), "DiffuRec")
+        self.assert_invalid(make_task(task_id="bad.bert4rec", model="BERT4Rec"), "BERT4Rec")
         self.assert_invalid(make_task(task_id="bad.risk12", ledger_id="RISK-12"), "RISK-12")
         self.assert_invalid(make_task(task_id="bad.retry", max_attempts=2), "max_attempts")
         self.assert_invalid(make_task(task_id="bad.policy", failure_policy="continue"), "fail_closed")
