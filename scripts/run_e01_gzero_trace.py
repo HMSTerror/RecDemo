@@ -535,6 +535,47 @@ def _value_sha256(value: Any) -> str:
     return _json_sha256(_stable_value(value))
 
 
+def _tensor_layout_metadata(value: torch.Tensor) -> dict[str, Any]:
+    """Return bounded, non-random provenance for a sampler tensor."""
+
+    tensor = value.detach()
+    float_tensor = tensor.float()
+    finite = torch.isfinite(float_tensor)
+    if bool(finite.any().item()):
+        finite_values = float_tensor[finite]
+        value_min = float(finite_values.min().item())
+        value_max = float(finite_values.max().item())
+        value_sum = float(finite_values.sum().item())
+    else:
+        value_min = None
+        value_max = None
+        value_sum = None
+    row_sum_min = None
+    row_sum_max = None
+    row_sum_mean = None
+    if tensor.dim() >= 1:
+        rows = float_tensor.reshape(-1, tensor.shape[-1]).sum(dim=-1)
+        row_sum_min = float(rows.min().item())
+        row_sum_max = float(rows.max().item())
+        row_sum_mean = float(rows.mean().item())
+    return {
+        "dtype": str(tensor.dtype),
+        "device": str(tensor.device),
+        "shape": [int(size) for size in tensor.shape],
+        "stride": [int(stride) for stride in tensor.stride()],
+        "is_contiguous": bool(tensor.is_contiguous()),
+        "is_floating_point": bool(tensor.is_floating_point()),
+        "finite": bool(finite.all().item()),
+        "min": value_min,
+        "max": value_max,
+        "sum": value_sum,
+        "row_sum_min": row_sum_min,
+        "row_sum_max": row_sum_max,
+        "row_sum_mean": row_sum_mean,
+        "sha256": _value_sha256(tensor),
+    }
+
+
 def _compare_values(reference: Any, observed: Any) -> tuple[bool, float | None, str]:
     reference_hash = _value_sha256(reference)
     observed_hash = _value_sha256(observed)
@@ -1183,6 +1224,7 @@ def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> 
 
         original_context = getattr(runtime.model, "encode_history_context", None)
         original_graph_sampler = getattr(runtime.graph, "sample_nonpreference")
+        import graph_lib
         import sampling as sampling_module
 
         original_categorical = sampling_module.sample_categorical
@@ -1199,13 +1241,38 @@ def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> 
             return result
 
         def traced_graph_sampler(*args, **kwargs):
+            if stage_probe["graph_initial"] is not None:
+                return original_graph_sampler(*args, **kwargs)
             before = state_metadata()
-            result = original_graph_sampler(*args, **kwargs)
+            row_probe: dict[str, Any] = {"call_count": 0}
+            original_row_sampler = graph_lib._sample_probability_rows
+
+            def traced_row_sampler(probabilities, batch_shape):
+                row_probe["call_count"] += 1
+                if "input" in row_probe:
+                    return original_row_sampler(probabilities, batch_shape)
+                row_probe["batch_shape"] = [int(value) for value in batch_shape]
+                row_probe["input"] = _tensor_layout_metadata(probabilities)
+                row_before = state_metadata()
+                result = original_row_sampler(probabilities, batch_shape)
+                row_after = state_metadata()
+                row_probe["output"] = _tensor_layout_metadata(result)
+                row_probe["rng_before"] = row_before
+                row_probe["rng_after"] = row_after
+                return result
+
+            graph_lib._sample_probability_rows = traced_row_sampler
+            try:
+                result = original_graph_sampler(*args, **kwargs)
+            finally:
+                graph_lib._sample_probability_rows = original_row_sampler
             after = state_metadata()
             stage_probe["graph_initial"] = {
                 "before": before,
                 "after": after,
                 "output_shape": [int(value) for value in result.shape],
+                "output": _tensor_layout_metadata(result),
+                "probability_rows": row_probe,
             }
             return result
 

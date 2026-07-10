@@ -329,6 +329,75 @@ class E01GZeroTraceTests(unittest.TestCase):
             runtime.initial_sampling_rng_trace["iterator_after"]["combined_sha256"],
         )
 
+    def test_initial_sampling_graph_probe_records_probability_layout_and_output(self) -> None:
+        module = load_module()
+        random.seed(100)
+        np.random.seed(100)
+        torch.manual_seed(100)
+        initial_state = module.capture_rng_state(include_cuda=False)
+
+        class FakeModel:
+            def encode_history_context(self, history):
+                return {
+                    "proposal": torch.full(
+                        (history.shape[0], 4),
+                        0.25,
+                        dtype=torch.float32,
+                    )
+                }
+
+        class FakeGraph:
+            def sample_nonpreference(self, *batch_dims, proposal=None):
+                self.last_proposal = proposal
+                import graph_lib
+
+                probability_rows = proposal.unsqueeze(1).expand(
+                    batch_dims[0], batch_dims[1], proposal.shape[-1]
+                )
+                return graph_lib._sample_probability_rows(probability_rows, batch_dims)
+
+        graph = FakeGraph()
+        model = FakeModel()
+
+        class FakeUtils:
+            @staticmethod
+            def evaluate_loader(model_arg, sampling_fn, data_loader, device, valid_item_count):
+                del model_arg, device, valid_item_count
+                for batch in data_loader:
+                    sampling_fn(model, (batch["seq"].shape[0], 1), batch["seq"])
+                return [0.0], [0.0]
+
+        runtime = SimpleNamespace(
+            name="proposal",
+            rng_state=initial_state,
+            sampling_fns={"p2": {"fn": lambda model_arg, dims, history: graph.sample_nonpreference(
+                *dims,
+                proposal=model_arg.encode_history_context(history)["proposal"],
+            )}},
+            val_loader=[{"seq": torch.zeros((2, 3), dtype=torch.long)}],
+            device=torch.device("cpu"),
+            model=model,
+            graph=graph,
+            initial_sampling_rng_trace={},
+        )
+
+        module._run_initial_production_sampling(runtime, FakeUtils)
+
+        graph_probe = runtime.initial_sampling_rng_trace["first_call_stage_probe"][
+            "graph_initial"
+        ]
+        self.assertIn("probability_rows", graph_probe)
+        self.assertIn("input", graph_probe["probability_rows"])
+        self.assertIn("output", graph_probe["probability_rows"])
+        self.assertEqual([2, 1, 4], graph_probe["probability_rows"]["input"]["shape"])
+        self.assertEqual(
+            [2, 1], graph_probe["probability_rows"]["output"]["shape"]
+        )
+        self.assertEqual(
+            graph_probe["probability_rows"]["input"]["dtype"],
+            "torch.float32",
+        )
+
     def test_asset_fingerprints_bind_bank_split_null_curve_and_utility(self) -> None:
         module = load_module()
         with tempfile.TemporaryDirectory() as tmpdir:
