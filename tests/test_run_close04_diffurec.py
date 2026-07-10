@@ -134,6 +134,38 @@ class RunClose04DiffuRecTests(unittest.TestCase):
         self.assertAlmostEqual(1.0, metrics["NDCG@10"])
         self.assertAlmostEqual(1.0, metrics["NDCG@20"])
 
+    def test_evaluate_model_weights_tail_metrics_by_row_count(self) -> None:
+        module = load_module()
+
+        class TailAwareModel:
+            def eval(self) -> None:
+                pass
+
+            def __call__(self, sequences, labels, train_flag):
+                del labels, train_flag
+                return None, sequences, None, None, None, None
+
+            def diffu_rep_pre(self, representations):
+                scores = torch.tensor([0.0, 1.0]).repeat(len(representations), 1)
+                tail_rows = representations[:, 0].eq(1)
+                scores[tail_rows, 0] = 2.0
+                return scores
+
+        data_loader = [
+            (torch.zeros((2, 1), dtype=torch.long), torch.zeros(2, dtype=torch.long)),
+            (torch.ones((1, 1), dtype=torch.long), torch.zeros(1, dtype=torch.long)),
+        ]
+
+        metrics = module.evaluate_model(
+            TailAwareModel(),
+            data_loader,
+            torch.device("cpu"),
+            ks=(1,),
+        )
+
+        self.assertAlmostEqual(1 / 3, metrics["HR@1"])
+        self.assertAlmostEqual(1 / 3, metrics["NDCG@1"])
+
 
 if __name__ == "__main__":
     unittest.main()

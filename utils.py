@@ -111,9 +111,6 @@ def evaluate_loader(model, sampling_fn, data_loader, device):
         history = batch["seq"].to(device)
         target = batch["next"]
         
-        if len(history) < 256:
-            continue
-
         prediction = sampling_fn(model, (target.shape[0],1), history) 
         prediction = prediction[:,0,:]
         _, topK = prediction.topk(100, dim=1, largest=True, sorted=True)

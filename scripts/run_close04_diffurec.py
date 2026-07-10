@@ -168,8 +168,9 @@ def topk_metrics(scores: torch.Tensor, labels: torch.Tensor, ks: tuple[int, ...]
 
 
 def evaluate_model(model, data_loader: DataLoader, device: torch.device, ks: tuple[int, ...] = DEFAULT_METRIC_KS) -> dict[str, float]:
-    metrics_accumulator = {f"HR@{k}": [] for k in ks}
-    metrics_accumulator.update({f"NDCG@{k}": [] for k in ks})
+    metric_sums = {f"HR@{k}": 0.0 for k in ks}
+    metric_sums.update({f"NDCG@{k}": 0.0 for k in ks})
+    evaluated_rows = 0
     model.eval()
     with torch.no_grad():
         for sequences, labels in data_loader:
@@ -178,9 +179,11 @@ def evaluate_model(model, data_loader: DataLoader, device: torch.device, ks: tup
             _, rep_diffu, _, _, _, _ = model(sequences, labels, train_flag=False)
             scores = model.diffu_rep_pre(rep_diffu)
             batch_metrics = topk_metrics(scores, labels, ks=ks)
+            batch_rows = int(labels.shape[0])
             for key, value in batch_metrics.items():
-                metrics_accumulator[key].append(value)
-    return {key: float(np.mean(values)) for key, values in metrics_accumulator.items()}
+                metric_sums[key] += value * batch_rows
+            evaluated_rows += batch_rows
+    return {key: value / evaluated_rows for key, value in metric_sums.items()}
 
 
 def metric_percent_to_fraction_dict(metrics_percent: dict[str, float]) -> dict[str, float]:
