@@ -69,3 +69,46 @@ def make_manifest(tasks: list[dict[str, Any]], **overrides: Any) -> dict[str, An
     }
     payload.update(overrides)
     return payload
+
+
+def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
+    tasks: list[dict[str, Any]] = []
+    for dataset in ("Beauty", "Steam"):
+        ledger_id = "RISK-06" if dataset == "Beauty" else "RISK-07"
+        tasks.append(
+            make_task(
+                task_id=f"pilot.{branch}.{dataset}.host",
+                ledger_id=ledger_id,
+                phase="pilot",
+                branch=branch,
+                dataset=dataset,
+                arm="host",
+            )
+        )
+        for level in (0, 60, 100):
+            tasks.append(
+                make_task(
+                    task_id=f"pilot.{branch}.{dataset}.anchor.c{level}",
+                    ledger_id=ledger_id,
+                    phase="pilot",
+                    branch=branch,
+                    dataset=dataset,
+                    arm=f"text_anchor_only_c{level}",
+                )
+            )
+            if include_full:
+                tasks.append(
+                    make_task(
+                        task_id=f"pilot.{branch}.{dataset}.full.c{level}",
+                        ledger_id=ledger_id,
+                        phase="pilot",
+                        branch=branch,
+                        dataset=dataset,
+                        arm=f"risk_gated_full_c{level}",
+                    )
+                )
+    return tasks
+
+
+def valid_pilots() -> list[dict[str, Any]]:
+    return make_pilot_tasks("e1_pass", True) + make_pilot_tasks("e1_fail_audit", False)
