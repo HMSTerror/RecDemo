@@ -8,6 +8,29 @@ from torch.cuda.amp import custom_fwd, custom_bwd
 
 from catsample import sample_categorical
 
+
+def _sample_probability_rows(probabilities, batch_shape):
+    """Sample one categorical value per state row with one shared kernel.
+
+    The host and proposal-adaptive graphs must consume identical random streams
+    when their probability rows are identical.  Always using the same batched
+    ``torch.multinomial(..., num_samples=1)`` layout achieves that while still
+    supporting genuinely row-specific proposal distributions.
+    """
+
+    if len(batch_shape) != 2:
+        raise ValueError(f"expected two batch dimensions, got {batch_shape}")
+    if probabilities.dim() == 1:
+        probabilities = probabilities.expand(*batch_shape, probabilities.shape[-1])
+    elif tuple(probabilities.shape[:-1]) != tuple(batch_shape):
+        raise ValueError(
+            "probability rows do not match batch shape: "
+            f"probabilities={tuple(probabilities.shape)}, batch_shape={tuple(batch_shape)}"
+        )
+    flat = probabilities.reshape(-1, probabilities.shape[-1])
+    return torch.multinomial(flat, 1, replacement=True).squeeze(-1).reshape(*batch_shape)
+
+
 def get_graph(config, device):
     if config.training.data == "ATV":
         item_num = config.data.ATV.item_num
@@ -1206,7 +1229,7 @@ class AdaptiveWise(PreferGrow, nn.Module):
         move_indices = torch.rand(*i.shape, device=i.device) < move_chance
         probs = self.nonpreference_probs()  # [dim]
         B, L = i.shape
-        samples = torch.multinomial(probs, B * L, replacement=True).view(B, L).to(i.device)  # [B * L]
+        samples = _sample_probability_rows(probs, (B, L)).to(i.device)
         i_pert = torch.where(move_indices, samples, i)  # [B, L]
         return i_pert
 
@@ -1229,8 +1252,7 @@ class AdaptiveWise(PreferGrow, nn.Module):
 
     def sample_nonpreference(self, *batch_dims):
         probs = self.nonpreference_probs()  # [dim]
-        B, L = batch_dims
-        return      torch.multinomial(probs, B * L, replacement=True).view(B, L)
+        return _sample_probability_rows(probs, batch_dims)
 
     def score_entropy(self, score, int_beta, x, x0):
         hate_probs = self.nonpreference_probs().to(score.device)  # [dim]
@@ -1334,7 +1356,7 @@ class ProposalAdaptiveWise(PreferGrow, nn.Module):
         move_chance = 1.0 - (-int_beta).exp()
         move_indices = torch.rand(*i.shape, device=i.device) < move_chance
         proposal_full = self._expand_proposal(proposal, i)
-        samples = sample_categorical(proposal_full, method="hard")
+        samples = _sample_probability_rows(proposal_full, tuple(i.shape))
         return torch.where(move_indices, samples, i)
 
     @torch.no_grad()
@@ -1351,7 +1373,7 @@ class ProposalAdaptiveWise(PreferGrow, nn.Module):
             raise ValueError("proposal_adaptive graph requires explicit proposal")
         dummy = torch.zeros(batch_dims, dtype=torch.long, device=proposal.device)
         proposal_full = self._expand_proposal(proposal, dummy)
-        return sample_categorical(proposal_full, method="hard")
+        return _sample_probability_rows(proposal_full, batch_dims)
 
     def score_entropy(self, score, int_beta, x, x0, proposal=None):
         proposal_full = self._expand_proposal(proposal, x)
