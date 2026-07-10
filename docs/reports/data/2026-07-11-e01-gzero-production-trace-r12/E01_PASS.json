@@ -1,0 +1,15 @@
+{
+  "dataset": "Beauty",
+  "fp32_tolerance": 1e-06,
+  "random_seed": 100,
+  "schema_version": 1,
+  "status": "pass",
+  "trace_report": "e01_gzero_trace.json",
+  "trace_report_sha256": "b912d5b6807320e9466048bc6e98ec470e85e510433b3471c65c94a569e387ce",
+  "trace_steps": [
+    0,
+    1,
+    100,
+    1000
+  ]
+}
