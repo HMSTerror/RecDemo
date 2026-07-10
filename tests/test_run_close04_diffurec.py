@@ -1,4 +1,5 @@
 import importlib.util
+import inspect
 import json
 import sys
 import tempfile
@@ -136,6 +137,7 @@ class RunClose04DiffuRecTests(unittest.TestCase):
 
     def test_evaluate_model_weights_tail_metrics_by_row_count(self) -> None:
         module = load_module()
+        self.assertIn("return_evaluated_rows", inspect.signature(module.evaluate_model).parameters)
 
         class TailAwareModel:
             def eval(self) -> None:
@@ -146,25 +148,41 @@ class RunClose04DiffuRecTests(unittest.TestCase):
                 return None, sequences, None, None, None, None
 
             def diffu_rep_pre(self, representations):
-                scores = torch.tensor([0.0, 1.0]).repeat(len(representations), 1)
+                scores = torch.tensor([100.0, 0.0, 1.0]).repeat(len(representations), 1)
                 tail_rows = representations[:, 0].eq(1)
-                scores[tail_rows, 0] = 2.0
+                scores[tail_rows, 1] = 2.0
                 return scores
 
         data_loader = [
-            (torch.zeros((2, 1), dtype=torch.long), torch.zeros(2, dtype=torch.long)),
-            (torch.ones((1, 1), dtype=torch.long), torch.zeros(1, dtype=torch.long)),
+            (torch.zeros((2, 1), dtype=torch.long), torch.ones(2, dtype=torch.long)),
+            (torch.ones((1, 1), dtype=torch.long), torch.ones(1, dtype=torch.long)),
         ]
 
-        metrics = module.evaluate_model(
+        metrics, evaluated_rows = module.evaluate_model(
             TailAwareModel(),
             data_loader,
             torch.device("cpu"),
             ks=(1,),
+            return_evaluated_rows=True,
         )
 
+        self.assertEqual(3, evaluated_rows)
         self.assertAlmostEqual(1 / 3, metrics["HR@1"])
         self.assertAlmostEqual(1 / 3, metrics["NDCG@1"])
+
+    def test_normalizes_one_based_catalog_and_excludes_padding(self) -> None:
+        module = load_module()
+        self.assertTrue(hasattr(module, "normalize_diffurec_candidates"))
+        scores = torch.tensor([[100.0, 10.0, 9.0]], dtype=torch.float32)
+        labels = torch.tensor([[1]], dtype=torch.long)
+
+        catalog_scores, zero_based_labels = module.normalize_diffurec_candidates(scores, labels)
+        metrics = module.topk_metrics(catalog_scores, zero_based_labels, ks=(1,))
+
+        self.assertEqual([[10.0, 9.0]], catalog_scores.tolist())
+        self.assertEqual([0], zero_based_labels.tolist())
+        self.assertEqual(1.0, metrics["HR@1"])
+        self.assertEqual(1.0, metrics["NDCG@1"])
 
 
 if __name__ == "__main__":

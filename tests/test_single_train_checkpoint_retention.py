@@ -1,4 +1,5 @@
 import importlib.util
+import inspect
 import sys
 import types
 import unittest
@@ -27,6 +28,7 @@ def load_single_train_module():
     stub_omegaconf.DictConfig = dict
     stub_utils = types.ModuleType("utils")
     stub_utils.save_single_checkpoint = lambda path, state: None
+    stub_utils.evaluate_loader = lambda *args, **kwargs: ([0.0] * 5, [0.0] * 5)
     stub_modules = {
         "hydra": stub_hydra,
         "numpy": stub_numpy,
@@ -95,6 +97,46 @@ class SingleTrainCheckpointRetentionTests(unittest.TestCase):
             ["/tmp/checkpoint_hybrid.pth", "/tmp/checkpoint_hybrid.pth"],
             saved_paths,
         )
+
+    def test_eval_suite_passes_catalog_size_to_every_metric_call(self) -> None:
+        module = load_single_train_module()
+        self.assertIn("valid_item_count", inspect.signature(module.run_eval_suite).parameters)
+        observed_counts: list[int] = []
+
+        def fake_evaluate(_model, _sampling_fn, _loader, _device, valid_item_count=None):
+            observed_counts.append(valid_item_count)
+            return [0.0] * 5, [0.0] * 5
+
+        class FakeEma:
+            def store(self, _parameters):
+                pass
+
+            def copy_to(self, _parameters):
+                pass
+
+            def restore(self, _parameters):
+                pass
+
+        class FakeModel:
+            def parameters(self):
+                return []
+
+        original = module.utils.evaluate_loader
+        module.utils.evaluate_loader = fake_evaluate
+        try:
+            module.run_eval_suite(
+                score_model=FakeModel(),
+                ema=FakeEma(),
+                sampling_fns={key: {"fn": object(), "label": key} for key in ("base", "p2", "p5", "p10")},
+                val_loader=object(),
+                test_loader=object(),
+                device=object(),
+                valid_item_count=101,
+            )
+        finally:
+            module.utils.evaluate_loader = original
+
+        self.assertEqual([101] * 8, observed_counts)
 
 
 if __name__ == "__main__":

@@ -63,29 +63,37 @@ def build_sampling_functions(cfg, graph, noise, sampling_eps, device):
     }
 
 
-def run_eval_suite(score_model, ema, sampling_fns, val_loader, test_loader, device):
+def run_eval_suite(score_model, ema, sampling_fns, val_loader, test_loader, device, valid_item_count):
     val_results = {}
     test_results = {}
 
     ema.store(score_model.parameters())
     ema.copy_to(score_model.parameters())
     try:
-        hr, ndcg = utils.evaluate_loader(score_model, sampling_fns["base"]["fn"], val_loader, device)
+        hr, ndcg = utils.evaluate_loader(
+            score_model, sampling_fns["base"]["fn"], val_loader, device, valid_item_count
+        )
         val_results["base"] = {"hr": hr, "ndcg": ndcg}
 
         for key in ("p2", "p5", "p10"):
             print(sampling_fns[key]["label"])
-            hr, ndcg = utils.evaluate_loader(score_model, sampling_fns[key]["fn"], val_loader, device)
+            hr, ndcg = utils.evaluate_loader(
+                score_model, sampling_fns[key]["fn"], val_loader, device, valid_item_count
+            )
             val_results[key] = {"hr": hr, "ndcg": ndcg}
 
         print("test phase:")
         print(sampling_fns["base"]["label"])
-        hr, ndcg = utils.evaluate_loader(score_model, sampling_fns["base"]["fn"], test_loader, device)
+        hr, ndcg = utils.evaluate_loader(
+            score_model, sampling_fns["base"]["fn"], test_loader, device, valid_item_count
+        )
         test_results["base"] = {"hr": hr, "ndcg": ndcg}
 
         for key in ("p2", "p5", "p10"):
             print(sampling_fns[key]["label"])
-            hr, ndcg = utils.evaluate_loader(score_model, sampling_fns[key]["fn"], test_loader, device)
+            hr, ndcg = utils.evaluate_loader(
+                score_model, sampling_fns[key]["fn"], test_loader, device, valid_item_count
+            )
             test_results[key] = {"hr": hr, "ndcg": ndcg}
     finally:
         ema.restore(score_model.parameters())
@@ -169,6 +177,7 @@ def main(cfg: DictConfig):
     initial_step = int(state["step"])
 
     train_loader, val_loader, test_loader = data.get_seqdataloader(cfg)
+    valid_item_count = int(getattr(cfg.data, str(cfg.training.data)).item_num)
     val_iter = iter(val_loader)
     print(f"Length of datasets: {len(train_loader)}, {len(val_loader)}, {len(test_loader)}")
 
@@ -185,7 +194,9 @@ def main(cfg: DictConfig):
     start_time = time.time()
 
     if sampling_fns is not None:
-        utils.evaluate_loader(score_model, sampling_fns["p2"]["fn"], val_loader, device)
+        utils.evaluate_loader(
+            score_model, sampling_fns["p2"]["fn"], val_loader, device, valid_item_count
+        )
 
     early_stop_patience = int(cfg.training.get("early_stop_patience", 0))
     early_stop_min_step = int(cfg.training.get("early_stop_min_step", 0))
@@ -259,6 +270,7 @@ def main(cfg: DictConfig):
                     val_loader=val_loader,
                     test_loader=test_loader,
                     device=device,
+                    valid_item_count=valid_item_count,
                 )
 
                 if early_stop_enabled:

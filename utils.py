@@ -99,7 +99,14 @@ def calculate_hit_loader(sorted_list,topk,true_items,hit_purchase,ndcg_purchase,
                 ndcg_purchase[i] += 1.0 / np.log2(rank + 1)
                 mrr_purchase[i] += 1.0/ rank
                 
-def evaluate_loader(model, sampling_fn, data_loader, device):
+def evaluate_loader(
+    model,
+    sampling_fn,
+    data_loader,
+    device,
+    valid_item_count=None,
+    return_evaluated_rows=False,
+):
 
     total_purchase = 0.0
     hit_purchase=[0,0,0,0,0]
@@ -113,6 +120,13 @@ def evaluate_loader(model, sampling_fn, data_loader, device):
         
         prediction = sampling_fn(model, (target.shape[0],1), history) 
         prediction = prediction[:,0,:]
+        if valid_item_count is not None:
+            if valid_item_count <= 0 or valid_item_count > prediction.shape[-1]:
+                raise ValueError(
+                    f"valid_item_count={valid_item_count} is incompatible with "
+                    f"prediction width {prediction.shape[-1]}"
+                )
+            prediction = prediction[:, :valid_item_count]
         _, topK = prediction.topk(100, dim=1, largest=True, sorted=True)
         topK = topK.cpu().detach().numpy()
         sorted_list2=np.flip(topK,axis=1)
@@ -138,6 +152,8 @@ def evaluate_loader(model, sampling_fn, data_loader, device):
     print('{:<10s} {:<10s} {:<10s} {:<10s}'.format('MRR@'+str(topk[1]), 'MRR@'+str(topk[2]), 'MRR@'+str(topk[3]), 'MRR@'+str(topk[4])))
     print('{:<10.6f} {:<10.6f} {:<10.6f} {:<10.6f}'.format(mrr_list[1], (mrr_list[2]), mrr_list[3], mrr_list[4]))
 
+    if return_evaluated_rows:
+        return hr_list, ndcg_list, int(total_purchase)
     return hr_list, ndcg_list
 
 def evaluate_sample_KL(model, sampling_fn, data_loader, device):

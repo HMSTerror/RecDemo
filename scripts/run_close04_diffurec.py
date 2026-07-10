@@ -167,7 +167,23 @@ def topk_metrics(scores: torch.Tensor, labels: torch.Tensor, ks: tuple[int, ...]
     return metrics
 
 
-def evaluate_model(model, data_loader: DataLoader, device: torch.device, ks: tuple[int, ...] = DEFAULT_METRIC_KS) -> dict[str, float]:
+def normalize_diffurec_candidates(scores: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    if scores.shape[-1] < 2:
+        raise ValueError("DiffuRec scores must contain padding plus at least one catalog item")
+    catalog_scores = scores[..., 1:]
+    zero_based_labels = labels.reshape(-1) - 1
+    if torch.any(zero_based_labels < 0) or torch.any(zero_based_labels >= catalog_scores.shape[-1]):
+        raise ValueError("DiffuRec labels must be one-based catalog item ids")
+    return catalog_scores, zero_based_labels
+
+
+def evaluate_model(
+    model,
+    data_loader: DataLoader,
+    device: torch.device,
+    ks: tuple[int, ...] = DEFAULT_METRIC_KS,
+    return_evaluated_rows: bool = False,
+):
     metric_sums = {f"HR@{k}": 0.0 for k in ks}
     metric_sums.update({f"NDCG@{k}": 0.0 for k in ks})
     evaluated_rows = 0
@@ -178,12 +194,16 @@ def evaluate_model(model, data_loader: DataLoader, device: torch.device, ks: tup
             labels = labels.to(device)
             _, rep_diffu, _, _, _, _ = model(sequences, labels, train_flag=False)
             scores = model.diffu_rep_pre(rep_diffu)
-            batch_metrics = topk_metrics(scores, labels, ks=ks)
+            catalog_scores, zero_based_labels = normalize_diffurec_candidates(scores, labels)
+            batch_metrics = topk_metrics(catalog_scores, zero_based_labels, ks=ks)
             batch_rows = int(labels.shape[0])
             for key, value in batch_metrics.items():
                 metric_sums[key] += value * batch_rows
             evaluated_rows += batch_rows
-    return {key: value / evaluated_rows for key, value in metric_sums.items()}
+    metrics = {key: value / evaluated_rows for key, value in metric_sums.items()}
+    if return_evaluated_rows:
+        return metrics, evaluated_rows
+    return metrics
 
 
 def metric_percent_to_fraction_dict(metrics_percent: dict[str, float]) -> dict[str, float]:
