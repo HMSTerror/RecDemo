@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-11T01:40:00+08:00",
+  "worktree": "E:/PreferGrow/.worktrees/aaai27-seed100-controller",
+  "code_revision": "bbb06d1",
+  "scope": "RISK-01 through RISK-14 adapter readiness only; no training, bank generation, remote mutation, or tmux launch was performed",
+  "source_ledgers": {
+    "primary_risk_ledger": {
+      "path": "issues/2026-07-10_21-18-20-aaai27-evidence-risk-rescue.csv",
+      "sha256": "902a6d2a6de2982b06aa4c08a8cab431974e557ef4e679b0adfb4a6668ef7b0f"
+    },
+    "execution_ledger": {
+      "path": "issues/2026-07-10_22-34-15-aaai27-seed100-resident-queue-execution.csv",
+      "sha256_at_audit": "043c4f91ae1d0b113b9842201692303915421d9b5a0e249b79d4adac0c25d3e8"
+    }
+  },
+  "commands_executed": [
+    "rg --files scripts",
+    "Test-Path checks for every named RISK adapter candidate",
+    "python <existing-script> --help for all existing Python candidates",
+    "python launch_*_tmux.py --print-only for legacy launcher candidates",
+    "python -m unittest tests.test_build_e0_evaluator_amendment tests.test_build_close04_external_baseline_table tests.test_build_gate0_text_utility_report -v (18 tests OK)",
+    "KMP_DUPLICATE_LIB_OK=TRUE python -m unittest tests.test_build_corrupted_beauty_utility_report -v (3 tests OK; default combined run hit Windows OpenMP duplicate-runtime failure)",
+    "rg -n for model names, markers, evaluator, selector, bank, and RISK decision symbols"
+  ],
+  "summary": {
+    "risk_count": 14,
+    "runnable_now": 0,
+    "artifact_only_or_terminal": 2,
+    "missing_or_noncompliant_adapter": 11,
+    "disabled_by_approved_constraint": 1,
+    "hard_stop_before_training": true,
+    "next_allowed_stage": "ADAPT-02 front-gate adapter implementation"
+  },
+  "adapters": [
+    {
+      "risk_id": "RISK-01",
+      "title": "Lock the shared evaluator and validation selector",
+      "candidate_scripts": [
+        {"path": "scripts/build_e0_evaluator_amendment.py", "exists": true, "help": "pass", "sha256": "ca8dcbd5bf2325b1e669a81a4a174e8dd153a5ae55ea280f8f42081371d5f28f"},
+        {"path": "scripts/evaluate_frozen_checkpoint.py", "exists": true, "help": "pass", "sha256": "623720a70ba9fa82c9926d4c3d9fb605c25ff9a1254e7e8379e0e4d9ac101c93"},
+        {"path": "scripts/evaluate_frozen_diffurec.py", "exists": true, "help": "pass", "sha256": "decfd318649b31432b982884ad666544389a11ab44ebfe252d926cbf7272cbfe", "role": "legacy DiffuRec-only evaluator; excluded from new confirmation"}
+      ],
+      "exact_argv": [
+        "python scripts/build_e0_evaluator_amendment.py --input-root <18-artifact-root> --execution-log <gpu0-log> --execution-log <gpu1-log> --output-dir <new-dated-dir>",
+        "python scripts/evaluate_frozen_checkpoint.py --method-id <method> --dataset-name <domain> --dataset-dir <paper_raw_v1/domain> --log-path <log> --summary-path <summary> --checkpoint-path <checkpoint> --output-dir <isolated-output> --expected-test-rows <protocol-count> --random-seed 100 --eval-seed 100"
+      ],
+      "inputs": ["paper_raw_v1 train/val/test frames", "frozen checkpoint/log/summary/manifest", "E0 execution logs", "protocol row and catalog counts"],
+      "outputs": ["e0_evaluator_amendment.json/md/zh", "e0_old_new_metrics.csv", "per-method e0_eval.json"],
+      "success_markers": ["E0 dated package exists and hashes validate"],
+      "dataset_coverage": "E0 artifact matrix has 18 entries across four domains; no generic baseline adapter",
+      "seed_behavior": "E0 evaluation seed 100; historical checkpoints use legacy training selection",
+      "evaluator_version": "e0_full_tail_v2 in existing artifact",
+      "selector_version": "selection equivalence not recomputed; validation-only selector contract is not exposed as a training adapter",
+      "config_split_bank_hashes": "E0 JSON records split hashes and source hashes; no new queue manifest binding",
+      "blocker": "Existing E0 package is audit evidence, not a reusable common adapter with a queue success marker. Every newly trained method still needs one shared evaluator/selector wrapper and protocol audit.",
+      "runnable_status": "artifact_only_not_queue_runnable",
+      "evidence": ["docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json", "tests.test_build_e0_evaluator_amendment: 14 tests OK"]
+    },
+    {
+      "risk_id": "RISK-02",
+      "title": "Amend optimizer ownership and rerun the E1 lockstep trace",
+      "candidate_scripts": [
+        {"path": "scripts/run_e01_gzero_trace.py", "exists": true, "help": "pass", "sha256": "201de1a84a844169d64a2f16fac252a356dd9232e199b3eabf3bdaa3b6cf08d"}
+      ],
+      "exact_argv": ["python scripts/run_e01_gzero_trace.py --dataset-dir <paper_raw_v1/Beauty> --text-utility-report-path <gate0-report> --e0-amendment-path <e0.json> --output-dir <new-isolated-dir> --device cuda:0 --execute-production-trace"],
+      "inputs": ["Beauty production frames and text assets", "E0 amendment JSON", "common evaluator source"],
+      "outputs": ["e01_gzero_trace.json", "E01_PASS.json only on exact pass", "E01_FAIL.json/hard-stop report on failure"],
+      "success_markers": ["RISK-02_PASS.json or RISK-02_FAIL.json, never both"],
+      "dataset_coverage": "Beauty matched production trio only in existing trace",
+      "seed_behavior": "source constant seed 100; trace steps 0,1,100,1000; FP32 tolerance 1e-6",
+      "evaluator_version": "E0 prerequisite embedded and checked",
+      "selector_version": "step-1000 validation selector evidence in trace implementation",
+      "config_split_bank_hashes": "existing hard-stop records bank hash and canonical parameter hash",
+      "blocker": "Existing e01_hard_stop.json reports source trace fail at step 0: core_proposal_logits.in_optimizer differs between host and final_v2_closed_gate_full; no amendment trace or PASS marker exists.",
+      "runnable_status": "terminal_fail_existing_evidence",
+      "evidence": ["docs/reports/data/2026-07-10-e01-gzero-production-trace/e01_hard_stop.json", "first divergence category=optimizer, key=core_proposal_logits.in_optimizer"]
+    },
+    {
+      "risk_id": "RISK-03",
+      "title": "Implement train-only positive-exposure risk reports",
+      "candidate_scripts": [
+        {"path": "scripts/build_gate0_text_utility_report.py", "exists": true, "help": "pass", "role": "U_ds utility diagnostic, not EPE/PNE"},
+        {"path": "scripts/build_gate0_utilde_report.py", "exists": true, "help": "pass", "role": "u_tilde diagnostic over train/val/test, not train-only EPE/PNE"},
+        {"path": "scripts/build_per_user_utility_harm_report.py", "exists": true, "help": "pass", "role": "historical per-user utility/harm report"}
+      ],
+      "exact_argv": ["python scripts/build_gate0_text_utility_report.py --dataset NAME=<path> --output-dir <dated-dir> --sample-size 4000 --seed 7"],
+      "inputs": ["existing train split and text embeddings for utility diagnostics"],
+      "outputs": ["historical U_ds/u_tilde/per-user reports"],
+      "success_markers": ["none matching RISK-03 EPE/PNE schema"],
+      "dataset_coverage": "historical reports cover multiple domains; no contract-complete EPE/PNE artifact",
+      "seed_behavior": "Gate0 utility default seed 7; not seed100 because it is a diagnostic sampling seed",
+      "evaluator_version": "not recorded as RISK-01 common evaluator",
+      "selector_version": "not applicable",
+      "config_split_bank_hashes": "some reports hash text assets and train split, but no row-identity contract for EPE/PNE",
+      "blocker": "No adapter computes the frozen EPE formula and PNE@10 nearest-neighbor definition from exactly 4000 train transitions with user-clustered uncertainty or an explicit not-estimable field; existing reports do not satisfy this schema.",
+      "runnable_status": "missing_contract_adapter",
+      "evidence": ["scripts/build_gate0_text_utility_report.py", "tests.test_build_gate0_text_utility_report: 2 tests OK"]
+    },
+    {
+      "risk_id": "RISK-04",
+      "title": "Build and preflight controlled evidence banks",
+      "candidate_scripts": [
+        {"path": "scripts/build_corrupted_text_bank.py", "exists": false},
+        {"path": "scripts/build_corrupted_beauty_utility_report.py", "exists": true, "help": "pass", "role": "reads historical token-dropout banks; does not build popularity-stratified Beauty/Steam banks"}
+      ],
+      "exact_argv": [],
+      "inputs": ["train-only item popularity strata", "clean item embeddings", "seed 100"],
+      "outputs": ["12 immutable banks, six levels per Beauty/Steam, permutation and preflight reports"],
+      "success_markers": ["none"],
+      "dataset_coverage": "no exact two-domain six-level builder present",
+      "seed_behavior": "approved corruption seed 100 not implemented",
+      "evaluator_version": "not applicable before preflight",
+      "selector_version": "not applicable before preflight",
+      "config_split_bank_hashes": "no bank hashes generated by a current adapter",
+      "blocker": "The spec-referenced build_corrupted_text_bank.py is absent. Existing Beauty token-dropout utility code consumes prebuilt historical banks and is not the approved popularity-stratified permutation protocol; no pilot may launch.",
+      "runnable_status": "missing_adapter",
+      "evidence": ["Test-Path scripts/build_corrupted_text_bank.py => False", "tests.test_build_corrupted_beauty_utility_report: 3 tests OK but historical-only"]
+    },
+    {
+      "risk_id": "RISK-05",
+      "title": "Freeze prospective risk protocol and pilot predictions",
+      "candidate_scripts": [
+        {"path": "scripts/build_aso_step0_report.py", "exists": true, "help": "pass", "role": "older ASO prediction report, not the RISK-05 preregistration"},
+        {"path": "scripts/build_aso_validation_report.py", "exists": true, "help": "pass", "role": "older out-of-sample report"}
+      ],
+      "exact_argv": [],
+      "inputs": ["RISK-04 preflight ranges", "frozen formulas and thresholds"],
+      "outputs": ["dated immutable preregistration and freeze marker"],
+      "success_markers": ["none matching RISK-05"],
+      "dataset_coverage": "no current protocol-freeze adapter",
+      "seed_behavior": "must bind corruption seed 100 and preregistration seed fields; absent",
+      "evaluator_version": "absent",
+      "selector_version": "absent",
+      "config_split_bank_hashes": "absent",
+      "blocker": "No script consumes the exact RISK-04 bank hashes and writes one immutable preregistration with the frozen ordering, Spearman, reversal, worst-delta, and no-rescue rules. Older ASO reports are not interchangeable.",
+      "runnable_status": "missing_adapter",
+      "evidence": ["scripts/build_aso_step0_report.py --help exit 0 but semantics are older ASO path"]
+    },
+    {
+      "risk_id": "RISK-06",
+      "title": "Run Beauty risk-response pilot",
+      "candidate_scripts": [
+        {"path": "scripts/run_text_side_main_table_tmux.sh", "exists": true, "role": "legacy multi-domain tmux runner; not queue-safe"},
+        {"path": "scripts/launch_beauty_text_side_tmux.py", "exists": true, "help": "pass", "role": "legacy Beauty launcher"},
+        {"path": "scripts/run_beauty_corrupted_ranking_batch.sh", "exists": true, "role": "Beauty token-dropout batch only"}
+      ],
+      "exact_argv": ["bash scripts/run_text_side_main_table_tmux.sh <repo-root> (legacy env-driven runner)", "python scripts/launch_beauty_text_side_tmux.py --print-only (legacy SSH/tmux command)"],
+      "inputs": ["E1 terminal outcome", "RISK-05 preregistration", "Beauty clean and corrupted banks"],
+      "outputs": ["7 E1-pass or 4 E1-fail-audit run artifacts, manifests, metrics, and markers"],
+      "success_markers": ["none for exact pilot arm contract"],
+      "dataset_coverage": "Beauty only in one legacy launcher; no exact shared host plus 0/60/100 arm matrix",
+      "seed_behavior": "legacy command contains random_seed=100 but permits mutable env/force/skip behavior",
+      "evaluator_version": "not queue-bound",
+      "selector_version": "legacy text-side early-stop settings",
+      "config_split_bank_hashes": "legacy manifest generation exists but no RISK-05 binding",
+      "blocker": "Legacy runner can kill tmux sessions, optionally rm -rf checkpoints, skip existing outputs, and lacks atomic queue success markers; it cannot be enabled as a fail-closed RISK-06 adapter.",
+      "runnable_status": "legacy_noncompliant",
+      "evidence": ["legacy print-only command contains tmux kill-session and mutable runner path"]
+    },
+    {
+      "risk_id": "RISK-07",
+      "title": "Run Steam risk-response pilot",
+      "candidate_scripts": [
+        {"path": "scripts/run_text_side_main_table_tmux.sh", "exists": true, "role": "legacy multi-domain tmux runner; not queue-safe"}
+      ],
+      "exact_argv": ["bash scripts/run_text_side_main_table_tmux.sh <repo-root> (legacy env-driven runner)"],
+      "inputs": ["E1 terminal outcome", "RISK-05 preregistration", "Steam clean and corrupted banks"],
+      "outputs": ["7 E1-pass or 4 E1-fail-audit run artifacts, manifests, metrics, and markers"],
+      "success_markers": ["none for exact pilot arm contract"],
+      "dataset_coverage": "no Steam-specific contract adapter found",
+      "seed_behavior": "legacy environment can change behavior; no immutable queue binding",
+      "evaluator_version": "not queue-bound",
+      "selector_version": "legacy text-side early-stop settings",
+      "config_split_bank_hashes": "absent for approved severe popularity-stratified banks",
+      "blocker": "No Steam pilot adapter exists, and the shared legacy runner has destructive/idempotent semantics forbidden by the resident queue.",
+      "runnable_status": "missing_or_legacy_noncompliant",
+      "evidence": ["rg --files scripts found no Steam pilot adapter or bank builder"]
+    },
+    {
+      "risk_id": "RISK-08",
+      "title": "Apply controlled-response go/no-go gate",
+      "candidate_scripts": [
+        {"path": "scripts/build_sprint05_gate1_report.py", "exists": true, "role": "historical Gate-1 report"},
+        {"path": "scripts/build_sprint07_control_report.py", "exists": true, "role": "historical control report"}
+      ],
+      "exact_argv": [],
+      "inputs": ["both pilot raw artifacts", "dated RISK-05 preregistration", "E1 marker"],
+      "outputs": ["one atomic RISK-08_EXIT.json with risk_gated_method/audit_only/submission_stop"],
+      "success_markers": ["none found; no producer for RISK-08_EXIT.json"],
+      "dataset_coverage": "none for current pilot decision",
+      "seed_behavior": "must consume seed100 pilot outputs; absent",
+      "evaluator_version": "absent",
+      "selector_version": "absent",
+      "config_split_bank_hashes": "absent",
+      "blocker": "No decision adapter was found that reads raw pilot artifacts and preregistration without paper-prose or hand-entered metrics. Controller understands the marker but cannot create it.",
+      "runnable_status": "missing_adapter",
+      "evidence": ["rg search for RISK-08_EXIT producer returned no script"]
+    },
+    {
+      "risk_id": "RISK-09",
+      "title": "Build shared-protocol classic baseline adapter",
+      "candidate_scripts": [
+        {"path": "scripts/run_sasrec.py", "exists": false},
+        {"path": "scripts/run_caser.py", "exists": false},
+        {"path": "scripts/run_grurec.py", "exists": false}
+      ],
+      "exact_argv": [],
+      "inputs": ["frozen four-domain frames", "one predeclared config per model", "common evaluator/selector"],
+      "outputs": ["manifest, best/latest checkpoints, validation/test metrics, row provenance"],
+      "success_markers": ["none"],
+      "dataset_coverage": "zero runnable classic model adapters",
+      "seed_behavior": "not implemented",
+      "evaluator_version": "not implemented",
+      "selector_version": "not implemented",
+      "config_split_bank_hashes": "not implemented",
+      "blocker": "No SASRec, Caser, or GRURec implementation/launcher is present in the worktree; only synthetic queue validator tasks mention these names.",
+      "runnable_status": "missing_adapter",
+      "evidence": ["rg --files | rg -i '(sasrec|caser|grurec)' returned no implementation files"]
+    },
+    {
+      "risk_id": "RISK-10",
+      "title": "Run SASRec, Caser, and GRURec on all four domains",
+      "candidate_scripts": [],
+      "exact_argv": [],
+      "inputs": ["RISK-09 protocol audit pass markers", "Steam/ML1M/Beauty/ATG frames"],
+      "outputs": ["12 all-four outcomes in one dated table"],
+      "success_markers": ["none"],
+      "dataset_coverage": "0/12 runnable",
+      "seed_behavior": "not implemented",
+      "evaluator_version": "not implemented",
+      "selector_version": "not implemented",
+      "config_split_bank_hashes": "not implemented",
+      "blocker": "Training cannot be scheduled before the missing RISK-09 adapters exist and mechanically enforce four-domain completion.",
+      "runnable_status": "blocked_by_RISK-09",
+      "evidence": ["controller validation only checks a future four-domain atomic group; it does not provide model code"]
+    },
+    {
+      "risk_id": "RISK-11",
+      "title": "Integrate and run DiffRec on all four domains",
+      "candidate_scripts": [
+        {"path": "scripts/run_close04_diffurec.py", "exists": true, "help": "pass", "sha256": "77534d87642d53b26a02d8aca46a2d6ae7013d022cdbb10ddabed03356aaa355", "role": "DiffuRec, explicitly not DiffRec"},
+        {"path": "scripts/evaluate_frozen_diffurec.py", "exists": true, "help": "pass", "role": "DiffuRec-only evaluator"},
+        {"path": "scripts/launch_close04_diffurec_tmux.py", "exists": true, "help": "pass", "role": "legacy DiffuRec launcher"}
+      ],
+      "exact_argv": ["python scripts/run_close04_diffurec.py --dataset-name <domain> --dataset-dir <paper_raw_v1/domain> --upstream-root <DiffuRec-checkout> --run-root <isolated-root> --random-seed 100 --device cuda"],
+      "inputs": ["DiffuRec upstream checkout and frozen protocol frames"],
+      "outputs": ["DiffuRec summaries/manifests/checkpoints"],
+      "success_markers": ["none for DiffRec identity"],
+      "dataset_coverage": "legacy DiffuRec has four-domain historical artifacts; no DiffRec adapter",
+      "seed_behavior": "legacy wrapper defaults to 100 but is the wrong model identity",
+      "evaluator_version": "E0 corrected test evaluator only for archived DiffuRec checkpoints",
+      "selector_version": "legacy_equal_batch_mean_validation in archived manifests",
+      "config_split_bank_hashes": "archived DiffuRec hashes exist, but cannot be reused as DiffRec",
+      "blocker": "The only implementation is DiffuRec. No official DiffRec identity, repository revision, configuration, or memory audit is present. Controller correctly rejects DiffuRec and cannot substitute it.",
+      "runnable_status": "identity_blocked",
+      "evidence": ["scripts/run_close04_diffurec.py:228 sets method=DiffuRec", "scripts/aaai27_queue/validation.py rejects model DiffuRec spelling only when lowercase diffurec"]
+    },
+    {
+      "risk_id": "RISK-12",
+      "title": "Optional BERT4Rec baseline",
+      "candidate_scripts": [],
+      "exact_argv": [],
+      "inputs": [],
+      "outputs": [],
+      "success_markers": [],
+      "dataset_coverage": "disabled",
+      "seed_behavior": "disabled",
+      "evaluator_version": "disabled",
+      "selector_version": "disabled",
+      "config_split_bank_hashes": "disabled",
+      "blocker": "Approved user constraint and controller validator disable BERT4Rec/RISK-12 for this wave; zero launch is required.",
+      "runnable_status": "disabled_by_constraint",
+      "evidence": ["scripts/aaai27_queue/validation.py rejects ledger_id RISK-12 and model BERT4Rec"]
+    },
+    {
+      "risk_id": "RISK-13",
+      "title": "Four-domain three-seed matched host/full matrix",
+      "candidate_scripts": [
+        {"path": "scripts/run_text_side_main_table_tmux.sh", "exists": true, "role": "legacy main-table runner; no matched-pair queue contract"}
+      ],
+      "exact_argv": [],
+      "inputs": ["E1 pass", "RISK-08 risk_gated_method", "matched initialization and loader contract"],
+      "outputs": ["24 runs in approved ledger design; current seed100 wave permits only its eight seed100 tasks"],
+      "success_markers": ["none for matched-pair matrix"],
+      "dataset_coverage": "legacy script can enumerate domains but does not enforce exact host/full pair cardinality",
+      "seed_behavior": "legacy runner is environment-driven; no controller adapter for seed100-only eight-run continuation",
+      "evaluator_version": "not queue-bound",
+      "selector_version": "legacy text-side settings",
+      "config_split_bank_hashes": "not bound to RISK-08 marker or current queue root",
+      "blocker": "No adapter creates the exact isolated matched host/full task group, per-seed provenance, or hard incomplete-pair stop. E1 currently fails anyway, so continuation is blocked by policy.",
+      "runnable_status": "missing_adapter_and_gate_blocked",
+      "evidence": ["controller design requires eight seed100 continuation tasks; no task builder exists in scripts"]
+    },
+    {
+      "risk_id": "RISK-14",
+      "title": "Frozen high-risk and low-risk mechanism controls",
+      "candidate_scripts": [
+        {"path": "scripts/build_sprint07_control_report.py", "exists": true, "role": "historical report builder, not a train-only condition selector or training adapter"},
+        {"path": "scripts/build_close10_atg_noise_floor_report.py", "exists": true, "role": "historical noise-floor report"}
+      ],
+      "exact_argv": [],
+      "inputs": ["RISK-08 decision", "frozen train-only primary statistic", "seed100 control definitions"],
+      "outputs": ["six arms per selected condition with risks, gates, metrics, and hashes"],
+      "success_markers": ["none"],
+      "dataset_coverage": "historical Beauty/ATG reports do not implement current control matrix",
+      "seed_behavior": "no current queue adapter",
+      "evaluator_version": "not queue-bound",
+      "selector_version": "not queue-bound",
+      "config_split_bank_hashes": "not bound to preregistration and RISK-08 marker",
+      "blocker": "No current adapter replays train-only condition choice and then schedules all required control arms without rescue tuning or test-based selection.",
+      "runnable_status": "missing_adapter",
+      "evidence": ["rg search found historical report builders but no RISK-14 launcher/marker producer"]
+    }
+  ],
+  "hard_stops": [
+    "Do not create a real tmux session or queue root from this report.",
+    "Do not treat the E0 artifact-only package as a complete common training adapter.",
+    "Do not call DiffuRec a DiffRec reproduction or put it in the confirmatory baseline group.",
+    "Do not schedule RISK-06/RISK-07 pilots until RISK-04 and RISK-05 adapters exist and E1 has a terminal marker.",
+    "Do not schedule any RISK-10/RISK-11/RISK-13/RISK-14 training while adapters or gates are absent."
+  ]
+}
