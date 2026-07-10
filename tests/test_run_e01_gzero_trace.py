@@ -420,6 +420,69 @@ class E01GZeroTraceTests(unittest.TestCase):
         self.assertEqual("training", report["execution_context"]["phase"])
         self.assertEqual(1, report["execution_context"]["trace_step"])
 
+    def test_training_parameter_contract_includes_graph_core_for_optimize_and_ema(self) -> None:
+        import losses
+
+        model = torch.nn.Linear(1, 1, bias=False)
+        graph_core = torch.nn.Parameter(torch.tensor([2.0]))
+        noise = torch.nn.Parameter(torch.tensor([3.0]))
+        optimizer = torch.optim.SGD([model.weight, graph_core, noise], lr=0.1)
+        scaler = torch.cuda.amp.GradScaler(enabled=False)
+        optimize_calls = []
+
+        class RecordingEMA:
+            def __init__(self):
+                self.updated = []
+                self.stored = []
+                self.copied = []
+                self.restored = []
+
+            def update(self, parameters):
+                self.updated.append(list(parameters))
+
+            def store(self, parameters):
+                self.stored.append(list(parameters))
+
+            def copy_to(self, parameters):
+                self.copied.append(list(parameters))
+
+            def restore(self, parameters):
+                self.restored.append(list(parameters))
+
+        ema = RecordingEMA()
+        original_get_loss_fn = losses.get_loss_fn
+        try:
+            losses.get_loss_fn = lambda *args, **kwargs: (
+                lambda current_model, batch, steps, cond=None: current_model.weight.sum()
+                + graph_core.sum()
+            )
+            def record_optimize(optimizer_arg, scaler_arg, parameters_arg, step):
+                del optimizer_arg, scaler_arg, step
+                optimize_calls.append(list(parameters_arg))
+
+            state = {
+                "model": model,
+                "optimizer": optimizer,
+                "scaler": scaler,
+                "ema": ema,
+                "step": 0,
+                "training_parameters": [model.weight, graph_core],
+            }
+            step_fn = losses.get_step_fn(
+                noise=None,
+                graph=None,
+                train=True,
+                loss_type="score_entropy",
+                optimize_fn=record_optimize,
+                accum=1,
+            )
+            step_fn(state, {}, 1)
+        finally:
+            losses.get_loss_fn = original_get_loss_fn
+
+        self.assertEqual([model.weight, graph_core], optimize_calls[0])
+        self.assertEqual([model.weight, graph_core], ema.updated[0])
+
     def test_asset_fingerprints_bind_bank_split_null_curve_and_utility(self) -> None:
         module = load_module()
         with tempfile.TemporaryDirectory() as tmpdir:

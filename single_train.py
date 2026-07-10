@@ -63,12 +63,26 @@ def build_sampling_functions(cfg, graph, noise, sampling_eps, device):
     }
 
 
-def run_eval_suite(score_model, ema, sampling_fns, val_loader, test_loader, device, valid_item_count):
+def run_eval_suite(
+    score_model,
+    ema,
+    sampling_fns,
+    val_loader,
+    test_loader,
+    device,
+    valid_item_count,
+    ema_parameters=None,
+):
     val_results = {}
     test_results = {}
 
-    ema.store(score_model.parameters())
-    ema.copy_to(score_model.parameters())
+    evaluation_parameters = (
+        list(ema_parameters)
+        if ema_parameters is not None
+        else list(score_model.parameters())
+    )
+    ema.store(evaluation_parameters)
+    ema.copy_to(evaluation_parameters)
     try:
         hr, ndcg = utils.evaluate_loader(
             score_model, sampling_fns["base"]["fn"], val_loader, device, valid_item_count
@@ -96,7 +110,7 @@ def run_eval_suite(score_model, ema, sampling_fns, val_loader, test_loader, devi
             )
             test_results[key] = {"hr": hr, "ndcg": ndcg}
     finally:
-        ema.restore(score_model.parameters())
+        ema.restore(evaluation_parameters)
 
     return val_results, test_results
 
@@ -162,7 +176,13 @@ def main(cfg: DictConfig):
     num_parameters = sum(p.numel() for p in score_model.parameters())
     print(f"Number of parameters in the model: {num_parameters}")
 
-    ema = ExponentialMovingAverage(score_model.parameters(), decay=cfg.training.ema)
+    training_parameters = list(score_model.parameters())
+    graph_p1 = getattr(graph, "p1", None)
+    if graph_p1 is not None and all(
+        id(graph_p1) != id(parameter) for parameter in training_parameters
+    ):
+        training_parameters.append(graph_p1)
+    ema = ExponentialMovingAverage(training_parameters, decay=cfg.training.ema)
     print(score_model)
     print(f"EMA: {ema}")
 
@@ -173,7 +193,15 @@ def main(cfg: DictConfig):
     print(f"Optimizer: {optimizer}")
     scaler = torch.cuda.amp.GradScaler()
     print(f"Scaler: {scaler}")
-    state = dict(optimizer=optimizer, scaler=scaler, model=score_model, noise=noise, ema=ema, step=0)
+    state = dict(
+        optimizer=optimizer,
+        scaler=scaler,
+        model=score_model,
+        noise=noise,
+        ema=ema,
+        training_parameters=training_parameters,
+        step=0,
+    )
     initial_step = int(state["step"])
 
     train_loader, val_loader, test_loader = data.get_seqdataloader(cfg)
@@ -271,6 +299,7 @@ def main(cfg: DictConfig):
                     test_loader=test_loader,
                     device=device,
                     valid_item_count=valid_item_count,
+                    ema_parameters=state["training_parameters"],
                 )
 
                 if early_stop_enabled:

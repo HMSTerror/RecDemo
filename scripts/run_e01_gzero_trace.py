@@ -1444,6 +1444,7 @@ def _run_step_1000_production_boundary(
         runtime.test_loader,
         runtime.device,
         EXPECTED_ITEM_COUNT,
+        ema_parameters=runtime.state.get("training_parameters"),
     )
     selector_value = single_train_module.extract_metric(
         val_results,
@@ -1576,7 +1577,16 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
             if arm == "global_p" and builder.ablation_mode != "global_p":
                 raise ValueError("global_p arm has the wrong ablation mode")
 
-        ema = ExponentialMovingAverage(model.parameters(), decay=float(cfg.training.ema))
+        training_parameters = list(model.parameters())
+        graph_p1 = getattr(graph, "p1", None)
+        if graph_p1 is not None and all(
+            id(graph_p1) != id(parameter) for parameter in training_parameters
+        ):
+            training_parameters.append(graph_p1)
+        ema = ExponentialMovingAverage(
+            training_parameters,
+            decay=float(cfg.training.ema),
+        )
         noise = noise_lib.get_noise(cfg).to(device)
         if arm == "host":
             host_noise = noise
@@ -1604,6 +1614,7 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
             "model": model,
             "noise": noise,
             "ema": ema,
+            "training_parameters": training_parameters,
             "step": 0,
         }
         train_loader, val_loader, test_loader = data.get_seqdataloader(cfg)

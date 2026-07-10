@@ -116,6 +116,13 @@ def optimization_manager(config):
     return optimize_fn
 
 
+def _training_parameters(state):
+    parameters = state.get("training_parameters")
+    if parameters is None:
+        return list(state["model"].parameters())
+    return list(parameters)
+
+
 def get_step_fn(noise, graph, train, loss_type, optimize_fn, accum):
     loss_fn = get_loss_fn(noise, graph, train, loss_type)
 
@@ -141,8 +148,14 @@ def get_step_fn(noise, graph, train, loss_type, optimize_fn, accum):
                 accum_iter = 0
 
                 state['step'] += 1
-                optimize_fn(optimizer, scaler, model.parameters(), step=state['step'])
-                state['ema'].update(model.parameters())
+                training_parameters = _training_parameters(state)
+                optimize_fn(
+                    optimizer,
+                    scaler,
+                    training_parameters,
+                    step=state['step'],
+                )
+                state['ema'].update(training_parameters)
                 optimizer.zero_grad()
                 
                 loss = total_loss
@@ -150,10 +163,11 @@ def get_step_fn(noise, graph, train, loss_type, optimize_fn, accum):
         else:
             with torch.no_grad():
                 ema = state['ema']
-                ema.store(model.parameters())
-                ema.copy_to(model.parameters())
+                training_parameters = _training_parameters(state)
+                ema.store(training_parameters)
+                ema.copy_to(training_parameters)
                 loss = loss_fn(model, batch, steps, cond=cond).mean()
-                ema.restore(model.parameters())
+                ema.restore(training_parameters)
 
         return loss
 
