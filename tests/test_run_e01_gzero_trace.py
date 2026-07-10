@@ -284,6 +284,48 @@ class E01GZeroTraceTests(unittest.TestCase):
         self.assertTrue(torch.equal(first, second))
         self.assertTrue(torch.equal(value_after_probe, expected_after_probe))
 
+    def test_initial_sampling_rng_diagnostic_records_without_advancing_rng(self) -> None:
+        module = load_module()
+        random.seed(100)
+        np.random.seed(100)
+        torch.manual_seed(100)
+        initial_state = module.capture_rng_state(include_cuda=False)
+
+        batches = [
+            {"seq": torch.zeros((2, 3), dtype=torch.long)},
+            {"seq": torch.ones((1, 3), dtype=torch.long)},
+        ]
+
+        class FakeUtils:
+            @staticmethod
+            def evaluate_loader(model, sampling_fn, data_loader, device, valid_item_count):
+                del model, device, valid_item_count
+                for batch in data_loader:
+                    sampling_fn(object(), (batch["seq"].shape[0], 1), batch["seq"])
+                return [0.0], [0.0]
+
+        runtime = SimpleNamespace(
+            name="host",
+            rng_state=initial_state,
+            sampling_fns={"p2": {"fn": lambda _model, _dims, _history: torch.zeros(1)}},
+            val_loader=batches,
+            device=torch.device("cpu"),
+            model=object(),
+            initial_sampling_rng_trace={},
+        )
+
+        module._run_initial_production_sampling(runtime, FakeUtils)
+
+        self.assertEqual(2, runtime.initial_sampling_rng_trace["sampling_call_count"])
+        self.assertEqual(
+            runtime.initial_sampling_rng_trace["before_eval"]["combined_sha256"],
+            runtime.initial_sampling_rng_trace["after_eval"]["combined_sha256"],
+        )
+        self.assertEqual(
+            runtime.initial_sampling_rng_trace["iterator_before"]["combined_sha256"],
+            runtime.initial_sampling_rng_trace["iterator_after"]["combined_sha256"],
+        )
+
     def test_asset_fingerprints_bind_bank_split_null_curve_and_utility(self) -> None:
         module = load_module()
         with tempfile.TemporaryDirectory() as tmpdir:

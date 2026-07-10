@@ -827,6 +827,7 @@ class ArmRuntime:
     rng_state: dict[str, Any]
     construction_rng_metadata: dict[str, Any] = field(default_factory=dict)
     trace_start_rng_metadata: dict[str, Any] = field(default_factory=dict)
+    initial_sampling_rng_trace: dict[str, Any] = field(default_factory=dict)
     train_iter: Any = None
     batch_hashes: list[str] = field(default_factory=list)
     last_gradients: dict[str, Any] = field(default_factory=dict)
@@ -1152,14 +1153,66 @@ def _require_identical_initial_values(runtimes: Mapping[str, ArmRuntime]) -> str
 
 
 def _run_initial_production_sampling(runtime: ArmRuntime, utils_module: Any) -> None:
+    include_cuda = runtime.device.type == "cuda"
+    trace: dict[str, Any] = {
+        "before_eval": rng_state_metadata(
+            capture_rng_state(include_cuda=include_cuda)
+        ),
+        "iterator_before": None,
+        "iterator_after": None,
+        "sampling_calls": [],
+    }
     restore_rng_state(runtime.rng_state)
+    trace["before_eval"] = rng_state_metadata(
+        capture_rng_state(include_cuda=include_cuda)
+    )
+    original_loader = runtime.val_loader
+    original_sampler = runtime.sampling_fns["p2"]["fn"]
+
+    class _RngTracingLoader:
+        def __iter__(self):
+            trace["iterator_before"] = rng_state_metadata(
+                capture_rng_state(include_cuda=include_cuda)
+            )
+            iterator = iter(original_loader)
+            trace["iterator_after"] = rng_state_metadata(
+                capture_rng_state(include_cuda=include_cuda)
+            )
+            return iterator
+
+        def __len__(self):
+            return len(original_loader)
+
+    def traced_sampler(model, batch_dims, history):
+        before = rng_state_metadata(
+            capture_rng_state(include_cuda=include_cuda)
+        )
+        output = original_sampler(model, batch_dims, history)
+        after = rng_state_metadata(
+            capture_rng_state(include_cuda=include_cuda)
+        )
+        trace["sampling_calls"].append(
+            {
+                "batch_dims": [int(value) for value in batch_dims],
+                "history_shape": [int(value) for value in history.shape],
+                "before": before,
+                "after": after,
+            }
+        )
+        return output
+
     hr, ndcg = utils_module.evaluate_loader(
         runtime.model,
-        runtime.sampling_fns["p2"]["fn"],
-        runtime.val_loader,
+        traced_sampler,
+        _RngTracingLoader(),
         runtime.device,
         EXPECTED_ITEM_COUNT,
     )
+    trace["after_eval"] = rng_state_metadata(
+        capture_rng_state(include_cuda=include_cuda)
+    )
+    trace["sampling_call_count"] = len(trace["sampling_calls"])
+    runtime.initial_sampling_rng_trace = trace
     runtime.initial_sampling_metrics = {
         **{f"initial_val_p2_hr_{index}": float(value) for index, value in enumerate(hr)},
         **{
@@ -1434,6 +1487,10 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
     # the arm-local RNG stream so step-0 RNG metadata matches production.
     for arm in ARM_NAMES:
         _run_initial_production_sampling(runtimes[arm], utils)
+    initialization_evidence["initial_sampling_rng_trace"] = {
+        arm: deepcopy(runtimes[arm].initial_sampling_rng_trace)
+        for arm in ARM_NAMES
+    }
 
     step0_proposals: dict[str, torch.Tensor] = {}
     step0_probe_batches: dict[str, dict[str, torch.Tensor]] = {}
