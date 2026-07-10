@@ -20,11 +20,107 @@ from scripts.aaai27_adapters.preregistration import build_preregistration
 from scripts.aaai27_adapters.preflight import build_risk_preflight
 from scripts.aaai27_adapters.proposal_contract import validate_proposal_manifest
 from scripts.aaai27_adapters.proposal_records import build_train_proposal_records
+from scripts.aaai27_adapters.pilot_adapters import build_pilot_manifest, write_risk08_exit
+from scripts.aaai27_queue.models import QueueManifest
+from scripts.aaai27_queue.validation import validate_manifest
 from scripts.aaai27_adapters.risk_report import build_train_only_risk_report
 from scripts.aaai27_adapters.optimizer_contract import compose_optimizer_parameters
 
 
 class FrontGateAdapterTests(unittest.TestCase):
+    def test_pilot_manifest_has_frozen_e1_fail_eight_run_branch_and_pass_fourteen_run_branch(self) -> None:
+        protocol = {
+            "queue_id": "aaai27-audit-test",
+            "created_at": "2026-07-11T02:00:00+08:00",
+            "run_root": "/srv/aaai27/run",
+            "source_root": "/srv/aaai27/source",
+            "source_manifest_sha256": "a" * 64,
+            "ledger_path": "/srv/aaai27/ledger.csv",
+            "ledger_sha256": "b" * 64,
+            "code_revision": "c" * 40,
+            "config_sha256": "d" * 64,
+            "python_bin": "/srv/aaai27/source/.venv/bin/python",
+            "single_train": "/srv/aaai27/source/single_train.py",
+            "training_overrides": ["model.hidden_size=256", "training.n_iters=10"],
+            "estimated_gpu_hours": {"low": 0.5, "high": 1.0, "output_gib": 0.2},
+            "datasets": {
+                dataset: {
+                    "dataset_dir": f"/srv/data/{dataset}",
+                    "split_sha256": "e" * 64,
+                    "text_bank_path": f"/srv/data/{dataset}/text_bank.csv",
+                    "null_curve_path": f"/srv/data/{dataset}/agreement_null_curves.json",
+                    "banks": {
+                        str(level): {
+                            "embedding_path": f"/srv/banks/{dataset}/{level}/embeddings.pt",
+                            "bank_sha256": "f" * 64,
+                        }
+                        for level in (0, 60, 100)
+                    },
+                }
+                for dataset in ("Beauty", "Steam")
+            },
+        }
+        manifest = build_pilot_manifest(protocol)
+        validate_manifest(QueueManifest.from_dict(manifest))
+        audit = [task for task in manifest["tasks"] if task["branch"] == "e1_fail_audit"]
+        passed = [task for task in manifest["tasks"] if task["branch"] == "e1_pass"]
+        self.assertEqual(8, len(audit))
+        self.assertEqual(14, len(passed))
+        self.assertEqual({100}, {task["seed"] for task in manifest["tasks"]})
+        self.assertFalse(any("risk_gated_full" in (task["arm"] or "") for task in audit))
+        self.assertTrue(any("text_side.ablation_mode=text_anchor_only" in task["argv"] for task in audit))
+        self.assertTrue(all(task["run_dir"].startswith("/srv/aaai27/run/runs/") for task in manifest["tasks"]))
+
+    def test_risk08_exit_is_single_immutable_fail_closed_decision(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            completed_audit = [
+                f"pilot.e1_fail_audit.{dataset}.host" for dataset in ("Beauty", "Steam")
+            ] + [
+                f"pilot.e1_fail_audit.{dataset}.anchor.c{level}"
+                for dataset in ("Beauty", "Steam")
+                for level in (0, 60, 100)
+            ]
+            marker = write_risk08_exit(
+                root,
+                e1_marker={"outcome": "fail", "marker_sha256": "a" * 64},
+                pilot_report={
+                    "branch": "e1_fail_audit",
+                    "completed_task_ids": completed_audit,
+                    "phenomenon_pass": True,
+                },
+            )
+            self.assertEqual("audit_only", marker["exit"])
+            with self.assertRaises(FileExistsError):
+                write_risk08_exit(
+                    root,
+                    e1_marker={"outcome": "fail"},
+                    pilot_report={"branch": "e1_fail_audit", "completed_task_ids": completed_audit, "phenomenon_pass": True},
+                )
+            with tempfile.TemporaryDirectory() as second:
+                stop = write_risk08_exit(
+                    Path(second),
+                    e1_marker={"outcome": "pass", "marker_sha256": "b" * 64},
+                    pilot_report={
+                        "branch": "e1_pass",
+                        "completed_task_ids": [
+                            f"pilot.e1_pass.{dataset}.host" for dataset in ("Beauty", "Steam")
+                        ]
+                        + [
+                            f"pilot.e1_pass.{dataset}.anchor.c{level}"
+                            for dataset in ("Beauty", "Steam")
+                            for level in (0, 60, 100)
+                        ]
+                        + [
+                            f"pilot.e1_pass.{dataset}.full.c{level}"
+                            for dataset in ("Beauty", "Steam")
+                            for level in (0, 60, 100)
+                        ],
+                        "phenomenon_pass": False,
+                    },
+                )
+                self.assertEqual("submission_stop", stop["exit"])
+
     def test_proposal_records_reuse_production_builder_on_train_df_without_target_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
