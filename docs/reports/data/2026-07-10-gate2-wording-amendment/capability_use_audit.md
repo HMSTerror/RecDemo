@@ -47,4 +47,3 @@ No local `tectonic`, `pdflatex`, `xelatex`, or `latexmk` executable is available
 - The ATG comparison remains provenance-limited because all three run manifests are absent.
 - E1's step-0 optimizer-ownership divergence prevents an end-to-end exact-reduction claim and blocks E2/E3/E4/E5/E8 launches in this sprint.
 - Camera-style page count and layout remain unverified until the AAAI author kit and a LaTeX engine are available.
-

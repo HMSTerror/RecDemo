@@ -39,4 +39,3 @@ Reject the amendment if it introduces an end-to-end performance bound, a confirm
 ## Validation
 
 Verify the actual paper diff, patch replay blocks, JSON parsing, source and package SHA-256 values, English/Chinese semantic pairing, frozen metric rows, prohibited-claim scans, and the best available LaTeX build.
-

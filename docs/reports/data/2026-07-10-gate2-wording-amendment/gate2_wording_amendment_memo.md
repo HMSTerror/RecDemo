@@ -63,4 +63,3 @@ E1's hard stop removes launch authorization for E2, E3, E4, E5, and E8 in this s
 ## Review gates
 
 The spec-compliance review must verify all requested English/Chinese claim pairs, the exact reproducibility sentence, unchanged Table 2 metric cells, and the E1/CLOSE-10 limitations. The quality review must reject any end-to-end extension of the TV bound, inferential use of `1/24`, unqualified ATG floor language, checkpoint-selection-equivalence wording, or a final-v2 corruption-response claim.
-

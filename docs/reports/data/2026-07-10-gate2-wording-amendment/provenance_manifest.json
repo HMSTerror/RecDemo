@@ -48,9 +48,14 @@
   ],
   "package_files": [
     {
+      "path": ".gitattributes",
+      "size_bytes": 48,
+      "sha256": "fed1b999924205f2ea8ab672ade1e163ce49b3c559c2d51fe818099d2ba36917"
+    },
+    {
       "path": "gate2_wording_amendment_memo.md",
-      "size_bytes": 6381,
-      "sha256": "16ecb216cf9fa9dc879aa5d0e4b4a52daf400bfc43d9469607b94793bac83df5"
+      "size_bytes": 6380,
+      "sha256": "9745f26a05c2cfb72bb5a7dce3a09f9afb438591a183d4ff5e8f7fe67c56b201"
     },
     {
       "path": "gate2_wording_amendment.apply_patch",
@@ -64,13 +69,13 @@
     },
     {
       "path": "task_packet.md",
-      "size_bytes": 2388,
-      "sha256": "1a1417a938217c6962c8007fd3fccbc78b32964d77a977b84f205f38efeac82c"
+      "size_bytes": 2387,
+      "sha256": "483befcdf6a8a709ff8dc3aba610e4c31c0c5c069de4f4243a0c2717ba068fb3"
     },
     {
       "path": "capability_use_audit.md",
-      "size_bytes": 3683,
-      "sha256": "bcc58b951fbc923f64684d5168bcd64b55fa7f50c25c697f67ac34d4624046a1"
+      "size_bytes": 3682,
+      "sha256": "5601a7836c5dc5b4d30ab705c456a12a50cdeceb8c6fd99c527d968b301cc7c0"
     }
   ],
   "verification": {
