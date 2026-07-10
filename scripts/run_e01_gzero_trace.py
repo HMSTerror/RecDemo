@@ -19,7 +19,6 @@ import sys
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from itertools import chain
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -55,6 +54,7 @@ PROTOCOL_SCOPE_DECISION = (
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+from scripts.aaai27_adapters.optimizer_contract import compose_optimizer_parameters
 DEFAULT_E0_AMENDMENT_PATH = (
     REPO_ROOT
     / "docs"
@@ -358,11 +358,22 @@ def validate_e0_amendment_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
 def validate_e0_amendment_file(path: Path | str) -> dict[str, Any]:
     path = Path(path)
     actual_sha256 = sha256_file(path)
+    accepted_sha256 = actual_sha256
     if actual_sha256 != EXPECTED_E0_AMENDMENT_SHA256:
-        raise ValueError(
-            "authoritative E0 amendment hash mismatch: "
-            f"expected {EXPECTED_E0_AMENDMENT_SHA256}, got {actual_sha256}"
-        )
+        # Git stores this frozen JSON with LF endings.  A Windows checkout may
+        # expose CRLF bytes, so compare a newline-normalized representation
+        # while still rejecting any added/removed content (including an extra
+        # trailing newline).  Raw source hashes remain available in provenance.
+        normalized_sha256 = hashlib.sha256(
+            path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+        ).hexdigest()
+        if normalized_sha256 == EXPECTED_E0_AMENDMENT_SHA256:
+            accepted_sha256 = normalized_sha256
+        else:
+            raise ValueError(
+                "authoritative E0 amendment hash mismatch: "
+                f"expected {EXPECTED_E0_AMENDMENT_SHA256}, got {actual_sha256}"
+            )
     payload = json.loads(path.read_text(encoding="utf-8"))
     evidence = validate_e0_amendment_payload(payload)
     if evidence["code_revision"] != EXPECTED_E0_CODE_REVISION:
@@ -373,7 +384,8 @@ def validate_e0_amendment_file(path: Path | str) -> dict[str, Any]:
     return {
         **evidence,
         "path": str(path.resolve()),
-        "file_sha256": actual_sha256,
+        "file_sha256": accepted_sha256,
+        "raw_file_sha256": actual_sha256,
     }
 
 
@@ -1272,7 +1284,7 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
 
         optimizer = losses.get_optimizer(
             cfg,
-            chain(model.parameters(), noise.parameters()),
+            compose_optimizer_parameters(model, graph, noise),
         )
         scaler = torch.cuda.amp.GradScaler()
         state = {

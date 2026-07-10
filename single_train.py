@@ -3,7 +3,6 @@ import logging
 import os
 import random
 import time
-from itertools import chain
 
 import hydra
 import numpy as np
@@ -17,6 +16,7 @@ import losses
 import noise_lib
 import sampling
 import utils
+from scripts.aaai27_adapters.optimizer_contract import compose_optimizer_parameters
 from model.ema import ExponentialMovingAverage
 from model.transformer import SEDD4REC
 
@@ -169,7 +169,7 @@ def main(cfg: DictConfig):
     noise = noise_lib.get_noise(cfg).to(device)
     sampling_eps = 1e-5
 
-    optimizer = losses.get_optimizer(cfg, chain(score_model.parameters(), noise.parameters()))
+    optimizer = losses.get_optimizer(cfg, compose_optimizer_parameters(score_model, graph, noise))
     print(f"Optimizer: {optimizer}")
     scaler = torch.cuda.amp.GradScaler()
     print(f"Scaler: {scaler}")
