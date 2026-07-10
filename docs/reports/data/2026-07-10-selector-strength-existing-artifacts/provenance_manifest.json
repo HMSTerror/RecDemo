@@ -1,0 +1,279 @@
+{
+  "schema_version": "aaai-e10-selector-strength-provenance-v1",
+  "source_artifact_count": 42,
+  "source_artifacts": [
+    {
+      "label": "Steam/host/summary",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Steam/best_summary_adaptive.json",
+      "sha256": "232a8aa9639fd466621a76456498999fe2527367c54067f4291367f0a8a21bc2",
+      "size_bytes": 3012
+    },
+    {
+      "label": "Steam/host/checkpoint",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Steam/checkpoint_adaptive_best.pth",
+      "sha256": "091c2587336c371ff62c0332b5a41df44eaab0bc067b6545fbdc1d8c3cef0ec4",
+      "size_bytes": 159396320
+    },
+    {
+      "label": "Steam/host/selection_log",
+      "path": "/data/Zijian/goal/RecDemo/logs/steam_adaptive_earlystop.log",
+      "sha256": "d5ff630dd4df2583c009a2f8da2bb8f251f6d054cc5fdfb5541edf178033fa10",
+      "size_bytes": 104178
+    },
+    {
+      "label": "Steam/full/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/best_summary_proposal_adaptive.json",
+      "sha256": "9cc41edd403b909f8f73ba92109e4c89582494579255e115e6132f084d66f69f",
+      "size_bytes": 3012
+    },
+    {
+      "label": "Steam/full/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "ca022e9cb4648617da0ba98db8c960ff78f018a1f98d6b2bf75a2b013f14cd5d",
+      "size_bytes": 216546837
+    },
+    {
+      "label": "Steam/full/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "sha256": "a3c6bbfe2c96d1f9d8d9bc851debb3be6f98267b777a08812cf24bf96ab48478",
+      "size_bytes": 1611
+    },
+    {
+      "label": "ML1M/host/summary",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ML1M/best_summary_hybrid.json",
+      "sha256": "59d3adebdf82a9dcb4062e479a3c3635afbf057cbec2d3e25e27fb7194dd027a",
+      "size_bytes": 2952
+    },
+    {
+      "label": "ML1M/host/checkpoint",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ML1M/checkpoint_hybrid_best.pth",
+      "sha256": "1d08f1f65f08b6f4e819504caa850e47fdd075913a93ffa390e85917e6316b09",
+      "size_bytes": 25767414
+    },
+    {
+      "label": "ML1M/host/selection_log",
+      "path": "/data/Zijian/goal/RecDemo/logs/ml1m_hybrid_earlystop.log",
+      "sha256": "1c875c027a6ed0ca550f942fae5e54d3c890a4f1829a33489a854aed7b2531be",
+      "size_bytes": 964210
+    },
+    {
+      "label": "ML1M/full/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/best_summary_proposal_adaptive.json",
+      "sha256": "3f64d85d9599994fd5de20cf4ba8ba92c239163de58115e874efe48f5a0cf9b4",
+      "size_bytes": 2967
+    },
+    {
+      "label": "ML1M/full/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "e1bdf6555040d7588d56ad8191bb42f42dad529f1573b67fcbb2628b52dc0d30",
+      "size_bytes": 48630421
+    },
+    {
+      "label": "ML1M/full/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/ml1m_proposal_adaptive_mainpath/checkpoints-meta/ML1M/frozen_run_manifest.json",
+      "sha256": "47e6a85b841df4bc0069758c1dadf5b3469715f2d90273bbb5a48b4386e283f3",
+      "size_bytes": 1600
+    },
+    {
+      "label": "Beauty/host/summary",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Beauty/best_summary_adaptive.json",
+      "sha256": "2071d281cb33fe18f26e03dbc5e84592d233fc731bd24e1c21c3ad11c05b211a",
+      "size_bytes": 2597
+    },
+    {
+      "label": "Beauty/host/checkpoint",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/Beauty/checkpoint_adaptive_best.pth",
+      "sha256": "7861123831ed496c5019cb9959793ceff3e8d3096ecffee179e701f91c8fadfd",
+      "size_bytes": 205906656
+    },
+    {
+      "label": "Beauty/host/selection_log",
+      "path": "/data/Zijian/goal/RecDemo/logs/beauty_adaptive_earlystop.log",
+      "sha256": "3ff9b94ff29fd7313f3c40bbe7378ac166efe04b177ca45747c507b7eac9ae52",
+      "size_bytes": 82213
+    },
+    {
+      "label": "Beauty/full/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/best_summary_proposal_adaptive.json",
+      "sha256": "6f64444d72a72a44a0e08b5ab588d1629676c000bea5f56cb424d8dda11c969e",
+      "size_bytes": 2622
+    },
+    {
+      "label": "Beauty/full/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "a6dcfa0de9e234b1eed7ff4d5a653f4fc3619da70a334f7e5f32b33d9546f588",
+      "size_bytes": 280549525
+    },
+    {
+      "label": "Beauty/full/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "sha256": "1b8f35e3c122ef8700ab6a1ffd024c8ed7e4471dc0d72ac154cc5ffa59e14ee2",
+      "size_bytes": 1605
+    },
+    {
+      "label": "ATG/host/summary",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ATG/best_summary_hybrid.json",
+      "sha256": "ae800dfd538745c211b966b10a68920e000ad17fcf6d28770002ea1a02142a38",
+      "size_bytes": 2935
+    },
+    {
+      "label": "ATG/host/checkpoint",
+      "path": "/data/Zijian/goal/RecDemo/checkpoints-meta/ATG/checkpoint_hybrid_best.pth",
+      "sha256": "e5b0831ae3e06412971efbf7d0c417ca65d5ab7c8f85e154fb713973f8e95ff7",
+      "size_bytes": 59428342
+    },
+    {
+      "label": "ATG/host/selection_log",
+      "path": "/data/Zijian/goal/RecDemo/logs/atg_hybrid_earlystop.log",
+      "sha256": "7f043aad06baed491e4dd841779dbe8df6e3debd87b610a3491ed8d6336575be",
+      "size_bytes": 141553
+    },
+    {
+      "label": "ATG/full/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/best_summary_proposal_adaptive.json",
+      "sha256": "95df9488951a36d89b905181f83384de450f024b1e81f92ef17846efd0efb61b",
+      "size_bytes": 2864
+    },
+    {
+      "label": "ATG/full/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "ffec48ff552a33dd0b405d1220fff6558a83cb354af1861cdb91d898f27bcda5",
+      "size_bytes": 132949013
+    },
+    {
+      "label": "ATG/full/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/atg_proposal_adaptive_mainpath/checkpoints-meta/ATG/frozen_run_manifest.json",
+      "sha256": "886ab6754d62a8177a6982b3c1b25fc1edeb556e656ac87b75272bd46cb25104",
+      "size_bytes": 1612
+    },
+    {
+      "label": "Beauty/u_shuffle/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Beauty/best_summary_proposal_adaptive.json",
+      "sha256": "286d97126913d5508b0d54696d0cc73ed742be1f96b183b0d550760399157628",
+      "size_bytes": 2630
+    },
+    {
+      "label": "Beauty/u_shuffle/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Beauty/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "109d1411484ccba361f7ad8d3e065eb5b2867b6f21a1e001480c8b828c68644a",
+      "size_bytes": 280549525
+    },
+    {
+      "label": "Beauty/u_shuffle/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "sha256": "73d9426b5b3034a01fc26dc4a1ded16858e2c2f80850925f859e4c0e29815f29",
+      "size_bytes": 1620
+    },
+    {
+      "label": "Beauty/text_anchor_only/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Beauty/best_summary_proposal_adaptive.json",
+      "sha256": "aaee42475431006d9368e872b0a513842a0a66486a35edd72b03b1a5be9ba2f2",
+      "size_bytes": 2625
+    },
+    {
+      "label": "Beauty/text_anchor_only/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Beauty/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "da76cbb91f2f87334348b903e9e10de9c04931334c987de7aac6954d7e128509",
+      "size_bytes": 280549525
+    },
+    {
+      "label": "Beauty/text_anchor_only/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "sha256": "dcb371aa3fa4bd588b4cdcacde25866695a5a531682d60afef2e41723f8d43a1",
+      "size_bytes": 1634
+    },
+    {
+      "label": "Beauty/global_p/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_global_p/checkpoints-meta/Beauty/best_summary_proposal_adaptive.json",
+      "sha256": "6f64444d72a72a44a0e08b5ab588d1629676c000bea5f56cb424d8dda11c969e",
+      "size_bytes": 2622
+    },
+    {
+      "label": "Beauty/global_p/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_global_p/checkpoints-meta/Beauty/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "a6dcfa0de9e234b1eed7ff4d5a653f4fc3619da70a334f7e5f32b33d9546f588",
+      "size_bytes": 280549525
+    },
+    {
+      "label": "Beauty/global_p/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_ablation_global_p/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "sha256": "028cd776cd0d153b0675adc26b89ecfb549679027332c03c4d1858bcbaa62d98",
+      "size_bytes": 1618
+    },
+    {
+      "label": "Steam/u_shuffle/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Steam/best_summary_proposal_adaptive.json",
+      "sha256": "2530ae3e0a81b191d329b11047a3aa903cdfaca5998536d61d29b7ec07a20b0f",
+      "size_bytes": 3014
+    },
+    {
+      "label": "Steam/u_shuffle/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Steam/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "cc56e8dc878a93efb0372a3419d80123fcd8438b748415dd9272982a8a2b2bb5",
+      "size_bytes": 216546837
+    },
+    {
+      "label": "Steam/u_shuffle/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_u_shuffle/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "sha256": "4647783c986e2cb998d24b734cd08fe0e566cd333b3299c99a8285393876b921",
+      "size_bytes": 1626
+    },
+    {
+      "label": "Steam/text_anchor_only/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Steam/best_summary_proposal_adaptive.json",
+      "sha256": "895f8fed4f884e34f1e3a2135513870358b77209bf19d5f5b88c63037c315ad4",
+      "size_bytes": 2994
+    },
+    {
+      "label": "Steam/text_anchor_only/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Steam/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "090e0e90ebae53bd5cab43c34d70972cc538c7d4c98450d6c7f9d8d188cbea1f",
+      "size_bytes": 216546837
+    },
+    {
+      "label": "Steam/text_anchor_only/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_text_anchor_only/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "sha256": "cf950d323a78490a575247baa862d9cae1f863361d7e375006a64976f62f5062",
+      "size_bytes": 1640
+    },
+    {
+      "label": "Steam/global_p/summary",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_global_p/checkpoints-meta/Steam/best_summary_proposal_adaptive.json",
+      "sha256": "4f4066a69f1a27a1951aec316525af2297653dadc1abe7676aaf5f84e79099c4",
+      "size_bytes": 3022
+    },
+    {
+      "label": "Steam/global_p/checkpoint",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_global_p/checkpoints-meta/Steam/checkpoint_proposal_adaptive_best.pth",
+      "sha256": "25cfce9efe56c1b32aad3b36bbdd619b09fe4b984fb83c31223cd71c5231c4a6",
+      "size_bytes": 216546837
+    },
+    {
+      "label": "Steam/global_p/manifest",
+      "path": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_ablation_global_p/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "sha256": "8ed06fed4bb380ccb16a8f3c46b043c16db2519d2bc754029dc38c1a590ffb6b",
+      "size_bytes": 1624
+    }
+  ],
+  "collector": {
+    "script_path": "E:\\PreferGrow\\scripts\\build_e10_selector_strength_report.py",
+    "script_sha256": "8bfd918561c1cfb7fe66ef8e73e6cea857dea0a1b1bc78deab9e3254a5f3162a"
+  },
+  "source_snapshot": {
+    "path": "E:\\PreferGrow\\tmp\\e10_snapshot_20260710_hash_bound.json",
+    "sha256": "2f0fcd3946977baa54e3597196e952646a213938639b7df472af6bc7a3c931a0",
+    "size_bytes": 1814421
+  },
+  "e0_amendment": {
+    "path": "E:\\PreferGrow\\docs\\reports\\data\\2026-07-10-evaluator-amendment\\e0_evaluator_amendment.json",
+    "sha256": "da11d9f7307ad4377c9bf02d378fbf69bddae0453be3403502ef7c0ec3c4f9e5",
+    "size_bytes": 88351
+  },
+  "policy": {
+    "existing_artifacts_only": true,
+    "training_runs_launched": 0,
+    "evaluation_runs_launched": 0,
+    "checkpoint_reselection": false,
+    "test_value_filtering": false
+  }
+}
