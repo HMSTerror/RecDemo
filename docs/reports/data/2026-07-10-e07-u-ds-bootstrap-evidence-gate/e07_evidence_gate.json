@@ -1,0 +1,116 @@
+{
+  "artifact_id": "AAAI-E07",
+  "generated_at": "2026-07-10T17:00:29+08:00",
+  "status": "hard_stop",
+  "decision": "bootstrap_not_run",
+  "reason_code": "missing_frozen_four_domain_per_transition_user_cluster_records",
+  "scope": {
+    "datasets": [
+      "Steam",
+      "ML1M",
+      "Beauty",
+      "ATG"
+    ],
+    "required_transitions_per_dataset": 4000,
+    "required_negatives_per_transition": 100,
+    "required_sampling_seed": 7,
+    "minimum_bootstrap_replicates_if_evidence_complete": 1000,
+    "training_runs_authorized": 0
+  },
+  "required_record_contract": {
+    "row_granularity": "one frozen Gate-0 sampled transition",
+    "required_identity": [
+      "dataset",
+      "user_cluster_id",
+      "transition_id"
+    ],
+    "required_scores": [
+      "utility_popularity",
+      "utility_uniform"
+    ],
+    "point_reproduction": "the mean of utility_popularity must reproduce the archived U_ds point estimate for each dataset before resampling"
+  },
+  "archived_aggregate_only_observations": [
+    {
+      "dataset": "ML1M",
+      "reported_sampled_transition_count": 4000,
+      "u_ds_popularity": 0.75353875,
+      "u_ds_uniform": 0.7985262500000001
+    },
+    {
+      "dataset": "Beauty",
+      "reported_sampled_transition_count": 4000,
+      "u_ds_popularity": 0.7124275,
+      "u_ds_uniform": 0.71720375
+    },
+    {
+      "dataset": "ATG",
+      "reported_sampled_transition_count": 4000,
+      "u_ds_popularity": 0.6882625,
+      "u_ds_uniform": 0.6920125
+    },
+    {
+      "dataset": "Steam",
+      "reported_sampled_transition_count": 4000,
+      "u_ds_popularity": 0.5695662499999999,
+      "u_ds_uniform": 0.56507875
+    }
+  ],
+  "reported_point_order_desc": [
+    "ML1M",
+    "Beauty",
+    "ATG",
+    "Steam"
+  ],
+  "negative_definitions": {
+    "popularity": "100 iid draws with replacement from the empirical train next-item distribution; U_ds uses pairwise next-versus-negative cosine comparisons with half credit for ties",
+    "uniform": "100 iid draws with replacement uniformly over catalog item ids; this is the diagnostic statistic and uses the same pairwise tie rule",
+    "archival_limit": "the realized negative ids and per-transition utility scores were not written by the Gate-0 generator"
+  },
+  "evidence_findings": [
+    "The formal Gate-0 JSON contains four dataset aggregates and sixteen coherence-quartile aggregates, not 16000 transition rows.",
+    "The formal summary CSV contains one row per dataset; the coherence CSV contains one row per dataset-quartile.",
+    "The Gate-0 generator keeps popularity_scores and uniform_scores only in memory and writes only dataset and quartile summaries.",
+    "The formal local archive, the l20 formal archive, and Git object history contain no qualifying four-domain per-transition Gate-0 record set.",
+    "FOLLOWUP-09 has transition rows only for ML1M and Steam, uses a different four-rows-per-user protocol, has 19328 and 127292 rows respectively, and lacks utility_uniform; it is ineligible as a substitute."
+  ],
+  "statistics": {
+    "bootstrap_replicates_executed": 0,
+    "u_ds_confidence_intervals": null,
+    "full_order_retention_probability": null,
+    "training_seed_variance": null,
+    "p_1_over_24": {
+      "value": 0.041666666666666664,
+      "status": "descriptive_combinatorial_quantity_only",
+      "assumption": "all 4! label orders are equiprobable under exchangeability",
+      "not_a_claim": "not a confirmatory p-value and not a confirmatory inferential result"
+    }
+  },
+  "paper_safe_wording": {
+    "en": "In the single archived Gate-0 sampling observation, the observed U_ds point estimates order the four datasets as ML1M > Beauty > ATG > Steam. Because the frozen per-transition records and user-cluster identifiers were not archived, this run cannot estimate uncertainty or full-order retention. Under exchangeability, 1/24 is only a descriptive combinatorial calculation, not a confirmatory p-value.",
+    "zh": "在单次归档的 Gate-0 抽样观察中，四个观测数据集的 U_ds 点估计顺序为 ML1M > Beauty > ATG > Steam。由于冻结的逐 transition 记录与用户聚类标识未归档，本轮无法估计不确定性或全序保留概率；exchangeability 假设下的 1/24 仅为描述性组合计算，不是确认性 p 值。"
+  },
+  "forbidden_actions_not_taken": [
+    "no transition sample was regenerated",
+    "no popularity or uniform negatives were regenerated",
+    "no aggregate or quartile row was treated as a transition record",
+    "no FOLLOWUP-09 row was substituted for the Gate-0 sample",
+    "no training or model-seed run was launched",
+    "no confidence interval or order-retention probability was imputed"
+  ],
+  "provenance": {
+    "audit_revision": "bd08ae2c0085a23f0d83f11ee75d0903713ce527",
+    "local_workspace": "E:\\PreferGrow",
+    "remote_host": "zijian@172.18.0.40",
+    "remote_hostname": "ubuntu",
+    "formal_gate0_report_sha256": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420",
+    "formal_gate0_summary_sha256": "f8ab04d0be4c1218815c3d207543d3c193b4f20060366be517622a58b938fbdd",
+    "formal_gate0_quartiles_sha256": "96599875cb6c099e3fa354e31e9f9303dadf8c9b5704809e9d2e043d7f49baf5",
+    "gate0_generator_sha256": "18d28453ddd98830e11c92134880f037a26047a30c09f2bcc332e2f8f0dfa02d",
+    "remote_hashes_match_local": true,
+    "remote_formal_archive_file_count": 23,
+    "followup09_ml1m_sha256": "455be37783d3e6d9b0c03743533e0f7e499d2f4bfae0422a5d7f6b6f47117b08",
+    "followup09_steam_sha256": "87dbe5d5390aee046633ee20285b8392cbe20898b5d619de652a29fcd556623e",
+    "fast_context_used": "mcp__fast_context__fast_context_search"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "artifact_id": "AAAI-E07",
+  "generated_at": "2026-07-10T17:00:29+08:00",
+  "outcome": "hard_stop",
+  "immutable_source_hashes": [
+    {
+      "path": "scripts/build_gate0_text_utility_report.py",
+      "sha256": "18d28453ddd98830e11c92134880f037a26047a30c09f2bcc332e2f8f0dfa02d"
+    },
+    {
+      "path": "docs/reports/data/2026-07-02-gate0/gate0_text_utility_report.json",
+      "sha256": "75f76a1701dd349aa49d4919c17c7d0bec0b5998e9c0f9031a1779c1bb74a420"
+    },
+    {
+      "path": "docs/reports/data/2026-07-02-gate0/gate0_text_utility_summary.csv",
+      "sha256": "f8ab04d0be4c1218815c3d207543d3c193b4f20060366be517622a58b938fbdd"
+    },
+    {
+      "path": "docs/reports/data/2026-07-02-gate0/gate0_text_utility_coherence_quartiles.csv",
+      "sha256": "96599875cb6c099e3fa354e31e9f9303dadf8c9b5704809e9d2e043d7f49baf5"
+    }
+  ],
+  "excluded_remote_candidates": [
+    {
+      "path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-04-followup09/ML1M_sampled_transition_points.csv",
+      "sha256": "455be37783d3e6d9b0c03743533e0f7e499d2f4bfae0422a5d7f6b6f47117b08",
+      "reason": "different protocol, 19328 rows, missing uniform utility, one domain only"
+    },
+    {
+      "path": "/data/Zijian/goal/RecDemo/docs/reports/data/2026-07-04-followup09/Steam_sampled_transition_points.csv",
+      "sha256": "87dbe5d5390aee046633ee20285b8392cbe20898b5d619de652a29fcd556623e",
+      "reason": "different protocol, 127292 rows, missing uniform utility, one domain only"
+    }
+  ],
+  "audit_environment": {
+    "local_root": "E:\\PreferGrow",
+    "remote": "zijian@172.18.0.40",
+    "remote_hostname": "ubuntu",
+    "audit_revision": "bd08ae2c0085a23f0d83f11ee75d0903713ce527"
+  }
+}
