@@ -1,0 +1,79 @@
+{
+  "artifact": "AAAI-E01 production-path deterministic g-zero trace hard stop",
+  "artifact_date": "2026-07-10",
+  "dataset": "Beauty",
+  "random_seed": 100,
+  "fp32_tolerance": 1e-06,
+  "trace_steps": [0, 1, 100, 1000],
+  "status": "hard_stop",
+  "source_trace_status": "fail",
+  "downstream_launch_authorized": false,
+  "blocked_experiments": ["E2", "E3", "E4", "E5", "E8"],
+  "first_divergence": {
+    "step": 0,
+    "category": "optimizer",
+    "key": "core_proposal_logits.in_optimizer",
+    "reference_arm": "host",
+    "arm": "final_v2_closed_gate_full",
+    "max_abs_diff": 1.0
+  },
+  "ownership_evidence": {
+    "host": "graph.p1",
+    "final_v2_closed_gate_full": "model.text_side_builder.p1",
+    "global_p": "model.text_side_builder.p1",
+    "interpretation": "The production paths do not have identical optimizer ownership for the canonical core proposal parameter."
+  },
+  "initialization": {
+    "canonical_parameter_sha256": "9f34d3c821bc073668cbf8784a3e5ffa619415c715a2798867cbf5738ef85320",
+    "parameter_values_aligned_before_training": true
+  },
+  "checkpoint_failure_counts": [
+    {
+      "step": 0,
+      "total": 24,
+      "by_category": {"optimizer": 18, "rng": 6}
+    },
+    {
+      "step": 1,
+      "total": 140,
+      "by_category": {"gradients": 46, "loss_terms": 16, "optimizer": 72, "rng": 6}
+    },
+    {
+      "step": 100,
+      "total": 190,
+      "by_category": {"gradients": 46, "loss_terms": 16, "optimizer": 74, "parameters": 46, "rng": 6, "sampling_probe": 2}
+    },
+    {
+      "step": 1000,
+      "total": 200,
+      "by_category": {"gradients": 46, "loss_terms": 16, "optimizer": 74, "parameters": 48, "rng": 6, "sampling_probe": 10}
+    }
+  ],
+  "selected_divergence_magnitudes": {
+    "step_1_core_proposal_gradient_max_abs_diff": 0.15866872668266296,
+    "step_100_core_proposal_parameter_max_abs_diff": 0.0001971721649169922,
+    "step_100_p5_logits_max_abs_diff": 0.000034511089324951172,
+    "step_1000_core_proposal_gradient_max_abs_diff": 3.184959888458252,
+    "step_1000_core_proposal_parameter_max_abs_diff": 0.011368274688720703,
+    "step_1000_p5_logits_max_abs_diff": 0.9984807372093201
+  },
+  "passed_prerequisites": {
+    "e0_artifact_count": 18,
+    "e0_completed_item_count": 18,
+    "config_contract": "pass",
+    "beauty_phi_u_ds": 0.0,
+    "batch_order_all_checkpoints": "pass"
+  },
+  "scientific_boundary": {
+    "end_to_end_exact_reduction_demonstrated": false,
+    "seed_noise_explanation_used": false,
+    "rescue_tuning_or_added_seed": false,
+    "production_path_modified": false,
+    "scope_note": "Beauty is the sole matched production trio; this artifact does not claim ML1M equivalence."
+  },
+  "source_trace": {
+    "path": "e01_gzero_trace.json",
+    "sha256": "1ca4972357afb860f7e4b99b60711f28dc41ccd7e3192ae7aeff6351dc3cb70c",
+    "generated_at": "2026-07-10T18:08:17+08:00"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "artifact": "AAAI-E01 production-path deterministic g-zero trace hard stop",
+  "artifact_date": "2026-07-10",
+  "code_revision": "50e8e7be7430da236a0772df4ad8616e0aa00020",
+  "remote_host": "zijian@172.18.0.40",
+  "remote_code_root": "/data/Zijian/goal/RecDemo_clean_aaai27_e0_5709c62",
+  "remote_run_root": "/data/Zijian/goal/RecDemoRuns/aaai27_e01_gzero_trace_20260710_50e8e7b",
+  "gpu": "NVIDIA L20 46068 MiB",
+  "source_files": [
+    {
+      "package_path": "e01_gzero_trace.json",
+      "remote_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e01_gzero_trace_20260710_50e8e7b/e01_gzero_trace.json",
+      "size_bytes": 1484544,
+      "sha256": "1ca4972357afb860f7e4b99b60711f28dc41ccd7e3192ae7aeff6351dc3cb70c"
+    },
+    {
+      "package_path": "provenance/e01_execution.log",
+      "remote_path": "/data/Zijian/goal/RecDemoRuns/aaai27_e01_gzero_trace_20260710_50e8e7b.execution.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "audit_note": "Archived exactly as found; zero-byte file is not used as positive execution evidence."
+    }
+  ],
+  "remote_gate_check": {
+    "e01_pass_marker_present": false,
+    "source_trace_status": "fail",
+    "downstream_launch_authorized": false
+  },
+  "write_policy": "All remote access for this package was read-only. No frozen artifact or production path was modified."
+}
