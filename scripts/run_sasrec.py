@@ -115,6 +115,14 @@ def load_split(dataset_dir: Path, split: str, protocol: dict[str, Any]) -> tuple
     lengths = np.asarray(frame["len_seq"].to_numpy(), dtype=np.int64)
     if np.any(lengths < 1) or np.any(lengths > seq_size):
         raise ValueError(f"{split} len_seq is outside [1,{seq_size}]")
+    # paper_raw_v1 stores histories left-padded with the catalog padding id.
+    # Canonicalize to right padding before the causal Transformer. This keeps
+    # item IDs and split rows unchanged while avoiding all-masked causal rows,
+    # which otherwise yield NaNs in TransformerEncoder attention.
+    canonical = np.full_like(sequences, item_num)
+    for row_index, length in enumerate(lengths.tolist()):
+        canonical[row_index, : int(length)] = sequences[row_index, -int(length) :]
+    sequences = canonical
     targets = np.asarray(frame["next"].to_numpy(), dtype=np.int64)
     if int(targets.min()) < 0 or int(targets.max()) >= item_num:
         raise ValueError(f"{split} target is outside real catalog [0,{item_num - 1}]")
@@ -140,18 +148,20 @@ class SASRec(nn.Module):
         self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
         self.output = nn.Linear(hidden_size, self.item_num)
 
-    def forward(self, sequences: torch.Tensor) -> torch.Tensor:
+    def forward(self, sequences: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         if sequences.ndim != 2 or sequences.shape[1] != self.seq_size:
             raise ValueError(f"sequences must have shape (B,{self.seq_size})")
+        if lengths.ndim != 1 or lengths.shape[0] != sequences.shape[0]:
+            raise ValueError("lengths must have shape (B,)")
         batch_size, seq_size = sequences.shape
         positions = torch.arange(seq_size, device=sequences.device).unsqueeze(0).expand(batch_size, -1)
         hidden = self.item_embeddings(sequences) + self.position_embeddings(positions)
         causal_mask = torch.triu(torch.ones((seq_size, seq_size), dtype=torch.bool, device=sequences.device), diagonal=1)
         padding_mask = sequences.eq(self.padding_item_id)
         encoded = self.encoder(hidden, mask=causal_mask, src_key_padding_mask=padding_mask)
-        # paper_raw_v1 left-pads histories, so the last position is always the
-        # final non-padding item (validated while loading each split).
-        return self.output(encoded[:, -1, :])
+        last_indices = lengths.to(device=sequences.device).clamp(min=1, max=seq_size) - 1
+        batch_indices = torch.arange(batch_size, device=sequences.device)
+        return self.output(encoded[batch_indices, last_indices])
 
 
 def _batches(size: int, batch_size: int, rng: np.random.Generator | None) -> Iterable[np.ndarray]:
@@ -162,14 +172,17 @@ def _batches(size: int, batch_size: int, rng: np.random.Generator | None) -> Ite
         yield order[start : start + batch_size]
 
 
-def evaluate(model: SASRec, sequences: np.ndarray, targets: np.ndarray, *, device: torch.device, batch_size: int) -> dict[str, Any]:
+def evaluate(model: SASRec, sequences: np.ndarray, lengths: np.ndarray, targets: np.ndarray, *, device: torch.device, batch_size: int) -> dict[str, Any]:
     model.eval()
     max_k = min(50, model.item_num)
     top_batches: list[torch.Tensor] = []
     with torch.no_grad():
         for indices in _batches(len(sequences), batch_size, None):
             batch_sequences = torch.as_tensor(sequences[indices], dtype=torch.long, device=device)
-            logits = model(batch_sequences)
+            batch_lengths = torch.as_tensor(lengths[indices], dtype=torch.long, device=device)
+            logits = model(batch_sequences, batch_lengths)
+            if not torch.isfinite(logits).all():
+                raise FloatingPointError("non-finite SASRec evaluation logits")
             top_batches.append(torch.topk(logits, k=max_k, dim=1, largest=True, sorted=True).indices.cpu())
     ranked = torch.cat(top_batches, dim=0) if top_batches else torch.empty((0, max_k), dtype=torch.long)
     target_tensor = torch.as_tensor(targets, dtype=torch.long)
@@ -235,9 +248,9 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError(f"config hash mismatch: expected {args.config_sha256}, actual {config_hash}")
     item_num = int(protocol["counts"]["item_num"])
     seq_size = int(protocol["parameters"]["target_sequence_length"])
-    train_sequences, _, train_targets = load_split(dataset_dir, "train", protocol)
-    val_sequences, _, val_targets = load_split(dataset_dir, "val", protocol)
-    test_sequences, _, test_targets = load_split(dataset_dir, "test", protocol)
+    train_sequences, train_lengths, train_targets = load_split(dataset_dir, "train", protocol)
+    val_sequences, val_lengths, val_targets = load_split(dataset_dir, "val", protocol)
+    test_sequences, test_lengths, test_targets = load_split(dataset_dir, "test", protocol)
 
     requested_device = torch.device(args.device)
     device = requested_device
@@ -252,6 +265,14 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
         dropout=float(args.dropout),
     ).to(device)
     if args.startup_probe_only:
+        probe_rows = min(2, len(train_sequences))
+        with torch.no_grad():
+            probe_logits = model(
+                torch.as_tensor(train_sequences[:probe_rows], dtype=torch.long, device=device),
+                torch.as_tensor(train_lengths[:probe_rows], dtype=torch.long, device=device),
+            )
+        if not torch.isfinite(probe_logits).all():
+            raise FloatingPointError("non-finite SASRec startup-probe logits")
         probe = {
             "schema_version": 1,
             "dataset": args.dataset,
@@ -262,7 +283,7 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
             "config_sha256": config_hash,
             "device": str(device),
             "model_parameters": int(sum(parameter.numel() for parameter in model.parameters())),
-            "probe_batch_rows": min(2, len(train_sequences)),
+            "probe_batch_rows": probe_rows,
             "optimizer_steps": 0,
             "checkpoints_written": 0,
             "metrics_written": 0,
@@ -287,14 +308,20 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
         losses: list[float] = []
         for indices in _batches(len(train_sequences), int(args.batch_size), rng):
             sequence_batch = torch.as_tensor(train_sequences[indices], dtype=torch.long, device=device)
+            length_batch = torch.as_tensor(train_lengths[indices], dtype=torch.long, device=device)
             target_batch = torch.as_tensor(train_targets[indices], dtype=torch.long, device=device)
             optimizer.zero_grad(set_to_none=True)
-            loss = criterion(model(sequence_batch), target_batch)
+            logits = model(sequence_batch, length_batch)
+            if not torch.isfinite(logits).all():
+                raise FloatingPointError(f"non-finite SASRec logits at epoch {epoch}")
+            loss = criterion(logits, target_batch)
+            if not torch.isfinite(loss):
+                raise FloatingPointError(f"non-finite SASRec loss at epoch {epoch}")
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             losses.append(float(loss.detach().cpu()))
-        val_result = evaluate(model, val_sequences, val_targets, device=device, batch_size=int(args.eval_batch_size))
+        val_result = evaluate(model, val_sequences, val_lengths, val_targets, device=device, batch_size=int(args.eval_batch_size))
         selector_value = float(val_result["metrics"]["NDCG@10"])
         improved = selector_value > best_metric + float(args.early_stop_min_delta)
         if improved:
@@ -324,7 +351,7 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
     model.load_state_dict(best_state)
     checkpoint_path = run_dir / "sasrec_best.pt"
     torch.save({"model_state_dict": best_state, "config": config, "best_epoch": best_epoch}, checkpoint_path)
-    test_result = evaluate(model, test_sequences, test_targets, device=device, batch_size=int(args.eval_batch_size))
+    test_result = evaluate(model, test_sequences, test_lengths, test_targets, device=device, batch_size=int(args.eval_batch_size))
     summary = {
         "schema_version": 1,
         "method": "SASRec",
@@ -365,6 +392,7 @@ def train_one(args: argparse.Namespace) -> dict[str, Any]:
         "metrics_sha256": sha256_file(metrics_path),
         "selection": "validation NDCG@10 row-weighted; test evaluated only after selection",
         "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "padding_contract": "paper_raw_v1-left-pad-canonicalized-to-right-pad-before-causal-encoder",
         "test_disclosure": summary["test_disclosure"],
         "parameter_count": int(sum(parameter.numel() for parameter in model.parameters())),
         "elapsed_seconds": float(time.time() - started_at),
