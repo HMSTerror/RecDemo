@@ -52,6 +52,7 @@ def _task(
     run_rel: str,
     argv: list[str],
     bank_sha256: str | None,
+    embedding_sha256: str | None,
     graph_type: str,
     priority: int,
 ) -> dict[str, Any]:
@@ -64,6 +65,26 @@ def _task(
         task_id = f"pilot.{branch}.{dataset}.full.c{level}"
     run_dir = f"{protocol['run_root']}/{run_rel}"
     summary_name = "best_summary_hybrid.json" if graph_type == "hybrid" else "best_summary_proposal_adaptive.json"
+    env = {
+        "PYTHONHASHSEED": "100",
+        "AAAI_DATASET": dataset,
+        "AAAI_ARM": arm,
+    }
+    if bank_sha256 is not None:
+        env["AAAI_BANK_SHA256"] = str(bank_sha256)
+        if embedding_sha256 is None:
+            raise ValueError("evidence-conditioned task lacks embedding SHA-256")
+        env["AAAI_EMBEDDING_SHA256"] = str(embedding_sha256)
+        env["AAAI_RISK05_PREREG_SHA256"] = str(
+            protocol["risk05_preregistration_sha256"]
+        )
+    gate_scale_tokens = [
+        token.split("=", 1)[1]
+        for token in argv
+        if token.startswith("text_side.gate_dataset_scale_override=")
+    ]
+    if gate_scale_tokens:
+        env["AAAI_GATE_DATASET_SCALE"] = gate_scale_tokens[0]
     return {
         "schema_version": 1,
         "task_id": task_id,
@@ -73,7 +94,7 @@ def _task(
         "kind": "gpu",
         "argv": argv,
         "cwd": str(protocol["source_root"]),
-        "env": {"PYTHONHASHSEED": "100", "AAAI_DATASET": dataset, "AAAI_ARM": arm},
+        "env": env,
         "dependencies": [],
         "required_markers": ["markers/RISK-02_PASS.json" if branch == "e1_pass" else "markers/RISK-02_FAIL.json"],
         "success_artifacts": [f"{run_rel}/checkpoints-meta/{dataset}/{summary_name}"],
@@ -118,6 +139,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                     run_rel=host_rel,
                     argv=host_argv,
                     bank_sha256=None,
+                    embedding_sha256=None,
                     graph_type="hybrid",
                     priority=0,
                 )
@@ -144,6 +166,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                         "text_side.g_max=0.5",
                         "text_side.ablation_mode=text_anchor_only",
                         "text_side.injection_mode=kernel",
+                        "text_side.require_gate_source=True",
                     ]
                 )
                 tasks.append(
@@ -156,6 +179,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                         run_rel=anchor_rel,
                         argv=anchor_argv,
                         bank_sha256=str(bank["bank_sha256"]),
+                        embedding_sha256=str(bank["embedding_sha256"]),
                         graph_type="proposal_adaptive",
                         priority=1,
                     )
@@ -163,7 +187,18 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                 if include_full:
                     full_rel = f"runs/{branch}/{dataset}/full_c{level}"
                     full_argv = list(anchor_argv)
+                    full_run_dir = f"{protocol['run_root']}/{full_rel}"
+                    full_argv = [
+                        f"work_dir={full_run_dir}"
+                        if token.startswith("work_dir=")
+                        else token
+                        for token in full_argv
+                    ]
                     full_argv[full_argv.index("text_side.ablation_mode=text_anchor_only")] = "text_side.ablation_mode=none"
+                    full_argv.append(
+                        "text_side.gate_dataset_scale_override="
+                        f"{float(bank['phi_R'])}"
+                    )
                     tasks.append(
                         _task(
                             protocol=protocol,
@@ -174,6 +209,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                             run_rel=full_rel,
                             argv=full_argv,
                             bank_sha256=str(bank["bank_sha256"]),
+                            embedding_sha256=str(bank["embedding_sha256"]),
                             graph_type="proposal_adaptive",
                             priority=1,
                         )

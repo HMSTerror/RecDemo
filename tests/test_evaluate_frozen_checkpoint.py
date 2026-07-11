@@ -172,6 +172,72 @@ class EvaluateFrozenCheckpointTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "EMA shadow parameter"):
             module.validate_ema_state(FakeEma(), model)
 
+    def test_restores_graph_owned_host_p1_from_checkpoint_ema(self) -> None:
+        module = load_module()
+
+        class HostGraph(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.p1 = torch.nn.Parameter(torch.ones(3))
+
+        model = torch.nn.Linear(2, 1, bias=False)
+        graph = HostGraph()
+        checkpoint = {
+            "model": {"weight": torch.tensor([[1.5, -2.0]])},
+            "graph": {"p1": torch.tensor([0.1, 0.2, 0.3])},
+            "ema": {
+                "decay": 0.9,
+                "num_updates": 5,
+                "shadow_params": [
+                    torch.tensor([[2.5, -3.0]]),
+                    torch.tensor([4.0, 5.0, 6.0]),
+                ],
+            },
+            "training_parameter_names": ["model.weight", "graph.p1"],
+            "step": 8,
+        }
+
+        restored = module.restore_evaluation_parameters(
+            score_model=model,
+            graph=graph,
+            checkpoint=checkpoint,
+            ema_decay=0.9,
+        )
+
+        self.assertEqual(
+            ["model.weight", "graph.p1"],
+            restored["training_parameter_names"],
+        )
+        self.assertTrue(torch.equal(model.weight.detach(), torch.tensor([[2.5, -3.0]])))
+        self.assertTrue(torch.equal(graph.p1.detach(), torch.tensor([4.0, 5.0, 6.0])))
+
+    def test_rejects_legacy_host_checkpoint_without_graph_ema_slot(self) -> None:
+        module = load_module()
+
+        class HostGraph(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.p1 = torch.nn.Parameter(torch.ones(3))
+
+        model = torch.nn.Linear(2, 1, bias=False)
+        checkpoint = {
+            "model": model.state_dict(),
+            "ema": {
+                "decay": 0.9,
+                "num_updates": 5,
+                "shadow_params": [torch.zeros_like(model.weight)],
+            },
+            "step": 8,
+        }
+
+        with self.assertRaisesRegex(ValueError, "EMA shadow parameter count mismatch"):
+            module.restore_evaluation_parameters(
+                score_model=model,
+                graph=HostGraph(),
+                checkpoint=checkpoint,
+                ema_decay=0.9,
+            )
+
     def test_text_manifest_binds_external_assets_and_run_directory(self) -> None:
         module = load_module()
         self.assertTrue(hasattr(module, "validate_text_manifest"))

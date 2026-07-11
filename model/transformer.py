@@ -677,6 +677,12 @@ class SEDD4REC(nn.Module):
                 g_max=float(text_side_cfg.get("g_max", 0.5)),
                 agreement_null_curve_path=Path(text_side_cfg.get("agreement_null_curve_path")) if text_side_cfg.get("agreement_null_curve_path") else None,
                 text_utility_report_path=Path(text_side_cfg.get("text_utility_report_path")) if text_side_cfg.get("text_utility_report_path") else None,
+                gate_dataset_scale_override=(
+                    float(text_side_cfg.get("gate_dataset_scale_override"))
+                    if text_side_cfg.get("gate_dataset_scale_override") is not None
+                    else None
+                ),
+                require_gate_source=bool(text_side_cfg.get("require_gate_source", False)),
                 agreement_k=float(text_side_cfg.get("agreement_k", 2.0)),
                 agreement_weight=float(text_side_cfg.get("agreement_weight", 0.45)),
                 completeness_weight=float(text_side_cfg.get("completeness_weight", 0.15)),

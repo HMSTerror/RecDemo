@@ -478,6 +478,89 @@ class TextSideProposalTests(unittest.TestCase):
                     text_utility_report_path=utility_report_path,
                 )
 
+    def test_strict_v2_full_requires_gate_source_and_accepts_explicit_scale(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            dataset_dir = repo_root / "dataset" / "paper_raw_v1" / "ToySet"
+            dataset_dir.mkdir(parents=True)
+            pd.DataFrame(
+                [
+                    {"item_id": 0, "field_coverage": 1.0},
+                    {"item_id": 1, "field_coverage": 1.0},
+                ]
+            ).to_csv(dataset_dir / "text_bank.csv", index=False)
+            torch.save(
+                {
+                    "embeddings": torch.tensor(
+                        [[1.0, 0.0], [0.0, 1.0]], dtype=torch.float32
+                    ),
+                    "field_coverage": torch.ones(2, dtype=torch.float32),
+                },
+                dataset_dir / "embeddings.pt",
+            )
+            null_curve = dataset_dir / "agreement_null_curves.json"
+            null_curve.write_text(
+                json.dumps(
+                    {
+                        "length_bins": {
+                            "1": {"mu": 0.0, "sigma": 1.0},
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "gate source"):
+                module.TextSideProposalBuilder.from_files(
+                    dataset_dir=dataset_dir,
+                    item_num=2,
+                    is_disliked_item=False,
+                    embeddings_path=dataset_dir / "embeddings.pt",
+                    agreement_null_curve_path=null_curve,
+                    kernel_version="v2",
+                    ablation_mode="none",
+                    require_gate_source=True,
+                )
+
+            default_report = (
+                repo_root
+                / "docs"
+                / "reports"
+                / "data"
+                / "2026-07-02-gate0"
+                / "gate0_text_utility_report.json"
+            )
+            default_report.parent.mkdir(parents=True)
+            default_report.write_text(
+                json.dumps(
+                    {
+                        "datasets": [
+                            {
+                                "dataset": "ToySet",
+                                "bank_hash": "default-report-must-not-win",
+                                "u_ds_popularity": 0.65,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            builder = module.TextSideProposalBuilder.from_files(
+                dataset_dir=dataset_dir,
+                item_num=2,
+                is_disliked_item=False,
+                embeddings_path=dataset_dir / "embeddings.pt",
+                agreement_null_curve_path=null_curve,
+                kernel_version="v2",
+                ablation_mode="none",
+                gate_dataset_scale_override=0.25,
+                require_gate_source=True,
+            )
+            self.assertAlmostEqual(0.25, builder.gate_dataset_scale, places=12)
+
     def test_text_anchor_only_ablation_still_forces_full_gate_under_dataset_scaling(self) -> None:
         module = load_module()
         builder = module.TextSideProposalBuilder(

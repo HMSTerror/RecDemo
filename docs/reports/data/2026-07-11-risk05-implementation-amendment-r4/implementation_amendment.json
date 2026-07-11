@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "report_name": "RISK-05 implementation-only amendment for a post-r3 attempt",
+  "generated_at": "2026-07-11T17:18:42+08:00",
+  "status": "draft_pending_final_commit_and_server_smoke",
+  "supersedes_runtime_template_only": "docs/reports/data/2026-07-11-risk05-freeze/risk0607_protocol_template.json",
+  "does_not_supersede_scientific_preregistration": true,
+  "frozen_sources": {
+    "risk04_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+    "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+    "preflight_report_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+    "risk05_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk05_2026-07-11_332efb8",
+    "risk05_preregistration_semantic_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+    "risk05_preregistration_file_sha256": "d08e7988a4e25c0236b725274d34af21d933fb16f8e18f5e542bdc0fe1f62537",
+    "e1_marker_file_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+    "e1_source_revision": "0338cc219f9ee983b8e9464b4df85f34471c7d6f"
+  },
+  "frozen_scientific_contract": {
+    "seed": 100,
+    "datasets": ["Beauty", "Steam"],
+    "corruption_levels": [0, 20, 40, 60, 80, 100],
+    "pilot_levels": [0, 60, 100],
+    "pilot_task_counts": {
+      "e1_pass": 14,
+      "e1_fail_audit": 8
+    },
+    "primary_risk_statistic": "EPE",
+    "phi_R_formula": "clip((R_100 - R_D) / (R_100 - R_clean), 0, 1)",
+    "phi_R": {
+      "Beauty": {
+        "0": 1.0,
+        "20": 0.6571838503003895,
+        "40": 0.3464195403937691,
+        "60": 0.1366311174092942,
+        "80": 0.042045495400233,
+        "100": 0.0
+      },
+      "Steam": {
+        "0": 1.0,
+        "20": 0.5003765125284032,
+        "40": 0.13864348022246753,
+        "60": 0.05808110271503808,
+        "80": 0.0,
+        "100": 0.0
+      }
+    },
+    "evaluator_version": "e0_full_tail_v2",
+    "selector_version": "validation-ndcg10-rowweighted-v1",
+    "no_rescue": true,
+    "no_second_seed": true,
+    "no_retry": true
+  },
+  "implementation_changes_only": [
+    "resolve exact level-labelled RISK-04 embedding paths and verify file SHA-256 before manifest emission",
+    "make queue_root the manifest containment root and require argv work_dir to equal task.run_dir",
+    "inject frozen phi_R explicitly for controlled full arms and require a non-silent gate/null source",
+    "bind embedding, bank and RISK-05 preregistration provenance in task environment",
+    "run from a clean immutable source root containing the graph-p1 optimizer/EMA/checkpoint contract",
+    "scope R12 to its exact source revision and require fresh final-revision verification"
+  ],
+  "claim_boundary": {
+    "phi_R_role": "controlled-corruption pilot gate",
+    "phi_R_is_paper_phi_U_ds_replacement": false,
+    "unit_or_smoke_is_performance_evidence": false,
+    "single_seed_wording": "single-run result/observation only"
+  },
+  "finalization_required": [
+    "replace pending status with pass or stop after fresh local verification",
+    "record repaired source commit and source manifest SHA-256",
+    "record exact new queue root, ledger SHA-256 and config SHA-256",
+    "generate a runnable protocol JSON with no placeholder and hash it",
+    "complete server-side no-training smoke before controller launch"
+  ]
+}

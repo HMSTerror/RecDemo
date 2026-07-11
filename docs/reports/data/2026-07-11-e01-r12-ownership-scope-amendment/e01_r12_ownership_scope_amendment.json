@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "report_name": "E1/R12 ownership and checkpoint scope amendment",
+  "generated_at": "2026-07-11T17:18:42+08:00",
+  "decision": "revision_scoped_pass_with_checkpoint_boundary",
+  "revisions": {
+    "pre_repair_r3_source": "e63193f9485b554c52fd91a676102546c0687fc1",
+    "ownership_repair": "af85ec3340a75f614ecc2e4a05a6085c161d0f29",
+    "r12_source": "0338cc219f9ee983b8e9464b4df85f34471c7d6f",
+    "current_branch_head_before_amendment_commit": "38ddbb088c3f05b57f4def679f641c2a11cc1ed7"
+  },
+  "r12": {
+    "status": "pass",
+    "dataset": "Beauty",
+    "seed": 100,
+    "trace_steps": [0, 1, 100, 1000],
+    "fp32_tolerance": 0.000001,
+    "comparison_counts": {
+      "0": 592,
+      "1": 802,
+      "100": 802,
+      "1000": 790,
+      "total": 2986,
+      "failed": 0
+    },
+    "trace_report_sha256": "b912d5b6807320e9466048bc6e98ec470e85e510433b3471c65c94a569e387ce",
+    "e01_pass_file_sha256": "1da54cf25f936a7b09397cf78f14162f3ab02e0caa1c46dfa2d3aba4b37c017f",
+    "risk02_pass_file_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+    "supported_scope": [
+      "in-memory production parameter ownership and EMA/update order at source revision 0338cc2",
+      "Beauty AdaptiveWise host versus final-v2 closed-gate full and global_p numerical trace",
+      "proposal, loss, gradient, parameter, optimizer and recorded RNG/batch-order comparisons at the four frozen steps"
+    ],
+    "unsupported_scope": [
+      "r3 tasks executed from e63193f",
+      "standalone checkpoint serialization and frozen reevaluation of graph-owned p1",
+      "any recommendation-metric equivalence or performance guarantee",
+      "an unverified later source commit"
+    ]
+  },
+  "r3_implication": {
+    "manifest_sha256": "559808f19da0bc066d9a658bd022757b9573a00ea38583736e4c76d247891653",
+    "host_results_eligible_as_repaired_host": false,
+    "reason": "r3 declared and executed pre-repair e63193f from a dirty mutable source root"
+  },
+  "checkpoint_boundary": {
+    "r12_covered_checkpoint_roundtrip": false,
+    "pre_amendment_common_evaluator_loaded_graph_p1": false,
+    "required_fix": "explicit graph state plus model/graph training-parameter order and common-evaluator EMA restoration",
+    "status": "implemented_locally_pending_full_verification_and_commit"
+  },
+  "prelaunch_requirements": [
+    "commit and hash the queue-safe and checkpoint-contract repair",
+    "run fresh checkpoint round-trip and common-evaluator regression tests",
+    "run a final-revision ownership/closed-gate trace or an explicitly scoped equivalent smoke",
+    "bind the new immutable source revision in the amended RISK-05 implementation artifact and every task"
+  ]
+}

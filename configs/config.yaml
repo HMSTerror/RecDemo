@@ -84,6 +84,8 @@ text_side:
   g_max: 0.5
   agreement_null_curve_path: null
   text_utility_report_path: null
+  gate_dataset_scale_override: null
+  require_gate_source: False
   agreement_k: 2.0
   agreement_weight: 0.45
   completeness_weight: 0.15

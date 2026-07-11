@@ -170,11 +170,14 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             )
             self.assertTrue(risk05["preregistration_sha256"])
             queue_root = root / "queue-2026-07-11"
+            risk04_runtime_root = risk04_root.resolve().as_posix()
+            if not risk04_runtime_root.startswith("/"):
+                risk04_runtime_root = "/srv/aaai27/risk04-2026-07-11"
             protocol = {
                 "queue_id": "aaai27-risk0408-test",
                 "created_at": "2026-07-11T08:20:00+08:00",
                 "queue_root_posix": "/srv/aaai27/queue/2026-07-11",
-                "run_root_posix": "/srv/aaai27/queue/2026-07-11/runs",
+                "run_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "source_root_posix": "/srv/aaai27/source",
                 "source_manifest_sha256": "d" * 64,
                 "ledger_path_posix": "/srv/aaai27/ledger.csv",
@@ -183,6 +186,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 "config_sha256": "1" * 64,
                 "python_bin": "/srv/aaai27/source/.venv/bin/python",
                 "single_train": "/srv/aaai27/source/single_train.py",
+                "risk04_root_posix": risk04_runtime_root,
                 "training_overrides": ["training.n_iters=10"],
                 "estimated_gpu_hours": {"low": 0.5, "high": 1.0, "output_gib": 0.2},
                 "datasets": {
@@ -203,6 +207,70 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             self.assertEqual(8, sum(task.branch == "e1_fail_audit" for task in decoded.tasks))
             self.assertTrue((queue_root / "queue" / "queue_seed100.json").exists())
 
+            prereg = json.loads(
+                (queue_root / "protocol" / "risk05_preregistration.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            prereg_sha256 = stable_sha256(prereg)
+            for task in manifest["tasks"]:
+                self.assertTrue(
+                    task["run_dir"].startswith(
+                        "/srv/aaai27/queue/2026-07-11/runs/"
+                    ),
+                    task["task_id"],
+                )
+                self.assertNotIn("/runs/runs/", task["run_dir"])
+                work_dirs = [
+                    token.split("=", 1)[1]
+                    for token in task["argv"]
+                    if token.startswith("work_dir=")
+                ]
+                self.assertEqual([task["run_dir"]], work_dirs, task["task_id"])
+                if task["arm"] == "host":
+                    continue
+                level = task["arm"].rsplit("c", 1)[-1]
+                expected_embedding = (
+                    f"{risk04_runtime_root}/banks/{task['dataset']}/"
+                    f"level-{int(level):03d}/embeddings.pt"
+                )
+                self.assertIn(
+                    f"text_side.embeddings_path={expected_embedding}",
+                    task["argv"],
+                    task["task_id"],
+                )
+                self.assertEqual(
+                    risk04["datasets"][task["dataset"]]["banks"][level][
+                        "embedding_sha256"
+                    ],
+                    task["env"].get("AAAI_EMBEDDING_SHA256"),
+                    task["task_id"],
+                )
+                self.assertEqual(
+                    risk04["datasets"][task["dataset"]]["banks"][level][
+                        "bank_sha256"
+                    ],
+                    task["env"].get("AAAI_BANK_SHA256"),
+                    task["task_id"],
+                )
+                if task["arm"].startswith("risk_gated_full_c"):
+                    expected_scale = prereg["phi_R"][task["dataset"]][level]
+                    self.assertIn(
+                        f"text_side.gate_dataset_scale_override={expected_scale}",
+                        task["argv"],
+                        task["task_id"],
+                    )
+                    self.assertEqual(
+                        prereg_sha256,
+                        task["env"].get("AAAI_RISK05_PREREG_SHA256"),
+                        task["task_id"],
+                    )
+                    self.assertEqual(
+                        str(expected_scale),
+                        task["env"].get("AAAI_GATE_DATASET_SCALE"),
+                        task["task_id"],
+                    )
+
     def test_risk08_rejects_unproven_metrics_and_writes_one_exit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -214,11 +282,14 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             risk05_root = root / "risk05-2026-07-11"
             build_risk05_bundle(risk04_root, preflight, e1, risk05_root, generated_at="2026-07-11T08:10:00+08:00")
             queue_root = root / "queue-2026-07-11"
+            risk04_runtime_root = risk04_root.resolve().as_posix()
+            if not risk04_runtime_root.startswith("/"):
+                risk04_runtime_root = "/srv/aaai27/risk04-2026-07-11"
             protocol = {
                 "queue_id": "aaai27-risk0408-r8-test",
                 "created_at": "2026-07-11T08:20:00+08:00",
                 "queue_root_posix": "/srv/aaai27/queue/2026-07-11",
-                "run_root_posix": "/srv/aaai27/queue/2026-07-11/runs",
+                "run_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "source_root_posix": "/srv/aaai27/source",
                 "source_manifest_sha256": "d" * 64,
                 "ledger_path_posix": "/srv/aaai27/ledger.csv",
@@ -227,6 +298,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 "config_sha256": "1" * 64,
                 "python_bin": "/srv/aaai27/source/.venv/bin/python",
                 "single_train": "/srv/aaai27/source/single_train.py",
+                "risk04_root_posix": risk04_runtime_root,
                 "training_overrides": [],
                 "estimated_gpu_hours": {"low": 0.5, "high": 1.0, "output_gib": 0.2},
                 "datasets": {

@@ -99,6 +99,16 @@ class QueueValidationTests(unittest.TestCase):
             "run_dir",
         )
 
+    def test_rejects_hydra_work_dir_that_differs_from_task_run_dir(self) -> None:
+        task = make_task(task_id="bad.work-dir")
+        task["argv"] = [
+            "python",
+            "single_train.py",
+            "work_dir=/data/Zijian/goal/aaai27_queue/dated/runs/collision",
+        ]
+
+        self.assert_invalid(task, "work_dir")
+
     def test_rejects_force_variants_and_overwrite_environment(self) -> None:
         self.assert_invalid(
             make_task(task_id="bad.force.assignment", argv=["python", "adapter.py", "--force=True"]),

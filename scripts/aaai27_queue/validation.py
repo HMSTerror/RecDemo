@@ -84,6 +84,17 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: invalid gpu_slots for task kind")
     if not task.argv or any(not isinstance(item, str) or not item for item in task.argv):
         raise ManifestError(f"{task.task_id}: argv must be a nonempty string array")
+    hydra_work_dirs = [
+        item.split("=", 1)[1]
+        for item in task.argv
+        if item.startswith("work_dir=")
+    ]
+    if hydra_work_dirs and (
+        len(hydra_work_dirs) != 1 or hydra_work_dirs[0] != task.run_dir
+    ):
+        raise ManifestError(
+            f"{task.task_id}: Hydra work_dir must equal task run_dir"
+        )
     lowered = {item.strip().casefold() for item in task.argv}
     destructive = lowered & DESTRUCTIVE_TOKENS
     destructive.update(item for item in lowered if item.startswith("--force=") or item.startswith("--no-skip-existing="))

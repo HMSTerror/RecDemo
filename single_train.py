@@ -16,7 +16,10 @@ import losses
 import noise_lib
 import sampling
 import utils
-from scripts.aaai27_adapters.optimizer_contract import compose_optimizer_parameters
+from scripts.aaai27_adapters.optimizer_contract import (
+    compose_named_training_parameters,
+    compose_optimizer_parameters,
+)
 from model.ema import ExponentialMovingAverage
 from model.transformer import SEDD4REC
 
@@ -176,12 +179,8 @@ def main(cfg: DictConfig):
     num_parameters = sum(p.numel() for p in score_model.parameters())
     print(f"Number of parameters in the model: {num_parameters}")
 
-    training_parameters = list(score_model.parameters())
-    graph_p1 = getattr(graph, "p1", None)
-    if graph_p1 is not None and all(
-        id(graph_p1) != id(parameter) for parameter in training_parameters
-    ):
-        training_parameters.append(graph_p1)
+    named_training_parameters = compose_named_training_parameters(score_model, graph)
+    training_parameters = [parameter for _, parameter in named_training_parameters]
     ema = ExponentialMovingAverage(training_parameters, decay=cfg.training.ema)
     print(score_model)
     print(f"EMA: {ema}")
@@ -197,9 +196,11 @@ def main(cfg: DictConfig):
         optimizer=optimizer,
         scaler=scaler,
         model=score_model,
+        graph=graph,
         noise=noise,
         ema=ema,
         training_parameters=training_parameters,
+        training_parameter_names=[name for name, _ in named_training_parameters],
         step=0,
     )
     initial_step = int(state["step"])

@@ -29,6 +29,9 @@ import noise_lib
 import utils
 from model.ema import ExponentialMovingAverage
 from model.transformer import SEDD4REC
+from scripts.aaai27_adapters.optimizer_contract import (
+    compose_named_training_parameters,
+)
 
 
 METRIC_CONTRACT_VERSION = "e0_full_tail_v2"
@@ -72,8 +75,23 @@ def validate_best_summary(summary: dict[str, Any], *, checkpoint_step: int) -> N
         )
 
 
-def validate_ema_state(ema: Any, model: Any) -> None:
-    parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
+def validate_ema_state(
+    ema: Any,
+    parameters_or_model: Any,
+    parameter_names: list[str] | None = None,
+) -> None:
+    if hasattr(parameters_or_model, "parameters"):
+        parameters = [
+            parameter
+            for parameter in parameters_or_model.parameters()
+            if parameter.requires_grad
+        ]
+    else:
+        parameters = [
+            parameter
+            for parameter in parameters_or_model
+            if parameter.requires_grad
+        ]
     shadows = list(ema.shadow_params)
     if len(shadows) != len(parameters):
         raise ValueError(
@@ -81,10 +99,47 @@ def validate_ema_state(ema: Any, model: Any) -> None:
         )
     for index, (shadow, parameter) in enumerate(zip(shadows, parameters)):
         if tuple(shadow.shape) != tuple(parameter.shape):
+            label = (
+                parameter_names[index]
+                if parameter_names is not None and index < len(parameter_names)
+                else str(index)
+            )
             raise ValueError(
-                f"EMA shadow parameter shape mismatch at index {index}: "
+                f"EMA shadow parameter shape mismatch at {label}: "
                 f"expected {tuple(parameter.shape)}, got {tuple(shadow.shape)}"
             )
+
+
+def restore_evaluation_parameters(
+    *,
+    score_model: Any,
+    graph: Any,
+    checkpoint: dict[str, Any],
+    ema_decay: float,
+) -> dict[str, Any]:
+    load_model_state_strict(score_model, checkpoint["model"])
+    if "graph" in checkpoint:
+        graph.load_state_dict(checkpoint["graph"], strict=True)
+
+    named_parameters = compose_named_training_parameters(score_model, graph)
+    parameter_names = [name for name, _ in named_parameters]
+    checkpoint_names = checkpoint.get("training_parameter_names")
+    if checkpoint_names is not None and list(checkpoint_names) != parameter_names:
+        raise ValueError(
+            "checkpoint training parameter order mismatch: "
+            f"expected {parameter_names}, got {list(checkpoint_names)}"
+        )
+    training_parameters = [parameter for _, parameter in named_parameters]
+    ema = ExponentialMovingAverage(training_parameters, decay=float(ema_decay))
+    ema.load_state_dict(checkpoint["ema"])
+    validate_ema_state(ema, training_parameters, parameter_names)
+    ema.copy_to(training_parameters)
+    return {
+        "ema": ema,
+        "training_parameters": training_parameters,
+        "training_parameter_names": parameter_names,
+        "legacy_parameter_order_inferred": checkpoint_names is None,
+    }
 
 
 def validate_text_manifest(
@@ -422,13 +477,14 @@ def evaluate_frozen_checkpoint(args: argparse.Namespace) -> Path:
 
     graph = graph_lib.get_graph(cfg, device)
     score_model = SEDD4REC(cfg).to(device)
-    ema = ExponentialMovingAverage(score_model.parameters(), decay=float(cfg.training.ema))
     checkpoint_step = int(checkpoint["step"])
     validate_best_summary(summary, checkpoint_step=checkpoint_step)
-    load_model_state_strict(score_model, checkpoint["model"])
-    ema.load_state_dict(checkpoint["ema"])
-    validate_ema_state(ema, score_model)
-    ema.copy_to(score_model.parameters())
+    restore_evaluation_parameters(
+        score_model=score_model,
+        graph=graph,
+        checkpoint=checkpoint,
+        ema_decay=float(cfg.training.ema),
+    )
     score_model.eval()
 
     noise = noise_lib.get_noise(cfg).to(device)

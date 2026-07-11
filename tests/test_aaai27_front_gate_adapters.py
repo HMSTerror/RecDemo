@@ -41,6 +41,7 @@ class FrontGateAdapterTests(unittest.TestCase):
             "config_sha256": "d" * 64,
             "python_bin": "/srv/aaai27/source/.venv/bin/python",
             "single_train": "/srv/aaai27/source/single_train.py",
+            "risk05_preregistration_sha256": "9" * 64,
             "training_overrides": ["model.hidden_size=256", "training.n_iters=10"],
             "estimated_gpu_hours": {"low": 0.5, "high": 1.0, "output_gib": 0.2},
             "datasets": {
@@ -52,7 +53,9 @@ class FrontGateAdapterTests(unittest.TestCase):
                     "banks": {
                         str(level): {
                             "embedding_path": f"/srv/banks/{dataset}/{level}/embeddings.pt",
+                            "embedding_sha256": "8" * 64,
                             "bank_sha256": "f" * 64,
+                            "phi_R": 1.0 - (level / 100.0),
                         }
                         for level in (0, 60, 100)
                     },

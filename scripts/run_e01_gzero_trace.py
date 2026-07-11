@@ -60,7 +60,10 @@ LAST_EXECUTION_CONTEXT: dict[str, Any] = {
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-from scripts.aaai27_adapters.optimizer_contract import compose_optimizer_parameters
+from scripts.aaai27_adapters.optimizer_contract import (
+    compose_named_training_parameters,
+    compose_optimizer_parameters,
+)
 DEFAULT_E0_AMENDMENT_PATH = (
     REPO_ROOT
     / "docs"
@@ -1577,12 +1580,10 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
             if arm == "global_p" and builder.ablation_mode != "global_p":
                 raise ValueError("global_p arm has the wrong ablation mode")
 
-        training_parameters = list(model.parameters())
-        graph_p1 = getattr(graph, "p1", None)
-        if graph_p1 is not None and all(
-            id(graph_p1) != id(parameter) for parameter in training_parameters
-        ):
-            training_parameters.append(graph_p1)
+        named_training_parameters = compose_named_training_parameters(model, graph)
+        training_parameters = [
+            parameter for _, parameter in named_training_parameters
+        ]
         ema = ExponentialMovingAverage(
             training_parameters,
             decay=float(cfg.training.ema),
@@ -1612,9 +1613,13 @@ def run_production_trace(args: argparse.Namespace) -> dict[str, Any]:
             "optimizer": optimizer,
             "scaler": scaler,
             "model": model,
+            "graph": graph,
             "noise": noise,
             "ema": ema,
             "training_parameters": training_parameters,
+            "training_parameter_names": [
+                name for name, _ in named_training_parameters
+            ],
             "step": 0,
         }
         train_loader, val_loader, test_loader = data.get_seqdataloader(cfg)

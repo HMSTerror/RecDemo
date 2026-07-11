@@ -12,7 +12,7 @@ import json
 import math
 import re
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from .bank_builder import CORRUPTION_SEED, build_corruption_bank
@@ -514,10 +514,28 @@ def build_risk0607_manifest(
         raise QueueSafetyError("bound RISK-04 report lacks an artifact hash")
     output_root = _dated_absent(Path(output_root), "RISK-06/RISK-07 queue root")
     queue_root_posix = _posix_path(protocol_template.get("queue_root_posix"), "queue_root_posix")
-    run_root_posix = _posix_path(protocol_template.get("run_root_posix", f"{queue_root_posix}/runs"), "run_root_posix")
+    run_root_posix = _posix_path(
+        protocol_template.get("run_root_posix", queue_root_posix),
+        "run_root_posix",
+    )
     source_root_posix = _posix_path(protocol_template.get("source_root_posix"), "source_root_posix")
-    if not (run_root_posix == queue_root_posix or run_root_posix.startswith(queue_root_posix + "/")):
-        raise QueueSafetyError("run_root_posix must remain below queue_root_posix")
+    if run_root_posix != queue_root_posix:
+        raise QueueSafetyError(
+            "run_root_posix is the manifest containment root and must equal queue_root_posix"
+        )
+    risk04_root_posix = _posix_path(
+        protocol_template.get("risk04_root_posix"),
+        "risk04_root_posix",
+    )
+    bound_risk04_root = Path(str(metadata["risk04_bundle_root"])).resolve()
+    bound_risk04_root_posix = bound_risk04_root.as_posix()
+    if (
+        bound_risk04_root_posix.startswith("/")
+        and bound_risk04_root_posix != risk04_root_posix
+    ):
+        raise QueueSafetyError(
+            "risk04_root_posix does not match the RISK-05-bound RISK-04 root"
+        )
     datasets_template = protocol_template.get("datasets")
     if not isinstance(datasets_template, Mapping) or set(datasets_template) != set(DATASETS):
         raise QueueSafetyError("RISK-06/RISK-07 requires exactly Beauty and Steam dataset settings")
@@ -525,6 +543,19 @@ def build_risk0607_manifest(
     source_manifest_sha256 = _require_hash(protocol_template.get("source_manifest_sha256"), "source_manifest_sha256")
     ledger_sha256 = _require_hash(protocol_template.get("ledger_sha256"), "ledger_sha256")
     config_sha256 = _require_hash(protocol_template.get("config_sha256"), "config_sha256")
+    risk05_prereg = _load_object(
+        risk05_root / "protocol" / "risk05_preregistration.json",
+        "RISK-05 preregistration",
+    )
+    risk05_preregistration_sha256 = stable_sha256(risk05_prereg)
+    if risk05_preregistration_sha256 != metadata.get(
+        "risk05_preregistration_sha256"
+    ):
+        raise QueueSafetyError("RISK-05 preregistration hash disagrees with bundle metadata")
+    phi_r = risk05_prereg.get("phi_R")
+    if not isinstance(phi_r, Mapping) or set(phi_r) != set(DATASETS):
+        raise QueueSafetyError("RISK-05 preregistration lacks the two-domain phi_R map")
+
     protocol: dict[str, Any] = {
         "queue_id": str(protocol_template["queue_id"]),
         "created_at": str(protocol_template["created_at"]),
@@ -537,6 +568,8 @@ def build_risk0607_manifest(
         "config_sha256": config_sha256,
         "python_bin": str(protocol_template["python_bin"]),
         "single_train": str(protocol_template["single_train"]),
+        "risk04_root": risk04_root_posix,
+        "risk05_preregistration_sha256": risk05_preregistration_sha256,
         "training_overrides": [str(item) for item in protocol_template.get("training_overrides", [])],
         "estimated_gpu_hours": dict(protocol_template.get("estimated_gpu_hours", {"low": 0.5, "high": 1.0, "output_gib": 0.2})),
         "datasets": {},
@@ -546,19 +579,44 @@ def build_risk0607_manifest(
         if not isinstance(template, Mapping):
             raise QueueSafetyError(f"pilot dataset template is not an object: {dataset}")
         risk04_dataset = risk04_report["datasets"][dataset]
-        bank_root = str(template.get("bank_root_posix", f"{source_root_posix}/banks/{dataset}")).rstrip("/")
         banks: dict[str, Any] = {}
         for level in PILOT_LEVELS:
             source_bank = risk04_dataset["banks"][str(level)]
+            relative_embedding = PurePosixPath(str(source_bank["embedding_path"]))
+            if relative_embedding.is_absolute() or ".." in relative_embedding.parts:
+                raise QueueSafetyError(
+                    f"RISK-04 embedding path is not a safe relative path: {relative_embedding}"
+                )
+            embedding_sha256 = _require_hash(
+                source_bank.get("embedding_sha256"),
+                f"{dataset} level {level} embedding_sha256",
+            )
+            bound_embedding = bound_risk04_root.joinpath(*relative_embedding.parts)
+            if not bound_embedding.is_file():
+                raise QueueSafetyError(
+                    f"bound RISK-04 embedding is missing: {bound_embedding}"
+                )
+            if sha256_file(bound_embedding) != embedding_sha256:
+                raise QueueSafetyError(
+                    f"bound RISK-04 embedding hash mismatch: {bound_embedding}"
+                )
             banks[str(level)] = {
-                "embedding_path": f"{bank_root}/{level}/embeddings.pt",
+                "embedding_path": (
+                    f"{risk04_root_posix}/{relative_embedding.as_posix()}"
+                ),
+                "embedding_sha256": embedding_sha256,
                 "bank_sha256": str(source_bank["bank_sha256"]),
+                "phi_R": float(phi_r[dataset][str(level)]),
             }
         protocol["datasets"][dataset] = {
             "dataset_dir": str(template["dataset_dir"]),
             "split_sha256": str(risk04_dataset["split_sha256"]),
             "text_bank_path": str(template["text_bank_path"]),
             "null_curve_path": str(template["null_curve_path"]),
+            "phi_R": {
+                str(level): float(phi_r[dataset][str(level)])
+                for level in PILOT_LEVELS
+            },
             "config_sha256": _require_hash(template.get("config_sha256", config_sha256), f"{dataset} config_sha256"),
             "banks": banks,
         }
@@ -584,7 +642,6 @@ def build_risk0607_manifest(
     for relative in ("queue", "protocol", "markers", "manifests"):
         (output_root / relative).mkdir()
     atomic_write_json(output_root / "protocol" / "risk04_manifest.json", risk04_report)
-    risk05_prereg = _load_object(risk05_root / "protocol" / "risk05_preregistration.json", "RISK-05 preregistration")
     atomic_write_json(output_root / "protocol" / "risk05_preregistration.json", risk05_prereg)
     protocol["risk04_bundle_sha256"] = metadata["risk04_bundle_sha256"]
     protocol["risk05_preregistration_sha256"] = metadata["risk05_preregistration_sha256"]

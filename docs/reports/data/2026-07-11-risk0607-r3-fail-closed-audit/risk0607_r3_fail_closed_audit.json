@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "report_name": "RISK-06/RISK-07 r3 fail-closed audit",
+  "checked_at": "2026-07-11T17:18:42+08:00",
+  "classification": "failed_audit_artifact_only",
+  "queue": {
+    "root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-332efb8-r3",
+    "queue_id": "aaai27-risk0607-2026-07-11-332efb8-r3",
+    "manifest_sha256": "559808f19da0bc066d9a658bd022757b9573a00ea38583736e4c76d247891653",
+    "source_root": "/data/Zijian/goal/RecDemo",
+    "task_code_revision": "e63193f9485b554c52fd91a676102546c0687fc1",
+    "source_manifest_sha256": "a087c0eaa995b7a839d540b435645d53969f701c4237ca73b99a6c9ec6b88b51",
+    "stop_marker": "state/STOP_AFTER_CURRENT",
+    "stop_marker_sha256": "048436a4ae6128513025342498fef51092e32c1a3c264ab0744350528bc07715",
+    "stop_requested": true
+  },
+  "terminal_counts": {
+    "passed": 2,
+    "failed": 2,
+    "running": 0,
+    "ready": 0,
+    "pending": 18,
+    "full_tasks_started": 0
+  },
+  "completed_observations": {
+    "pilot.e1_pass.Beauty.host": {
+      "classification": "ineligible_hybrid_host_single_run_validation_observation",
+      "best_step": 8000,
+      "best_validation_ndcg10": 0.02209269400633314,
+      "summary_sha256": "1b5b056b707b806fbd21c494186cc90606d1af28239a31cbbe29be8dd45ab705"
+    },
+    "pilot.e1_pass.Steam.host": {
+      "classification": "ineligible_hybrid_host_single_run_validation_observation",
+      "best_step": 28000,
+      "best_validation_ndcg10": 0.01531301051497468,
+      "summary_sha256": "d5476807e825b2d4be1e871efb95afa5dac41bb40d061f23dc9a4f62a83e1d0c"
+    }
+  },
+  "failed_tasks": {
+    "pilot.e1_pass.Beauty.anchor.c0": {
+      "classification": "pre_training_asset_path_failure",
+      "missing_path": "/data/Zijian/goal/RecDemo/banks/Beauty/0/embeddings.pt",
+      "log_sha256": "10cd98e05d7ffac25a9762faf626c6827411a59e26101a3cf7e30f5f7e656400"
+    },
+    "pilot.e1_pass.Beauty.anchor.c100": {
+      "classification": "pre_training_asset_path_failure",
+      "missing_path": "/data/Zijian/goal/RecDemo/banks/Beauty/100/embeddings.pt",
+      "log_sha256": "22a8dec6db5eebaf91a70b06df19bbd8659961a764fc67afb64aefaa54d3ad37"
+    }
+  },
+  "root_causes": [
+    {
+      "id": "asset_binding",
+      "finding": "The manifest guessed source-root bank paths instead of resolving exact RISK-04 level-000/060/100 assets."
+    },
+    {
+      "id": "work_directory_collision",
+      "finding": "Every full task copied the corresponding anchor work_dir although task.run_dir used full_c{level}."
+    },
+    {
+      "id": "missing_phi_R",
+      "finding": "Full argv carried neither the frozen phi_R override nor a text utility report path and would have silently used dataset scale 1.0."
+    },
+    {
+      "id": "source_revision_mismatch",
+      "finding": "Tasks ran from mutable dirty e63193f source, which predates the af85ec3 graph-p1 ownership repair used by R12 descendant 0338cc2."
+    }
+  ],
+  "evidence_boundary": {
+    "risk08_eligible": false,
+    "performance_evidence": false,
+    "may_reuse_queue": false,
+    "may_restart_controller": false,
+    "required_next_attempt": "new immutable source plus new dated queue and manifest"
+  }
+}

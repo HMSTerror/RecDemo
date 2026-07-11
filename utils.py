@@ -56,9 +56,22 @@ def restore_checkpoint(ckpt_dir, state, device):
         loaded_state = torch.load(ckpt_dir, map_location=device)
         state['optimizer'].load_state_dict(loaded_state['optimizer'])
         state['model'].module.load_state_dict(loaded_state['model'], strict=False)
+        if 'graph' in loaded_state and state.get('graph') is not None:
+            state['graph'].load_state_dict(loaded_state['graph'], strict=True)
         state['ema'].load_state_dict(loaded_state['ema'])
         state['step'] = loaded_state['step']
         return state
+
+
+def _checkpoint_metadata(state):
+    metadata = {}
+    graph = state.get('graph')
+    if graph is not None and hasattr(graph, 'state_dict'):
+        metadata['graph'] = graph.state_dict()
+    training_parameter_names = state.get('training_parameter_names')
+    if training_parameter_names is not None:
+        metadata['training_parameter_names'] = list(training_parameter_names)
+    return metadata
 
 
 def save_checkpoint(ckpt_dir, state):
@@ -66,7 +79,8 @@ def save_checkpoint(ckpt_dir, state):
         'optimizer': state['optimizer'].state_dict(),
         'model': state['model'].module.state_dict(),
         'ema': state['ema'].state_dict(),
-        'step': state['step']
+        'step': state['step'],
+        **_checkpoint_metadata(state),
     }
     torch.save(saved_state, ckpt_dir)
     
@@ -75,7 +89,8 @@ def save_single_checkpoint(ckpt_dir, state):
         'optimizer': state['optimizer'].state_dict(),
         'model': state['model'].state_dict(),
         'ema': state['ema'].state_dict(),
-        'step': state['step']
+        'step': state['step'],
+        **_checkpoint_metadata(state),
     }
     torch.save(saved_state, ckpt_dir)
     

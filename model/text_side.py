@@ -292,6 +292,8 @@ class TextSideProposalBuilder(nn.Module):
         injection_mode: str = "kernel",
         loss_weight_scale: float = 1.0,
         text_utility_report_path: Path | None = None,
+        gate_dataset_scale_override: float | None = None,
+        require_gate_source: bool = False,
     ) -> "TextSideProposalBuilder":
         dataset_dir = Path(dataset_dir)
         if text_bank_path is None:
@@ -324,22 +326,50 @@ class TextSideProposalBuilder(nn.Module):
         if agreement_null_curve_path is not None and Path(agreement_null_curve_path).exists():
             agreement_null_stats = load_agreement_null_stats(Path(agreement_null_curve_path))
 
+        strict_v2_gate = (
+            bool(require_gate_source)
+            and str(kernel_version) == "v2"
+            and str(injection_mode) == "kernel"
+            and str(ablation_mode) in {"none", "u_shuffle"}
+        )
+        if strict_v2_gate and agreement_null_stats is None:
+            raise ValueError(
+                "strict v2 full gate requires an existing agreement null curve"
+            )
+
         resolved_text_utility_report_path = None
         if text_utility_report_path is not None:
             resolved_text_utility_report_path = Path(text_utility_report_path)
-        else:
+        elif gate_dataset_scale_override is None:
             candidate_path = default_text_utility_report_path(dataset_dir)
             if candidate_path is not None and candidate_path.exists():
                 resolved_text_utility_report_path = candidate_path
 
         text_utility_u_ds = None
         gate_dataset_scale = 1.0
-        if resolved_text_utility_report_path is not None:
+        if (
+            gate_dataset_scale_override is not None
+            and resolved_text_utility_report_path is not None
+        ):
+            raise ValueError(
+                "gate dataset scale must have exactly one source: "
+                "explicit override or text utility report"
+            )
+        if gate_dataset_scale_override is not None:
+            gate_dataset_scale = float(gate_dataset_scale_override)
+            if not np.isfinite(gate_dataset_scale) or not 0.0 <= gate_dataset_scale <= 1.0:
+                raise ValueError("gate dataset scale override must be finite and within [0, 1]")
+        elif resolved_text_utility_report_path is not None:
             bank_hash = _sha256_paths(Path(text_bank_path), Path(embeddings_path))
             text_utility_u_ds, gate_dataset_scale = load_text_utility_gate(
                 resolved_text_utility_report_path,
                 dataset_name=dataset_dir.name,
                 bank_hash=bank_hash,
+            )
+        elif strict_v2_gate:
+            raise ValueError(
+                "strict v2 full gate requires a gate source: "
+                "explicit scale or text utility report"
             )
 
         return cls(

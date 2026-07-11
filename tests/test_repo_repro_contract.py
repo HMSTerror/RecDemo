@@ -76,6 +76,8 @@ class RepoReproContractTests(unittest.TestCase):
             "injection_mode",
             "encoder_context_scale",
             "loss_weight_scale",
+            "gate_dataset_scale_override",
+            "require_gate_source",
         ):
             self.assertIn(
                 f'text_side_cfg.get("{knob}"',
