@@ -146,7 +146,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
         })
     manifest: dict[str, Any] = {
         "schema_version": 1,
-        "queue_id": "E05-SASREC-SEED100-GPU0-20260711",
+        "queue_id": f"E05.SASRec.{queue_root.name}",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "queue_root": str(queue_root),
         "source_root": str(source_root),
