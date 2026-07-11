@@ -1,0 +1,5 @@
+2026-07-11T14:24:00+08:00 FAIL wrapper missing in remote isolated bundle; no output root created
+2026-07-11T14:24:30+08:00 INFO copied build_risk05_preregistration.py SHA256=8a1adfc7cd8ee1aec836ce68242a31118c044425b266734bf4dd54b8f8913a90; remote hash matched
+2026-07-11T14:25:00+08:00 PASS RISK-05 bundle built with pilot_authorized=true; artifact_sha256=10e6a92ab8611c58cb2d0c42e16579e8da645129a31e7388746fdf71c3081dc8
+2026-07-11T14:25:00+08:00 PASS preregistration_sha256=5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65; E1 marker sha256=040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c
+2026-07-11T14:25:00+08:00 INFO no training started; next boundary is RISK-06/RISK-07 manifest validation

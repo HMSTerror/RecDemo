@@ -39,9 +39,14 @@ def _load_core_p1(path: Path, expected_size: int) -> np.ndarray:
         payload = torch.load(path, map_location="cpu", weights_only=False)
         if isinstance(payload, dict):
             candidates = [payload.get("p1"), payload.get("core_p1"), payload.get("model.text_side_builder.p1")]
-            state_dict = payload.get("state_dict")
-            if isinstance(state_dict, dict):
-                candidates.extend(value for key, value in state_dict.items() if str(key).endswith("text_side_builder.p1") or str(key).endswith(".p1"))
+            state_dicts = [payload.get("state_dict"), payload.get("model")]
+            for state_dict in state_dicts:
+                if isinstance(state_dict, dict):
+                    candidates.extend(
+                        value
+                        for key, value in state_dict.items()
+                        if str(key).endswith("text_side_builder.p1") or str(key).endswith(".p1")
+                    )
             payload = next((candidate for candidate in candidates if candidate is not None), None)
         if payload is None:
             raise ValueError("core p1 checkpoint does not expose a p1 vector")
@@ -153,6 +158,12 @@ def build_train_proposal_records(
         history_rows: list[int] = []
         for raw_item in raw_history:
             item_id = int(raw_item)
+            if item_id == len(item_ids):
+                # The production sequence loader uses the extra catalog slot
+                # as padding.  Preserve that slot so the builder can mask it,
+                # but never treat it as a real item row.
+                history_rows.append(item_id)
+                continue
             if item_id not in item_id_to_row:
                 raise ValueError(f"history item ID {item_id} is absent from frozen item mapping")
             history_rows.append(item_id_to_row[item_id])

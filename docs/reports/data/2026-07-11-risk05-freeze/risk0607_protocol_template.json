@@ -1,0 +1,48 @@
+{
+  "queue_id": "aaai27-risk0607-2026-07-11-332efb8",
+  "created_at": "2026-07-11T14:35:00+08:00",
+  "queue_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-332efb8",
+  "run_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-332efb8/runs",
+  "source_root_posix": "/data/Zijian/goal/RecDemo",
+  "source_manifest_sha256": "a087c0eaa995b7a839d540b435645d53969f701c4237ca73b99a6c9ec6b88b51",
+  "ledger_path_posix": "/data/Zijian/goal/aaai27_method_pass_bundle_20260711_c7be478/issues/2026-07-11_host-core-v2-preflight.csv",
+  "ledger_sha256": "e85d5176a6d67b74417b64d8fce77930e8b86a95d0e5546408f8bf97de961b3d",
+  "code_revision": "e63193f9485b554c52fd91a676102546c0687fc1",
+  "config_sha256": "2ea02aa34c7863c224d281c037ee809469176b3340ba30ea780d328f0b0a93c1",
+  "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
+  "single_train": "/data/Zijian/goal/RecDemo/single_train.py",
+  "training_overrides": [
+    "model.hidden_size=256",
+    "model.cond_dim=256",
+    "training.batch_size=256",
+    "training.n_iters=2000000",
+    "training.eval_freq=1000",
+    "training.snapshot_freq=1000",
+    "training.snapshot_freq_for_preemption=1000",
+    "training.snapshot_sampling=True",
+    "training.early_stop_patience=5",
+    "training.early_stop_min_step=5000",
+    "training.early_stop_metric=ndcg10",
+    "training.early_stop_strength=p5",
+    "training.early_stop_min_delta=0.0",
+    "+training.write_snapshot_checkpoint=False",
+    "+training.write_best_checkpoint=True"
+  ],
+  "estimated_gpu_hours": {"low": 1.0, "high": 4.0, "output_gib": 1.0},
+  "datasets": {
+    "Beauty": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+      "config_sha256": "2ea02aa34c7863c224d281c037ee809469176b3340ba30ea780d328f0b0a93c1",
+      "bank_root_posix": "/data/Zijian/goal/aaai27_pilot_inputs_2026-07-11_332efb8/banks/Beauty"
+    },
+    "Steam": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
+      "config_sha256": "2ea02aa34c7863c224d281c037ee809469176b3340ba30ea780d328f0b0a93c1",
+      "bank_root_posix": "/data/Zijian/goal/aaai27_pilot_inputs_2026-07-11_332efb8/banks/Steam"
+    }
+  }
+}

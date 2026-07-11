@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "risk_id": "RISK-05",
+  "created_at": "2026-07-11T14:25:00+08:00",
+  "remote": "l20",
+  "risk04_bundle_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "risk04_bundle_file_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+  "preflight_report": "/data/Zijian/goal/RecDemoRuns/aaai27_host_core_v2_2026-07-11_332efb8/preflight_report/risk_preflight_report.json",
+  "preflight_report_file_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+  "e1_marker": "/data/Zijian/goal/RecDemoRuns/aaai27_e01_gzero_trace_20260711_r12_0338cc2/RISK-02_PASS.json",
+  "e1_marker_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+  "risk05_bundle_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk05_2026-07-11_332efb8",
+  "risk05_bundle_artifact_sha256": "10e6a92ab8611c58cb2d0c42e16579e8da645129a31e7388746fdf71c3081dc8",
+  "risk05_preregistration_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+  "pilot_authorized": true,
+  "training_started": false,
+  "seed": 100,
+  "failure_policy": "fail_closed",
+  "max_attempts": 1,
+  "wrapper_sha256": "8a1adfc7cd8ee1aec836ce68242a31118c044425b266734bf4dd54b8f8913a90",
+  "next_step": "Build and validate the dated RISK-06/RISK-07 22-task pilot manifest; do not launch until controller preflight and GPU availability checks pass."
+}

@@ -1,0 +1,5 @@
+2026-07-11T14:31:00+08:00 PASS created dated pilot-input symlink root with 0/60/100 aliases to final RISK-04 banks; manifest_sha256=85d0968c3b2de2ed4322d2c172a78fcd0b121b51adfb10b78d728fe8baae50ae
+2026-07-11T14:35:00+08:00 INFO protocol template bound source_manifest_sha256=a087c0eaa995b7a839d540b435645d53969f701c4237ca73b99a6c9ec6b88b51, ledger_sha256=e85d5176a6d67b74417b64d8fce77930e8b86a95d0e5546408f8bf97de961b3d, config_sha256=2ea02aa34c7863c224d281c037ee809469176b3340ba30ea780d328f0b0a93c1
+2026-07-11T14:36:00+08:00 PASS RISK-06/RISK-07 manifest built: 22 tasks (e1_pass=14, e1_fail_audit=8), seed=100, PreferGrow only
+2026-07-11T14:36:30+08:00 PASS controller validate exit=0; dry-run (E1 pass, RISK-08 pending) exit=0; no run directories/checkpoints/training PID created
+2026-07-11T14:36:30+08:00 INFO queue manifest sha256=f24d4a1682e25b1df8028e53bcd15fd667b8100dca71e8b63bd0de7fc43b90ea; next action requires pilot-launch authorization boundary

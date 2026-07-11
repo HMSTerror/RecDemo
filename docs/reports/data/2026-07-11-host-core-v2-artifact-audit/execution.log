@@ -1,0 +1,13 @@
+2026-07-11T13:25:16+08:00 INFO attempt created: host-core-v2-artifact-audit-2026-07-11-332efb8
+2026-07-11T13:26:00+08:00 INFO l20 read-only inspection found Beauty/Steam v2 checkpoints with finite text_side_builder.p1
+2026-07-11T13:27:00+08:00 INFO created train-only samples n=4000 with sampling_seed=7; no GPU process started
+2026-07-11T13:28:00+08:00 FAIL proposal-record smoke rejected production checkpoint: top-level model state_dict was not traversed
+2026-07-11T13:29:00+08:00 INFO TDD RED reproduced failure in test_core_p1_loader_accepts_production_checkpoint_model_state_dict
+2026-07-11T13:30:00+08:00 PASS minimal adapter fix implemented and focused test passed; patched file SHA256=049e68a7903ec84c17277791f23754f0789456887c737857c67e2bc96dfb2426
+2026-07-11T13:31:00+08:00 INFO patched adapter copied to isolated l20 bundle; remote SHA256 matched
+2026-07-11T13:32:00+08:00 FAIL proposal-record rerun rejected history item 12101/9265; production sequences use item_num as padding
+2026-07-11T13:33:00+08:00 INFO TDD RED reproduced by adding item_num to the existing train-data adapter test
+2026-07-11T13:34:00+08:00 PASS padding-slot mapping fix implemented; focused p1/padding tests passed
+2026-07-11T13:35:00+08:00 INFO patched adapter copied to isolated l20 bundle; remote SHA256=3e41ee1563204add39fb9f0b978252e03be4475bff3eef9480913d1e22d6fa6b
+2026-07-11T13:43:00+08:00 PASS Beauty proposal records generated for levels 000/020/040/060/080/100; 4000 train-only rows per level; no GPU process
+2026-07-11T13:49:00+08:00 PASS Steam proposal records generated for levels 000/020/040/060/080/100; 4000 train-only rows per level; no GPU process

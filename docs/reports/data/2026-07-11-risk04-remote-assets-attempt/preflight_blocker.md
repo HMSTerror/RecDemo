@@ -20,8 +20,9 @@ Consequences:
   seed-100 GPU training remain blocked.
 - GPU0 CLOSE-10 was not touched; GPU1 remains available.
 
-Required next dated attempt: implement and audit the RISK-09 common proposal
-adapter, run the approved isolated host/core seed-100 training that produces a
-real v2 core-p1 artifact, then generate proposal records and the frozen
-train-only preflight. No tensor substitution or copied published number is
-allowed.
+Required next dated attempt: audit a new v2 host/core proposal artifact (this is
+a preflight dependency, not the RISK-09 classic-baseline row), bind a real
+`text_side_builder.p1`/`core_p1` artifact, then generate proposal records and
+the frozen train-only preflight. RISK-09 remains reserved for the
+SASRec/Caser/GRURec classic-baseline adapter. No tensor substitution or copied
+published number is allowed.

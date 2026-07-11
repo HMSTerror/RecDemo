@@ -166,6 +166,20 @@ class ProcessSupervisor:
         return SpawnedProcess(process=process, log_handle=handle)
 
 
+def _bind_cuda_override(argv: list[str], gpu_id: int) -> list[str]:
+    """Keep Hydra's physical-device override aligned with the leased GPU.
+
+    ``single_train.py`` derives ``CUDA_VISIBLE_DEVICES`` from its Hydra
+    ``cuda=`` argument before it constructs ``cuda:0``.  The queue also sets
+    ``CUDA_VISIBLE_DEVICES`` to the leased physical card, so leaving a stale
+    ``cuda=0`` token would silently remap every leased card back to physical
+    GPU 0.  Rewrite only the explicit Hydra override; all other argv tokens
+    remain byte-for-byte unchanged.
+    """
+
+    return [f"cuda={gpu_id}" if token.startswith("cuda=") else token for token in argv]
+
+
 class QueueRuntime:
     def __init__(
         self,
@@ -197,13 +211,15 @@ class QueueRuntime:
         lock_handle: LockHandle | None,
     ) -> StartedChild:
         env = dict(task.env)
+        bound_argv = list(task.argv)
         if gpu_id is not None:
             env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
             env["AAAI_PHYSICAL_GPU_ID"] = str(gpu_id)
             env["AAAI_LOGICAL_GPU_ID"] = "0"
+            bound_argv = _bind_cuda_override(bound_argv, gpu_id)
         try:
             spawned = self.supervisor.start(
-                argv=list(task.argv),
+                argv=bound_argv,
                 cwd=Path(task.cwd),
                 env=env,
                 stdout_path=self._task_log_path(task.task_id),

@@ -1,0 +1,6 @@
+2026-07-11T14:10:00+08:00 INFO preflight artifact payload_sha256=1977c8a95a95476a00f4fd970a6cc5707fc97c3f0e15c550eef6809b271fe187; file_sha256=2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d
+2026-07-11T14:11:00+08:00 INFO computed Steam severe gate clean=0.11730639802643009 c60=0.08583761368395199 relative_drop=0.2682614492637301 status=pass
+2026-07-11T14:12:00+08:00 INFO created gate-pass rebuild root /data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass with deterministic seed-100 builder
+2026-07-11T14:16:00+08:00 WARN deterministic arrays/permutations matched the old asset root but torch serialization bytes changed; rebuilt root is not bound to the old proposal-record hashes and is not used
+2026-07-11T14:20:00+08:00 PASS metadata-only finalization copied the verified old banks into /data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final; no bank bytes rewritten
+2026-07-11T14:20:00+08:00 PASS final bundle validate_risk04_bundle(require_severe_gate=true); bundle_file_sha256=443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d

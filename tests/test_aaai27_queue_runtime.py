@@ -129,6 +129,31 @@ class QueueRuntimeTests(unittest.TestCase):
             processes[1].exit_code = 0
             self.assertEqual(2, len(runtime.observe_finished()))
 
+    def test_gpu_binding_rewrites_hydra_cuda_override_to_physical_gpu(self) -> None:
+        process = FakeProcess(131)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+            task = TaskSpec.from_dict(
+                make_task(task_id="gpu.cuda-override", argv=["python", "single_train.py", "cuda=0"])
+            )
+
+            try:
+                started = runtime.start_task(task, (1,))
+
+                self.assertEqual(1, started.gpu_id)
+                self.assertEqual(["python", "single_train.py", "cuda=1"], popen.call_args.args[0])
+                self.assertEqual("1", popen.call_args.kwargs["env"]["CUDA_VISIBLE_DEVICES"])
+            finally:
+                runtime._running[131].spawned.log_handle.close()
+
     def test_start_token_failure_keeps_spawned_child_tracked_until_observed(self) -> None:
         process = FakeProcess(151)
         popen = mock.Mock(return_value=process)

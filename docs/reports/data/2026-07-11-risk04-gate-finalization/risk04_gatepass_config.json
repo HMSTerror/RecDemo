@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "code_revision": "332efb8b2b23732191719520c86b10d9eaef33af",
+  "corruption_seed": 100,
+  "strata_count": 10,
+  "severe_gate": {
+    "clean_mean_gate": 0.11730639802643009,
+    "steam_c60_mean_gate": 0.08583761368395199
+  },
+  "datasets": {
+    "Beauty": {
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/sentence_t5_xl_item_emb.pt",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/train_data.df"
+    },
+    "Steam": {
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/sentence_t5_xl_item_emb.pt",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/train_data.df"
+    }
+  },
+  "bindings": {
+    "preflight_report_sha256": "1977c8a95a95476a00f4fd970a6cc5707fc97c3f0e15c550eef6809b271fe187",
+    "source_asset_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_ef84761_r2",
+    "no_training_started": true,
+    "adaptive_backoff": false
+  }
+}

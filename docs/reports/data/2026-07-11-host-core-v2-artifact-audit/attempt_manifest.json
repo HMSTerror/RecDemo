@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "attempt_id": "host-core-v2-artifact-audit-2026-07-11-332efb8",
+  "created_at": "2026-07-11T13:25:16+08:00",
+  "remote": "l20",
+  "purpose": "Audit existing seed-100 kernel_version=v2 host/core checkpoints as the preflight dependency for train-only RISK-04/RISK-05; do not treat this audit as a pilot or continuation result.",
+  "seed": 100,
+  "training_launch_authorized": false,
+  "training_started": false,
+  "corruption_started": false,
+  "max_attempts": 1,
+  "failure_policy": "fail_closed",
+  "datasets": ["Beauty", "Steam"],
+  "required_checkpoint_key": "text_side_builder.p1",
+  "required_vector_length": "item_count+1",
+  "source_artifacts": {
+    "Beauty": {
+      "run_manifest": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/frozen_run_manifest.json",
+      "run_manifest_sha256": "1b8f35e3c122ef8700ab6a1ffd024c8ed7e4471dc0d72ac154cc5ffa59e14ee2",
+      "checkpoint": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/beauty_proposal_adaptive_mainpath/checkpoints-meta/Beauty/checkpoint_proposal_adaptive_best.pth",
+      "checkpoint_sha256": "a6dcfa0de9e234b1eed7ff4d5a653f4fc3619da70a334f7e5f32b33d9546f588",
+      "source_revision": "b2c796f18b4bce671f83b809742f82a98057a34f",
+      "kernel_version": "v2",
+      "random_seed": 100,
+      "p1_shape": [12102],
+      "best_step": 18000
+    },
+    "Steam": {
+      "run_manifest": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/frozen_run_manifest.json",
+      "run_manifest_sha256": "a3c6bbfe2c96d1f9d8d9bc851debb3be6f98267b777a08812cf24bf96ab48478",
+      "checkpoint": "/data/Zijian/goal/RecDemoRuns/main_table_text_side/steam_proposal_adaptive_mainpath/checkpoints-meta/Steam/checkpoint_proposal_adaptive_best.pth",
+      "checkpoint_sha256": "ca022e9cb4648617da0ba98db8c960ff78f018a1f98d6b2bf75a2b013f14cd5d",
+      "source_revision": "b2c796f18b4bce671f83b809742f82a98057a34f",
+      "kernel_version": "v2",
+      "random_seed": 100,
+      "p1_shape": [9266],
+      "best_step": 66000
+    }
+  },
+  "hard_stops": [
+    "do not substitute output_layer/item_embeddings/another tensor for p1",
+    "do not overwrite or retrain the source runs",
+    "do not launch RISK-05/RISK-06/RISK-07 until proposal-record and severe-gate hashes pass",
+    "do not launch method-pass continuation before artifact-backed RISK-08_EXIT.json"
+  ],
+  "next_step": "Run the existing proposal_records and train-only preflight adapters in a new dated remote root; if severe_gate passes, freeze RISK-05 without changing thresholds."
+}

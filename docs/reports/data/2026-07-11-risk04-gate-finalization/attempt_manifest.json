@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "attempt_id": "risk04-gate-finalization-2026-07-11-332efb8",
+  "created_at": "2026-07-11T14:10:00+08:00",
+  "remote": "l20",
+  "seed": 100,
+  "corruption_seed": 100,
+  "source_asset_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_ef84761_r2",
+  "preflight_report": "/data/Zijian/goal/RecDemoRuns/aaai27_host_core_v2_2026-07-11_332efb8/preflight_report/risk_preflight_report.json",
+  "preflight_artifact_sha256": "1977c8a95a95476a00f4fd970a6cc5707fc97c3f0e15c550eef6809b271fe187",
+  "preflight_file_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+  "severe_gate": {
+    "dataset": "Steam",
+    "corruption_level": 60,
+    "clean_mean_gate": 0.11730639802643009,
+    "steam_c60_mean_gate": 0.08583761368395199,
+    "relative_clean_drop": 0.2682614492637301,
+    "threshold_relative_clean_drop": 0.2,
+    "status": "pass",
+    "training_start_authorized": true,
+    "adaptive_backoff": false
+  },
+  "hard_stops": [
+    "old pending RISK-04 root is immutable",
+    "no threshold/corruption/seed change",
+    "no pilot launch is implied by RISK-04 PASS",
+    "RISK-05 must bind the exact new bundle, preflight, and E1 PASS hashes"
+  ],
+  "final_bundle_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "final_bundle_file_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+  "final_bundle_payload_sha256": "2324d56f6f93003f2b3d2e6c61bc134f6953e05079840da898af71753995d6d",
+  "bank_rebuild_attempt_not_used": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass",
+  "next_step": "Build RISK-05 dated preregistration; only its PASS marker can authorize the RISK-06/RISK-07 manifest."
+}

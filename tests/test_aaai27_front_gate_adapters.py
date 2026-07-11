@@ -19,7 +19,7 @@ from scripts.aaai27_adapters.evaluator_contract import (
 from scripts.aaai27_adapters.preregistration import build_preregistration
 from scripts.aaai27_adapters.preflight import build_risk_preflight
 from scripts.aaai27_adapters.proposal_contract import validate_proposal_manifest
-from scripts.aaai27_adapters.proposal_records import build_train_proposal_records
+from scripts.aaai27_adapters.proposal_records import _load_core_p1, build_train_proposal_records
 from scripts.aaai27_adapters.pilot_adapters import build_pilot_manifest, write_risk08_exit
 from scripts.aaai27_queue.models import QueueManifest
 from scripts.aaai27_queue.validation import validate_manifest
@@ -141,7 +141,10 @@ class FrontGateAdapterTests(unittest.TestCase):
             pd.DataFrame(
                 {
                     "user": [1, 2, 1],
-                    "seq": [[0, 1], [2, 3], [4, 5]],
+                    # The production loader uses item_num as the padding slot;
+                    # it may appear inside a fixed-length history and must be
+                    # passed through as the builder's pad value.
+                    "seq": [[item_count, 1], [2, 3], [4, 5]],
                     "next": [2, 4, 6],
                 }
             ).to_pickle(dataset_dir / "train_data.df")
@@ -173,6 +176,25 @@ class FrontGateAdapterTests(unittest.TestCase):
             self.assertEqual(item_count, len(rows[0]["q_text"]))
             self.assertEqual("v2", result["proposal_manifest"]["kernel_version"])
             self.assertTrue(result["proposal_manifest"]["core_p1_sha256"])
+
+    def test_core_p1_loader_accepts_production_checkpoint_model_state_dict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                import torch
+            except ImportError:  # pragma: no cover - production environment supplies torch
+                self.skipTest("torch is required for production checkpoint loading")
+            path = Path(tmp) / "checkpoint_proposal_adaptive_best.pth"
+            expected = torch.arange(5, dtype=torch.float32)
+            torch.save(
+                {
+                    "step": 18000,
+                    "model": {"text_side_builder.p1": expected},
+                    "optimizer": {},
+                },
+                path,
+            )
+            loaded = _load_core_p1(path, expected_size=5)
+            np.testing.assert_array_equal(expected.numpy(), loaded)
 
     def test_proposal_manifest_binds_kernel_bank_core_and_train_split(self) -> None:
         valid = {

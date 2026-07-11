@@ -15,5 +15,5 @@
   "required_field_present": false,
   "training_started": false,
   "hard_stop": "do not substitute another tensor for core p1; RISK-05/RISK-08 and continuation remain blocked",
-  "next_required_adapter": "RISK-09 common proposal adapter"
+  "next_required_adapter": "new v2 host/core proposal artifact adapter (preflight dependency; RISK-09 remains classic-baseline adapter)"
 }
