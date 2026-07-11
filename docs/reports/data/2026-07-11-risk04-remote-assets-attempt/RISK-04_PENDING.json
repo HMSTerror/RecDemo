@@ -1,0 +1,19 @@
+{
+  "artifact_sha256": "140612f289761ffe82530565239d5f4774979cad584b98a32ad4fb3f0d4d4ed5",
+  "outcome": "pending",
+  "risk04_bundle_sha256": "dc2f728d0808f57117bc9b5c28f29fa103925e892df2fce185e98d1c2b181bcf",
+  "risk_id": "RISK-04",
+  "schema_version": 1,
+  "severe_gate": {
+    "adaptive_backoff": false,
+    "clean_mean_gate": null,
+    "corruption_level": 60,
+    "dataset": "Steam",
+    "relative_clean_drop": null,
+    "status": "pending",
+    "steam_c60_mean_gate": null,
+    "threshold_relative_clean_drop": 0.2,
+    "training_start_authorized": false
+  },
+  "training_start_authorized": false
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "artifact_type": "RISK-05 preflight blocker",
+  "remote": "l20",
+  "risk04_assets": "pass_asset_only",
+  "severe_gate": "pending",
+  "candidate_checkpoint": "/data/Zijian/goal/RecDemo/checkpoints/Beauty/checkpoint_proposal_adaptive_20.pth",
+  "observed_legacy_fields": [
+    "text_side_builder.item_embeddings",
+    "text_side_builder.semantic_embeddings",
+    "text_side_builder.item_completeness",
+    "text_side_builder.popularity_prior"
+  ],
+  "required_v2_field": "text_side_builder.p1 or core_p1 vector of length item_count+1",
+  "required_field_present": false,
+  "training_started": false,
+  "hard_stop": "do not substitute another tensor for core p1; RISK-05/RISK-08 and continuation remain blocked",
+  "next_required_adapter": "RISK-09 common proposal adapter"
+}

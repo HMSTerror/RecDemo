@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "code_revision": "ef84761e2c06af02bc6077e367b2a2d34956a568",
+  "corruption_seed": 100,
+  "strata_count": 10,
+  "severe_gate": {},
+  "datasets": {
+    "Beauty": {
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/sentence_t5_xl_item_emb.pt",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/train_data.df"
+    },
+    "Steam": {
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/sentence_t5_xl_item_emb.pt",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/train_data.df"
+    }
+  },
+  "notes": "Production asset-only attempt. Severe gate is intentionally pending until train-only preflight is generated; no training is authorized from this file."
+}
