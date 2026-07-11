@@ -1,0 +1,76 @@
+{
+  "queue_id": "aaai27-risk0607-2026-07-11-946a167-r6a",
+  "created_at": "2026-07-11T22:40:00+08:00",
+  "queue_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-946a167-r6a",
+  "run_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-946a167-r6a",
+  "source_root_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_946a167",
+  "source_manifest_sha256": "bb0ef40b67125338c0e61ee65fd1d046b1322b1a12e4fd2bd208e719475b35de",
+  "ledger_path_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_946a167/issues/2026-07-11_host-core-v2-preflight.csv",
+  "ledger_sha256": "4628dce358b78e3e6a4d161ba2b714cb5e96221a83aeb8f939b107f13c12453e",
+  "code_revision": "946a167cf53209566acb52365dba40a9c0836185",
+  "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
+  "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
+  "single_train": "/data/Zijian/goal/RecDemo_aaai27_risk0607_946a167/single_train.py",
+  "risk04_root_posix": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "gpu_ids": [1],
+  "training_overrides": [
+    "model.hidden_size=256",
+    "model.cond_dim=256",
+    "training.batch_size=256",
+    "training.n_iters=2000000",
+    "training.eval_freq=1000",
+    "training.snapshot_freq=1000",
+    "training.snapshot_freq_for_preemption=1000",
+    "training.snapshot_sampling=True",
+    "training.early_stop_patience=5",
+    "training.early_stop_min_step=5000",
+    "training.early_stop_metric=ndcg10",
+    "training.early_stop_strength=p5",
+    "training.early_stop_min_delta=0.0",
+    "+training.write_snapshot_checkpoint=False",
+    "+training.write_best_checkpoint=True"
+  ],
+  "estimated_gpu_hours": {"low": 1.0, "high": 4.0, "output_gib": 1.0},
+  "datasets": {
+    "Beauty": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92"
+    },
+    "Steam": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92"
+    }
+  },
+  "frozen_scientific_contract": {
+    "seed": 100,
+    "datasets": ["Beauty", "Steam"],
+    "pilot_levels": [0, 60, 100],
+    "task_counts": {"e1_pass": 14, "e1_fail_audit": 8},
+    "primary_risk_statistic": "EPE",
+    "phi_R_formula": "clip((R_100 - R_D) / (R_100 - R_clean), 0, 1)",
+    "phi_R_pilot": {
+      "Beauty": {"0": 1.0, "60": 0.1366311174092942, "100": 0.0},
+      "Steam": {"0": 1.0, "60": 0.05808110271503808, "100": 0.0}
+    },
+    "evaluator_version": "e0_full_tail_v2",
+    "selector_version": "validation-ndcg10-rowweighted-v1",
+    "max_attempts": 1,
+    "failure_policy": "fail_closed",
+    "no_rescue": true,
+    "no_second_seed": true,
+    "startup_probe_only_forbidden_in_scientific_manifest": true
+  },
+  "runtime_contract": {
+    "gpu_task_cwd_equals_run_dir": true,
+    "cpu_contract_gate_may_use_source_cwd": true,
+    "absolute_source_entry": true,
+    "gpu_allowlist_is_exact": [1],
+    "predecessor_r6_reuse": false,
+    "predecessor_r5_retry": false,
+    "risk08_eligible_before_live_completion": false
+  }
+}
