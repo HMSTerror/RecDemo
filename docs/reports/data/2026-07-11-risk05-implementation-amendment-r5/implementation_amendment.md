@@ -1,6 +1,6 @@
 # RISK-05 successor implementation amendment for r5
 
-_PreferGrow AAAI-27 · 2026-07-11 · prelaunch gates passed; one GPU1 controller authorized_
+_PreferGrow AAAI-27 · 2026-07-11 · prelaunch authorization consumed; r5 closed before training_
 
 ---
 
@@ -8,7 +8,13 @@ _PreferGrow AAAI-27 · 2026-07-11 · prelaunch gates passed; one GPU1 controller
 
 r5 is a successor attempt, not a resume of r4. The r4 queue stopped before training because its adapter bound the pilot host to `HybridWise`, which has no learned `p1`. r5 corrects that implementation identity to the paper's already-defined `AdaptiveWise` host and preserves every frozen scientific field.
 
-This amendment is `pass_authorized_for_single_gpu1_controller_launch`. It authorizes one r5 controller on GPU1 under the frozen manifest; it does not authorize performance claims or RISK-08 before complete task artifacts exist.
+This amendment originally reached `pass_authorized_for_single_gpu1_controller_launch`. That one-time authorization was consumed. The real subprocess path then failed before training, so the amendment is now closed as `closed_failed_before_training`; it does not authorize retry, reuse, performance claims, or RISK-08.
+
+## ❌ Post-launch closure
+
+The object-level smoke passed only object construction, temporary checkpoint replay, and strict real-asset construction. It did not execute the real Hydra subprocess startup. Once the controller launched, seven tasks exited during Hydra logging initialization because their `cwd` was the immutable read-only source root and Hydra attempted to create `single_train.log` there. Fifteen tasks were never launched, and the attempt produced zero training steps, checkpoints, best summaries, or performance evidence.
+
+One failed task was also assigned to GPU0 because the GPU1-only authorization was not encoded in the manifest allowlist. The controller is now held by `STOP_AFTER_CURRENT`; r5 must not be restarted or used for RISK-08. The full evidence and task hashes are in the [r5 live-startup fail-closed audit](../2026-07-11-risk0607-r5-live-startup-fail-closed-audit/risk0607_r5_live_startup_fail_closed_audit.md).
 
 ## 🔒 Immutable bindings
 

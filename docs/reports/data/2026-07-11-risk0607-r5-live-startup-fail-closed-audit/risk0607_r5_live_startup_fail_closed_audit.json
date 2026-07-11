@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "report_name": "AAAI-27 RISK-06/RISK-07 r5 live-startup fail-closed audit",
+  "checked_at": "2026-07-11T20:08:11+08:00",
+  "status": "closed_failed_before_training",
+  "attempt": "r5",
+  "scientific_evidence": false,
+  "queue": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+    "queue_id": "aaai27-risk0607-2026-07-11-6f18b3d-r5",
+    "manifest_sha256": "5a7d1c253c88f4689f96e1c9f57b5edac9f429818284e879b702ddb20358f2ed",
+    "protocol_sha256": "3bf4cba9a71bf0232dc9e4d46e451879104428d6037bf5610a2f17faf561afeb",
+    "source_revision": "6f18b3d8ecf945fd3230d827db2e813e675af492",
+    "source_root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d",
+    "source_root_mode": "dr-xr-xr-x",
+    "manifest_gpu_ids": [0, 1],
+    "documented_launch_gpu_id": 1,
+    "task_cwd": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d",
+    "task_run_dirs_under_queue_root": true,
+    "task_cwd_equals_run_dir": false,
+    "controller_pid": 2872090,
+    "controller_liveness_at_audit": true,
+    "controller_sha256": "51f29e6c6cf4d3144739172ca54fcb3228c51fc343b578668474671ecc4e122a",
+    "tmux_session": "aaai27_r5_seed100_controller_20260711",
+    "tmux_metadata_sha256": "08eccd75ce86bd643cbf7981fc9355097404b8164227825bff28869534b35812"
+  },
+  "prelaunch_scope": {
+    "object_smoke_status": "pass",
+    "object_smoke_file_sha256": "571ce664eaf987bc920780af2aeceec10b6fa7f63103d93cdbd52beb01e94c71",
+    "object_smoke_covered_real_hydra_subprocess_startup": false,
+    "object_smoke_covered_optimizer_step": false,
+    "object_smoke_covered_performance": false,
+    "resource_audit_file_sha256": "3223efbbc3f8358f1aee2945b21502373c301cf2b94437d747d165879b68cea5",
+    "resource_audit_checked_at": "2026-07-11T19:51:21+08:00",
+    "resource_audit_gpu0_external_pid": 2568867,
+    "resource_audit_gpu0_external_used_memory_mib": 8070,
+    "resource_audit_gpu1_eligible": true
+  },
+  "live_outcome": {
+    "task_count": 22,
+    "failed": 7,
+    "unlaunched": 15,
+    "running": 0,
+    "passed": 0,
+    "ready": 0,
+    "stop_requested": true,
+    "stop_marker_sha256": "048436a4ae6128513025342498fef51092e32c1a3c264ab0744350528bc07715",
+    "actual_gpu_hours_controller_accounting": 0.01951512573445345,
+    "training_steps": 0,
+    "checkpoints": 0,
+    "best_summaries": 0,
+    "run_directories": 0,
+    "risk08_exit": null,
+    "risk08_eligible": false,
+    "retry_allowed": false,
+    "reuse_allowed": false
+  },
+  "failure": {
+    "stage": "Hydra logging initialization before training loop",
+    "exception": "PermissionError followed by ValueError: Unable to configure handler 'file'",
+    "denied_path": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d/single_train.log",
+    "common_log_sha256": "f9688662cd3f728bb39433e899b35f94c8bedcdc23fd8e4aa7e6540c26e2c57a",
+    "events_sha256": "6de21003721aecf9b16bea25112862196013e9fc9ac1b46d7d1c68cb92a06796",
+    "root_cause": "The pilot adapter set task.cwd to the immutable read-only source root; ProcessSupervisor passed that cwd to the real Hydra subprocess, whose relative file handler attempted to create single_train.log before single_train.main could use work_dir.",
+    "root_cause_confidence": "directly evidenced"
+  },
+  "gpu_contract": {
+    "misdispatch_confirmed": true,
+    "misdispatched_task": "pilot.e1_pass.Beauty.full.c0",
+    "misdispatched_gpu_id": 0,
+    "misdispatched_pid": 2872437,
+    "misdispatch_started_at": "2026-07-11T11:58:07.664630+00:00",
+    "entered_training": false,
+    "definite_contract_gap": "The documented GPU1-only authorization was not encoded in the manifest; controller passed manifest gpu_ids [0,1] to QueueRuntime.",
+    "historical_probe_result_recorded": false,
+    "occupancy_probe_root_cause": "pending dynamic and implementation audit; current evidence cannot distinguish an ended external process from a probe defect at dispatch time",
+    "audit_snapshot": {
+      "gpu0_memory_used_mib": 9,
+      "gpu0_utilization_percent": 0,
+      "gpu1_memory_used_mib": 9,
+      "gpu1_utilization_percent": 0,
+      "compute_app_count": 0,
+      "external_pid_2568867_present": false
+    }
+  },
+  "task_records": [
+    {
+      "task_id": "pilot.e1_pass.Beauty.host",
+      "gpu_id": 1,
+      "pid": 2872094,
+      "record_sha256": "7444797254a709e55f7c1c3bdd07b797ffff1a46957b0caf123fa85c8feb1789"
+    },
+    {
+      "task_id": "pilot.e1_pass.Steam.host",
+      "gpu_id": 1,
+      "pid": 2872139,
+      "record_sha256": "fc99350fc78a6418ccb71c89f29bb78fe7271cffa760d3dbb53b946574fe6319"
+    },
+    {
+      "task_id": "pilot.e1_pass.Beauty.anchor.c0",
+      "gpu_id": 1,
+      "pid": 2872189,
+      "record_sha256": "ca9ef94a8587557e153c413411902bf6d2d390551a5a3dbbc68cf7b9bfe5f702"
+    },
+    {
+      "task_id": "pilot.e1_pass.Beauty.anchor.c100",
+      "gpu_id": 1,
+      "pid": 2872301,
+      "record_sha256": "a34a1f3f63017201f3b1566027ae90892092f84e0c1704ad99200f041f0e39a6"
+    },
+    {
+      "task_id": "pilot.e1_pass.Beauty.anchor.c60",
+      "gpu_id": 1,
+      "pid": 2872368,
+      "record_sha256": "ef41f2d3d81e38356b1d141d382afc35a6f053b990634dbb1cc168b13b1ba065"
+    },
+    {
+      "task_id": "pilot.e1_pass.Beauty.full.c0",
+      "gpu_id": 0,
+      "pid": 2872437,
+      "record_sha256": "4ba9ab0be5e0526d77398d0c47e17b027e0d8960fcd6e7b1c9cd0663662f08da"
+    },
+    {
+      "task_id": "pilot.e1_pass.Beauty.full.c100",
+      "gpu_id": 1,
+      "pid": 2872439,
+      "record_sha256": "1a42a65f550ac2524c02b7e2f025c6b59b515edf5ce769c799f55daa022aa91d"
+    }
+  ],
+  "predecessors": {
+    "r3": {
+      "stop_requested": true,
+      "running": 0,
+      "ready": 0,
+      "controller_pid": 2798369,
+      "left_untouched": true
+    },
+    "r4": {
+      "controller": null,
+      "record_count": 0,
+      "running": 0,
+      "left_untouched": true
+    }
+  },
+  "disk": {
+    "mount": "/data",
+    "available_bytes": 50202603520,
+    "free_gib_controller_status": 46.754817962646484,
+    "hard_stop_gib": 40.0,
+    "passed_at_audit": true
+  },
+  "required_successor_changes": [
+    "use task.run_dir as subprocess cwd while retaining absolute source entry paths",
+    "encode the attempt GPU allowlist mechanically as [1]",
+    "audit and fail-close GPU occupancy parsing",
+    "propagate --python-bin and --controller-entry through the local launcher",
+    "replace object-only smoke with a real Hydra startup probe that exits before optimizer step"
+  ]
+}

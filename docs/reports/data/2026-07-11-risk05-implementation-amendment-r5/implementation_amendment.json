@@ -2,7 +2,7 @@
   "schema_version": 1,
   "report_name": "RISK-05 successor implementation amendment with corrected host identity",
   "generated_at": "2026-07-11T19:40:23+08:00",
-  "status": "pass_authorized_for_single_gpu1_controller_launch",
+  "status": "closed_failed_before_training",
   "finalized_at": "2026-07-11T19:51:21+08:00",
   "does_not_supersede_scientific_preregistration": true,
   "predecessor": {
@@ -84,8 +84,28 @@
     "resource_audit_path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r5/r5_prelaunch_resource_audit.json",
     "training_started_at_finalization": false
   },
+  "post_launch_closure": {
+    "audit_path": "docs/reports/data/2026-07-11-risk0607-r5-live-startup-fail-closed-audit/risk0607_r5_live_startup_fail_closed_audit.json",
+    "object_smoke_scope": "passed object construction and temporary checkpoint replay only",
+    "live_hydra_startup": "failed before training loop",
+    "failure_signature": "PermissionError creating single_train.log in immutable source-root cwd",
+    "failed_tasks": 7,
+    "unlaunched_tasks": 15,
+    "training_steps": 0,
+    "checkpoints": 0,
+    "best_summaries": 0,
+    "performance_evidence": false,
+    "gpu0_misdispatch": true,
+    "stop_marker_sha256": "048436a4ae6128513025342498fef51092e32c1a3c264ab0744350528bc07715",
+    "retry_allowed": false,
+    "reuse_allowed": false,
+    "risk08_eligible": false
+  },
   "launch_authorization": {
     "authorized": true,
+    "historical_prelaunch_authorization": true,
+    "consumed_once": true,
+    "revoked_for_retry": true,
     "gpu_id": 1,
     "controller_count": 1,
     "seed": 100,
