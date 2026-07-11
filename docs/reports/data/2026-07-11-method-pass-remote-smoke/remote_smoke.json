@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "artifact_type": "ADAPT-04 remote bundle and no-op smoke",
+  "observed_at": "2026-07-11T12:32:39+08:00",
+  "host": "ubuntu",
+  "ssh_target": "l20",
+  "bundle_root": "/data/Zijian/goal/aaai27_method_pass_bundle_20260711_c7be478",
+  "bundle_commit": "c7be478",
+  "gpu0": {"name": "NVIDIA L20", "memory_total_mib": 46068, "memory_used_mib": 8033, "utilization_percent": 100, "protected_pid": 2568867},
+  "gpu1": {"name": "NVIDIA L20", "memory_total_mib": 46068, "memory_used_mib": 12, "utilization_percent": 0},
+  "data_free_gib": 79,
+  "focused_tests": "5 passed in 0.20s",
+  "compileall": "pass",
+  "cli_help": "pass",
+  "smoke_root": "/data/Zijian/goal/aaai27_method_pass_smoke_20260711_c7be478",
+  "smoke_status": "smoke_pass",
+  "training_started": false,
+  "runs_directory_created": false,
+  "production_risk08_method_marker_present": false,
+  "launch_authorized": false,
+  "hard_stop": "RISK-04/RISK-05/RISK-08 production evidence is absent"
+}
