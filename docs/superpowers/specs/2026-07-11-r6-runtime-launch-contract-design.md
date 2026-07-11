@@ -69,6 +69,13 @@ flowchart LR
 - Its remote command always includes `--python-bin <absolute path>` and `--controller-entry <absolute path>`
 - r6 passes the immutable source's `scripts/aaai27_resident_queue.py`; no mutable bundle path is inferred
 
+### Continuation adapter and CPU contract gate
+
+- The method-pass continuation adapter consumes the protocol's explicit `gpu_ids` and rejects every value other than `[1]` for this r6 attempt.
+- Continuation GPU tasks use `cwd == run_dir` and keep the same absolute source-entry and `work_dir=<run_dir>` contract as the pilot adapter.
+- A CPU `contract_gate` is intentionally different: it may execute from the existing immutable source root because it has `gpu_slots=0` and does not create a training run. The runtime applies queue-root containment and cwd/run-dir equality only to GPU tasks; the validator still checks the CPU gate's allowed source or queue root.
+- This CPU exception is an orchestration precondition, not a scientific result and not permission to place a GPU task in the source root.
+
 ### Real Hydra startup probe
 
 - `training.startup_probe_only` defaults to `false`
@@ -95,6 +102,8 @@ The real startup probe is engineering evidence only. It cannot be described as t
 | Startup probe unit | Real main initialization boundary returns before dataloader and writes one scoped artifact |
 | Remote integration | Real Hydra command on l20 exits `0`, writes its log/artifact in probe run dir, and leaves step/checkpoint/summary counts at zero |
 | Regression | Focused adapter/queue/checkpoint suites, `compileall`, `git diff --check`, manifest audit |
+
+The continuation adapter and CPU contract-gate exception are covered by the continuation and runtime regression suites; they do not alter the scientific matrix.
 
 ## 🚫 Non-goals
 

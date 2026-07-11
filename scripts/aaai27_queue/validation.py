@@ -71,6 +71,10 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: only seed 100 is permitted")
     if task.kind == "gpu" and task.seed != 100:
         raise ManifestError(f"{task.task_id}: GPU tasks require seed 100")
+    if task.kind == "gpu" and _normalized_posix(task.cwd) != _normalized_posix(
+        task.run_dir
+    ):
+        raise ManifestError(f"{task.task_id}: GPU task cwd must equal run_dir")
     model_name = (task.model or "").casefold()
     if model_name == "diffurec":
         raise ManifestError(f"{task.task_id}: DiffuRec is excluded")
@@ -84,6 +88,13 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: invalid gpu_slots for task kind")
     if not task.argv or any(not isinstance(item, str) or not item for item in task.argv):
         raise ManifestError(f"{task.task_id}: argv must be a nonempty string array")
+    if any(
+        item.lstrip("+").casefold().startswith("training.startup_probe_only=")
+        for item in task.argv
+    ):
+        raise ManifestError(
+            f"{task.task_id}: startup probe override is forbidden in scientific queue tasks"
+        )
     hydra_work_dirs = [
         item.split("=", 1)[1]
         for item in task.argv
@@ -106,6 +117,14 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: overwrite environment is forbidden")
     if not _inside(task.run_dir, manifest.run_root):
         raise ManifestError(f"{task.task_id}: run_dir leaves queue root")
+    if task.phase == "pilot":
+        if len(task.argv) < 2:
+            raise ManifestError(f"{task.task_id}: pilot argv lacks source entry")
+        _normalized_posix(task.argv[0])
+        if not _inside(task.argv[1], manifest.source_root):
+            raise ManifestError(
+                f"{task.task_id}: pilot source entry must be absolute and inside source_root"
+            )
     if not _inside(task.cwd, manifest.source_root) and not _inside(task.cwd, manifest.run_root):
         raise ManifestError(f"{task.task_id}: cwd is outside source and queue roots")
     if task.gpu_hours_low < 0 or task.gpu_hours_high < task.gpu_hours_low:
@@ -284,8 +303,14 @@ def _validate_dependencies(tasks: tuple[TaskSpec, ...]) -> None:
 def validate_manifest(manifest: QueueManifest) -> None:
     if manifest.schema_version != SCHEMA_VERSION:
         raise ManifestError("unsupported queue schema_version")
-    if manifest.gpu_ids != (0, 1):
-        raise ManifestError("queue must expose exactly GPU 0 and GPU 1")
+    if (
+        not manifest.gpu_ids
+        or len(manifest.gpu_ids) != len(set(manifest.gpu_ids))
+        or any(type(gpu_id) is not int or gpu_id < 0 for gpu_id in manifest.gpu_ids)
+    ):
+        raise ManifestError(
+            "queue gpu_ids must be a nonempty unique nonnegative integer allowlist"
+        )
     if manifest.gpu_budget_hours != 168.0:
         raise ManifestError("queue must freeze exactly 168 GPU-hours")
     if manifest.min_free_disk_gib != 40.0:

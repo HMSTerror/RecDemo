@@ -4,7 +4,7 @@
 
 **Goal:** Build a new revision whose seed-100 pilot tasks run from isolated directories, can only use GPU1, launch through a complete SSH/tmux argument chain, and pass a real Hydra pre-step probe before controller creation.
 
-**Architecture:** Keep immutable code identity in absolute argv paths and move all relative runtime state into `task.run_dir`. Treat `QueueManifest.gpu_ids` as the mechanical allowlist, retain the verified physical-GPU probe while making ambiguous output fail closed, and add a narrowly scoped `training.startup_probe_only` exit after state construction but before dataloaders or training.
+**Architecture:** Keep immutable code identity in absolute argv paths and move all relative GPU runtime state into `task.run_dir`. Treat `QueueManifest.gpu_ids` as the mechanical allowlist, retain the verified physical-GPU probe while making ambiguous output fail closed, and add a narrowly scoped `training.startup_probe_only` exit after state construction but before dataloaders or training. The method-pass continuation adapter follows the same GPU1-only contract; the CPU contract gate is the explicit source-cwd exception because it has no GPU slot.
 
 **Tech Stack:** Python 3.10, `unittest`, Hydra/OmegaConf, PyTorch, Linux `nvidia-smi`, SSH/tmux, JSON artifacts.
 
@@ -17,10 +17,12 @@
 - Modify: `tests/test_r6_launch_contract.py`
 - Modify: `scripts/aaai27_adapters/pilot_adapters.py:91-123,220-233`
 - Modify: `scripts/aaai27_adapters/risk04_08.py:515-576`
+- Modify: `scripts/aaai27_adapters/continuation_adapters.py:154-272,390`
 - Modify: `scripts/aaai27_queue/validation.py:61-123,284-313`
 - Modify: `tests/aaai27_queue_testdata.py:6-65`
+- Modify: `tests/test_method_pass_continuation_adapters.py:35-220`
 
-- [ ] **Step 1: Write failing adapter and validator tests**
+- [x] **Step 1: Write failing adapter and validator tests**
 
 ```python
 def test_pilot_manifest_copies_explicit_gpu1_allowlist(self):
@@ -37,13 +39,13 @@ def test_validator_rejects_gpu_task_cwd_that_differs_from_run_dir(self):
         validate_manifest(decoded([task], gpu_ids=[1]))
 ```
 
-- [ ] **Step 2: Run tests and confirm RED**
+- [x] **Step 2: Run tests and confirm RED**
 
 Run: `python -m unittest tests.test_r6_launch_contract -v`
 
 Expected: failures showing hard-coded `[0,1]`, source-root `cwd`, and missing cwd equality rejection.
 
-- [ ] **Step 3: Implement the minimum manifest contract**
+- [x] **Step 3: Implement the minimum manifest contract**
 
 ```python
 "cwd": run_dir,
@@ -53,7 +55,7 @@ Expected: failures showing hard-coded `[0,1]`, source-root `cwd`, and missing cw
 
 Validate `gpu_ids` as a nonempty unique list of nonnegative integers, require r6 protocol `[1]`, and reject GPU `cwd != run_dir`.
 
-- [ ] **Step 4: Run focused tests and confirm GREEN**
+- [x] **Step 4: Run focused tests and confirm GREEN**
 
 Run: `python -m unittest tests.test_r6_launch_contract tests.test_aaai27_queue_validation tests.test_risk04_08_queue_safe_adapters tests.test_aaai27_front_gate_adapters -v`
 
@@ -66,7 +68,7 @@ Expected: all tests pass; Windows-only `flock` skip remains permitted.
 - Modify: `tests/test_aaai27_queue_runtime.py:57-226`
 - Modify: `scripts/aaai27_queue/runtime.py:76-90,206-230`
 
-- [ ] **Step 1: Write failing runtime tests**
+- [x] **Step 1: Write failing runtime tests**
 
 ```python
 def test_gpu_probe_unknown_row_is_fail_closed(self):
@@ -80,13 +82,13 @@ def test_runtime_creates_contained_task_cwd_before_spawn(self):
     self.assertTrue(run_dir.is_dir())
 ```
 
-- [ ] **Step 2: Run tests and confirm RED**
+- [x] **Step 2: Run tests and confirm RED**
 
 Run: `python -m unittest tests.test_aaai27_queue_runtime.QueueRuntimeTests.test_gpu_probe_unknown_row_is_fail_closed tests.test_aaai27_queue_runtime.QueueRuntimeTests.test_runtime_creates_contained_task_cwd_before_spawn -v`
 
 Expected: no exception for `N/A` and absent cwd after spawn mock.
 
-- [ ] **Step 3: Implement containment and strict parsing**
+- [x] **Step 3: Implement containment and strict parsing**
 
 ```python
 rows = [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -97,7 +99,7 @@ cwd = require_within(Path(task.cwd), self.queue_root)
 cwd.mkdir(parents=True, exist_ok=True)
 ```
 
-- [ ] **Step 4: Run runtime suite and confirm GREEN**
+- [x] **Step 4: Run runtime suite and confirm GREEN**
 
 Run: `python -m unittest tests.test_aaai27_queue_runtime -v`
 
@@ -110,7 +112,7 @@ Expected: all runtime tests pass with one expected Windows `flock` skip.
 - Modify: `tests/test_launch_aaai27_seed100_queue.py:22-53`
 - Modify: `scripts/launch_aaai27_seed100_queue.py:12-103`
 
-- [ ] **Step 1: Write failing launcher integration test**
+- [x] **Step 1: Write failing launcher integration test**
 
 ```python
 argv = module.build_ssh_argv(
@@ -122,13 +124,13 @@ self.assertIn("--python-bin /opt/venv/bin/python3", argv[-1])
 self.assertIn("--controller-entry /srv/r6/scripts/aaai27_resident_queue.py", argv[-1])
 ```
 
-- [ ] **Step 2: Run test and confirm RED**
+- [x] **Step 2: Run test and confirm RED**
 
 Run: `python -m unittest tests.test_launch_aaai27_seed100_queue.QueueLaunchTests.test_local_launcher_forwards_controller_python_and_entry -v`
 
 Expected: `build_ssh_argv` rejects the new keywords or omits the flags.
 
-- [ ] **Step 3: Add required parameters through parser, launcher, and remote argv**
+- [x] **Step 3: Add required parameters through parser, launcher, and remote argv**
 
 ```python
 remote_argv.extend([
@@ -137,7 +139,7 @@ remote_argv.extend([
 ])
 ```
 
-- [ ] **Step 4: Run launcher suite and confirm GREEN**
+- [x] **Step 4: Run launcher suite and confirm GREEN**
 
 Run: `python -m unittest tests.test_launch_aaai27_seed100_queue -v`
 
@@ -152,7 +154,7 @@ Expected: all launcher and remote-entry tests pass.
 - Modify: `scripts/aaai27_queue/validation.py:85-110`
 - Create: `tests/test_single_train_startup_probe.py`
 
-- [ ] **Step 1: Write failing main-boundary tests**
+- [x] **Step 1: Write failing main-boundary tests**
 
 ```python
 def test_startup_probe_returns_before_dataloader_and_writes_scoped_artifact(self):
@@ -169,13 +171,13 @@ def test_queue_manifest_rejects_startup_probe_override(self):
         validate_manifest(decoded([task], gpu_ids=[1]))
 ```
 
-- [ ] **Step 2: Run tests and confirm RED**
+- [x] **Step 2: Run tests and confirm RED**
 
 Run: `python -m unittest tests.test_single_train_startup_probe -v`
 
 Expected: missing config/behavior and validator acceptance.
 
-- [ ] **Step 3: Implement the exclusive pre-step artifact and early return**
+- [x] **Step 3: Implement the exclusive pre-step artifact and early return**
 
 ```python
 if bool(cfg.training.get("startup_probe_only", False)):
@@ -188,9 +190,9 @@ if bool(cfg.training.get("startup_probe_only", False)):
 
 The helper raises unless step is zero, optimizer state is empty, and no checkpoint or summary files exist. Place the branch before `data.get_seqdataloader(cfg)`.
 
-- [ ] **Step 4: Run startup-probe and core training-helper suites**
+- [x] **Step 4: Run startup-probe and core training-helper suites**
 
-Run: `python -m unittest tests.test_single_train_startup_probe tests.test_graph_checkpoint_contract tests.test_training_checkpoint_retention -v`
+Run: `python -m unittest tests.test_single_train_startup_probe tests.test_graph_checkpoint_contract tests.test_single_train_checkpoint_retention -v`
 
 Expected: all tests pass and no existing checkpoint behavior changes.
 
@@ -202,13 +204,13 @@ Expected: all tests pass and no existing checkpoint behavior changes.
 - Create: `docs/reports/data/2026-07-11-r6-runtime-launch-contract/verification.json`
 - Create: `docs/reports/data/2026-07-11-r6-runtime-launch-contract/verification.md`
 
-- [ ] **Step 1: Run focused and aggregate regression suites**
+- [x] **Step 1: Run focused and aggregate regression suites**
 
 Run: `python -m unittest tests.test_r6_launch_contract tests.test_aaai27_queue_runtime tests.test_aaai27_queue_validation tests.test_aaai27_queue_cli tests.test_launch_aaai27_seed100_queue tests.test_risk04_08_queue_safe_adapters tests.test_aaai27_front_gate_adapters tests.test_single_train_startup_probe -v`
 
-Expected: zero failures; only the platform-expected Windows `flock` skip is allowed.
+Expected: zero failures; only the platform-expected Windows `flock` skip is allowed. The continuation adapter must report `gpu_ids=[1]`, every continuation GPU task must report `cwd==run_dir`, and the CPU contract gate must retain the immutable source cwd.
 
-- [ ] **Step 2: Run static verification**
+- [x] **Step 2: Run static verification**
 
 Run: `python -m compileall -q single_train.py scripts tests/test_r6_launch_contract.py tests/test_single_train_startup_probe.py`
 
@@ -216,13 +218,13 @@ Run: `git diff --check`
 
 Expected: exit code `0` for both commands.
 
-- [ ] **Step 3: Re-run dynamic l20 GPU probe evidence**
+- [ ] **Step 3: Re-run production `probe_gpu_pids(0/1)` after deploying the r6 immutable source**
 
 Create a short no-training CUDA context on GPU1, capture global and `--id` queries, call `probe_gpu_pids(0/1)`, and wait for natural exit.
 
 Expected: the diagnostic PID appears only for GPU1; no process remains afterward.
 
-- [ ] **Step 4: Audit a generated manifest**
+- [x] **Step 4: Audit a generated manifest**
 
 Expected invariants: 22 tasks, 14/8 branches, seed set `{100}`, `gpu_ids=[1]`, 22 unique run dirs, every GPU task `cwd==run_dir`, absolute source entry, unchanged assets/`phi_R`/identities.
 
@@ -234,3 +236,9 @@ git commit -m "fix(queue): enforce r6 runtime launch contract"
 ```
 
 Do not stage user tar archives or the two untracked E1 execution logs.
+
+### Task 6: Freeze the dated r6 handoff contract
+
+- [x] Update the r6 spec, this plan, and the E1/RISK-04–08 manual with the r5 closed-before-training fact, GPU1-only binding, GPU-task `cwd==run_dir`, absolute source entry, real Hydra startup-probe boundary, and CPU contract-gate exception.
+- [x] Mark the 2026-07-10 resident-queue runbook as superseded; retain it as historical evidence and do not reuse its `[0,1]` allowlist.
+- [x] Record fresh test, compile, diff, dynamic GPU probe, and generated-manifest evidence in the dated verification artifact; production probe evidence remains a pre-controller gate after deployment.

@@ -10,7 +10,15 @@ E1 在 R12 dated attempt 的指定 revision `0338cc2…` 上通过：`random_see
 
 r3 队列已 fail closed，详见 [r3 audit](../reports/data/2026-07-11-risk0607-r3-fail-closed-audit/risk0607_r3_fail_closed_audit.md)。r3 从 pre-repair `e63193f…` dirty source 运行，出现错误 bank path、full/anchor `work_dir` 碰撞及 full 缺少 `phi_R`；它的 2 个 host summary 不进入修复后证据链。当前修复还把 graph-owned host `p1` 纳入显式 checkpoint state 和 common evaluator EMA 恢复，范围说明见 [E1/R12 amendment](../reports/data/2026-07-11-e01-r12-ownership-scope-amendment/e01_r12_ownership_scope_amendment.md)。新训练授权已存在，但只有本手册全部 prelaunch gate 通过后才能执行。
 
-GPU0 上的 CLOSE-10 PID `2568867` 不得干预。所有新增实验固定 `seed=100`，每个 dated root 只允许一次 attempt，`failure_policy=fail_closed`，不得静默 retry、改 seed、改阈值、改 corruption 或使用 adaptive backoff。DiffuRec 不进入本队列；本手册也不把任何历史 DiffuRec 工件称为 DiffRec。
+r5 attempt 已在真实训练循环前 fail closed，根因为 Hydra 从只读 source-root 初始化 `single_train.log`；r5 的 7 个失败任务、0 steps、0 checkpoints、0 summaries 不进入性能证据，也不得 retry、resume 或进入 RISK-08。r5 根目录保持不可变：`/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5`。
+
+GPU0 上的 CLOSE-10 PID `2568867` 历史上已在动态探针前自然消失，未被干预；这不授权使用 GPU0。r6 即使 GPU0 空闲也只允许 `gpu_ids=[1]`，每张卡同时最多一个新增训练进程。所有新增实验固定 `seed=100`，每个 dated root 只允许一次 attempt，`failure_policy=fail_closed`，不得静默 retry、改 seed、改阈值、改 corruption 或使用 adaptive backoff。DiffuRec 不进入本队列；本手册也不把任何历史 DiffuRec 工件称为 DiffRec。
+
+## 🔒 r6 runtime launch contract
+
+r6 只能从全新的 immutable source root 和 dated queue root 启动。代码身份来自绝对路径（Python 与 `single_train.py`/controller entry），GPU task 的 `cwd` 必须与其唯一 `run_dir` 相等且位于 queue root；因此 Hydra 的相对日志、checkpoint、summary 和 marker 写入不会落入 source root。method-pass continuation adapter 也强制 `gpu_ids=[1]`。唯一例外是 `gpu_slots=0` 的 CPU `contract_gate`：它可从 immutable source cwd 执行，用于启动前契约检查，不是训练任务。
+
+真实启动前必须在独立 probe `run_dir` 执行 Hydra 入口，加载 logging、dataset reconciliation、graph/model/noise、optimizer/EMA 以及严格 text-bank/null/`phi_R` 资产，然后在 dataloader、optimizer step、validation/test、sampling、checkpoint、summary 和 metrics 之前返回，并只写 `startup_probe.json` 与 `STARTUP_PROBE_PASS`。科学 queue manifest 禁止携带 `training.startup_probe_only` override。
 
 ### 流程图
 
@@ -131,21 +139,21 @@ python -m scripts.aaai27_queue.cli dry-run `
   --risk08-exit pending
 ```
 
-在 Linux/l20 上，`--queue-root` 必须等于 manifest 中的绝对 POSIX `run_root`/queue containment root；不能把 Windows 路径或工作站路径混入远端 manifest。`validate` 和 `dry-run` 不启动训练。用户已授权“全部 gate 通过后继续”，但任一 gate 未通过仍必须 fail closed。
+在 Linux/l20 上，`--queue-root` 必须等于 manifest 中的绝对 POSIX `run_root`/queue containment root；不能把 Windows 路径或工作站路径混入远端 manifest。r6 manifest 必须固定 `gpu_ids=[1]`，并逐任务满足 `cwd==run_dir`。`validate` 和 `dry-run` 不启动训练。用户已授权“全部 gate 通过后继续”，但任一 gate 未通过仍必须 fail closed。
 
 生成后必须逐任务核验：`argv work_dir == task.run_dir`；4 个 host 使用 `graph.type=adaptive` 和 `best_summary_adaptive.json`；18 个 evidence arm 使用 `graph.type=proposal_adaptive`；6 个 full 使用独立 `full_c{0,60,100}`；embedding 路径来自 RISK-04 的 `level-000/060/100`；embedding SHA 可复算；full 的 `gate_dataset_scale_override` 与冻结 `phi_R` 精确相等；evidence task 带 RISK-04/RISK-05 hash；strict full 能加载 null curve 且不会自动回退到默认 U_ds report。
 
 ## 🧾 训练授权、监控与产物要求
 
-controller 只能消费已验证的 `queue/queue_seed100.json`，并在每张 L20 卡上同时保持最多一个训练进程。GPU0 的 CLOSE-10 仍然独立运行，不得杀进程、抢卡或删除目录。新 queue 必须重新跑完整 branch；不得把 r3 的两个 hybrid host summary 或 r4 的任何 manifest/task identity 跨 manifest 拼入 RISK-08。
+controller 只能消费已验证的 r6 `queue/queue_seed100.json`，并在 GPU1 上最多保持一个新增训练进程。GPU0 的 CLOSE-10 历史任务若仍存在不得杀进程、抢卡或删除目录；即使 GPU0 空闲也不进入 r6 allowlist。新 queue 必须重新跑完整 branch；不得把 r3 的两个 hybrid host summary、r4/r5 的任何 manifest/task identity 或失败日志跨 manifest 拼入 RISK-08。
 
 每个成功任务必须产生：task artifact manifest、validation-selected best checkpoint、真实 stdout/stderr log、summary、split/bank/config/evaluator/selector hashes。当前协议显式设置 `write_snapshot_checkpoint=False`，因此不得把 periodic/latest checkpoint 当作成功前置；best checkpoint 仍由 `write_best_checkpoint=True` 保留。日志必须是实际文件，不得使用没有落盘内容的 `pipe-pane` 代替 structured heartbeat。缺失 summary、非零退出、OOM、hash mismatch 或 run directory 越界均写 terminal fail，不触发 retry。
 
 状态审计命令（只读）：
 
 ```bash
-# Set this to the absolute POSIX run_root recorded in queue_seed100.json.
-QUEUE_RUN_ROOT=/data/Zijian/goal/aaai27_queue/<new-dated-r5-root>
+# Set this to the absolute POSIX run_root recorded in the new r6 queue_seed100.json.
+QUEUE_RUN_ROOT=/data/Zijian/goal/aaai27_queue/<new-dated-r6-root>
 python -m scripts.aaai27_queue.cli status --queue-root "$QUEUE_RUN_ROOT" --json
 ```
 
@@ -193,7 +201,7 @@ python "$Root\scripts\run_risk08_decision.py" `
 
 ### 交接与审计
 
-每一步把命令、exit code、生成路径和 SHA-256 写入执行账本 `issues/2026-07-10_22-34-15-aaai27-seed100-resident-queue-execution.csv`。论文 reproducibility 声明必须保留原句：`model selection used validation only; test metrics were logged during development`；本轮不宣称 test 是 untouched final holdout。
+每一步把命令、exit code、生成路径和 SHA-256 写入唯一执行账本 `issues/2026-07-11_host-core-v2-preflight.csv`。论文 reproducibility 声明必须保留原句：`model selection used validation only; test metrics were logged during development`；本轮不宣称 test 是 untouched final holdout。
 
 ## 🔍 复盘清单
 

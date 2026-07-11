@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import time
+from pathlib import Path
 
 import hydra
 import numpy as np
@@ -20,6 +21,7 @@ from scripts.aaai27_adapters.optimizer_contract import (
     compose_named_training_parameters,
     compose_optimizer_parameters,
 )
+from scripts.aaai27_queue.storage import atomic_create_json
 from model.ema import ExponentialMovingAverage
 from model.transformer import SEDD4REC
 
@@ -156,6 +158,93 @@ def maybe_write_periodic_checkpoint(
     return True
 
 
+def _startup_probe_files(roots, patterns):
+    files = []
+    for root in roots:
+        root_path = Path(root).resolve(strict=False)
+        if not root_path.is_dir():
+            continue
+        for pattern in patterns:
+            files.extend(path for path in root_path.rglob(pattern) if path.is_file())
+    return sorted(str(path) for path in set(files))
+
+
+def build_startup_probe_payload(
+    *,
+    cfg,
+    state,
+    work_dir,
+    checkpoint_dir,
+    checkpoint_meta_dir,
+):
+    work_path = Path(work_dir).resolve(strict=False)
+    runtime_cwd = Path.cwd().resolve(strict=False)
+    if runtime_cwd != work_path:
+        raise RuntimeError(
+            f"startup probe runtime cwd must equal work_dir: {runtime_cwd} != {work_path}"
+        )
+    step = int(state.get("step", -1))
+    if step != 0:
+        raise RuntimeError(f"startup probe requires step zero, got {step}")
+    optimizer_state_entries = len(state["optimizer"].state)
+    if optimizer_state_entries != 0:
+        raise RuntimeError(
+            "startup probe requires empty optimizer state before any optimizer step"
+        )
+
+    roots = (checkpoint_dir, checkpoint_meta_dir)
+    checkpoint_files = _startup_probe_files(
+        roots, ("*.pt", "*.pth", "*.ckpt")
+    )
+    summary_files = _startup_probe_files(roots, ("best_summary_*.json",))
+    if checkpoint_files or summary_files:
+        raise RuntimeError(
+            "startup probe found pre-existing checkpoint or summary artifacts"
+        )
+
+    training_parameter_names = list(state["training_parameter_names"])
+    training_parameters = list(state["training_parameters"])
+    if len(training_parameter_names) != len(training_parameters):
+        raise RuntimeError("startup probe training parameter topology is inconsistent")
+
+    provenance_env = {}
+    for key in (
+        "AAAI_ARM",
+        "AAAI_BANK_SHA256",
+        "AAAI_DATASET",
+        "AAAI_EMBEDDING_SHA256",
+        "AAAI_GATE_DATASET_SCALE",
+        "AAAI_PHYSICAL_GPU_ID",
+        "AAAI_RISK05_PREREG_SHA256",
+    ):
+        if key in os.environ:
+            provenance_env[key] = os.environ[key]
+
+    return {
+        "schema_version": 1,
+        "status": "pass",
+        "probe_type": "hydra_pre_step",
+        "seed": int(cfg.random_seed),
+        "dataset": str(cfg.training.data),
+        "graph_type": str(cfg.graph.type),
+        "runtime_cwd": str(runtime_cwd),
+        "work_dir": str(work_path),
+        "step": step,
+        "optimizer_state_entries": optimizer_state_entries,
+        "training_parameter_names": training_parameter_names,
+        "training_parameter_count": len(training_parameters),
+        "checkpoint_files": checkpoint_files,
+        "summary_files": summary_files,
+        "provenance_env": provenance_env,
+        "side_effect_boundary": {
+            "dataloader_constructed": False,
+            "optimizer_step_called": False,
+            "checkpoint_written": False,
+            "metric_evaluation_called": False,
+        },
+    }
+
+
 @hydra.main(version_base=None, config_path="./configs", config_name="config")
 def main(cfg: DictConfig):
     setup_seed(cfg.random_seed)
@@ -204,6 +293,19 @@ def main(cfg: DictConfig):
         step=0,
     )
     initial_step = int(state["step"])
+
+    if bool(cfg.training.get("startup_probe_only", False)):
+        payload = build_startup_probe_payload(
+            cfg=cfg,
+            state=state,
+            work_dir=work_dir,
+            checkpoint_dir=checkpoint_dir,
+            checkpoint_meta_dir=checkpoint_meta_dir,
+        )
+        marker_path = Path(work_dir) / "startup_probe.json"
+        atomic_create_json(marker_path, payload)
+        print(f"STARTUP_PROBE_PASS path={marker_path}")
+        return
 
     train_loader, val_loader, test_loader = data.get_seqdataloader(cfg)
     valid_item_count = int(getattr(cfg.data, str(cfg.training.data)).item_num)

@@ -34,6 +34,7 @@ class FrontGateAdapterTests(unittest.TestCase):
             "created_at": "2026-07-11T02:00:00+08:00",
             "run_root": "/srv/aaai27/run",
             "source_root": "/srv/aaai27/source",
+            "gpu_ids": [1],
             "source_manifest_sha256": "a" * 64,
             "ledger_path": "/srv/aaai27/ledger.csv",
             "ledger_sha256": "b" * 64,
@@ -70,6 +71,8 @@ class FrontGateAdapterTests(unittest.TestCase):
         self.assertEqual(8, len(audit))
         self.assertEqual(14, len(passed))
         self.assertEqual({100}, {task["seed"] for task in manifest["tasks"]})
+        self.assertEqual([1], manifest["gpu_ids"])
+        self.assertTrue(all(task["cwd"] == task["run_dir"] for task in manifest["tasks"]))
         self.assertFalse(any("risk_gated_full" in (task["arm"] or "") for task in audit))
         self.assertTrue(any("text_side.ablation_mode=text_anchor_only" in task["argv"] for task in audit))
         self.assertTrue(all(task["run_dir"].startswith("/srv/aaai27/run/runs/") for task in manifest["tasks"]))

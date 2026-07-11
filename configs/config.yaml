@@ -26,6 +26,7 @@ training:
   early_stop_metric: ndcg10
   early_stop_strength: p2
   early_stop_min_delta: 0.0
+  startup_probe_only: False
 
 data:
   Steam:

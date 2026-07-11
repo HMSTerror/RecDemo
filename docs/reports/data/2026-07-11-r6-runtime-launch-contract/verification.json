@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "attempt": "r6-local-contract-verification",
+  "generated_at": "2026-07-11T21:25:00+08:00",
+  "evidence_scope": "engineering launch-contract evidence only; no performance evidence",
+  "tests": {
+    "command": "python -m unittest tests.test_aaai27_front_gate_adapters tests.test_aaai27_queue_cli tests.test_aaai27_queue_controller tests.test_aaai27_queue_models tests.test_aaai27_queue_runtime tests.test_aaai27_queue_scheduler tests.test_aaai27_queue_storage tests.test_aaai27_queue_validation tests.test_evaluate_frozen_checkpoint tests.test_graph_checkpoint_contract tests.test_launch_aaai27_seed100_queue tests.test_method_pass_continuation_adapters tests.test_proposal_adaptive_graph tests.test_proposal_wiring tests.test_risk04_08_queue_safe_adapters tests.test_single_train_checkpoint_retention tests.test_single_train_startup_probe tests.test_text_side_proposal tests.test_r6_launch_contract",
+    "ran": 156,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "skip_scope": "Windows-only Linux flock integration",
+    "startup_probe_unit_marker": "STARTUP_PROBE_PASS"
+  },
+  "static_checks": {
+    "compileall_command": "python -m compileall -q single_train.py scripts tests/test_r6_launch_contract.py tests/test_single_train_startup_probe.py",
+    "compileall_exit_code": 0,
+    "git_diff_check_exit_code": 0
+  },
+  "generated_manifest_audit": {
+    "evidence_type": "synthetic_manifest_invariant_audit",
+    "not_performance_evidence": true,
+    "task_count": 22,
+    "pass_count": 14,
+    "fail_audit_count": 8,
+    "gpu_ids": [1],
+    "seed_set": [100],
+    "unique_run_dirs": 22,
+    "cwd_equals_run_dir": true,
+    "absolute_single_train": true,
+    "source_entry_sample": "/srv/aaai27/source/single_train.py",
+    "host_count": 4,
+    "evidence_count": 18,
+    "risk04_severe_gate": "pass"
+  },
+  "dynamic_gpu_probe": {
+    "host": "ubuntu",
+    "observed_at": "2026-07-11T21:19:50+08:00",
+    "gpu_model": "NVIDIA L20",
+    "gpu_memory_mib": 46068,
+    "probe_pid": 2891985,
+    "cuda_visible_devices": "1",
+    "raw_global_compute_row": "GPU-407d64b5-f9d8-4075-675e-708d40569d90, 2891985, /data/Zijian/goal/PreferGrow/.venv/bin/python",
+    "raw_id0_rows": [],
+    "raw_id1_rows": ["2891985"],
+    "naturally_exited": true,
+    "production_probe_gpu_pids": {
+      "status": "pending_r6_source_deploy",
+      "reason": "The pre-deployment immutable source did not contain scripts.aaai27_queue; raw nvidia-smi evidence is retained, and the production probe_gpu_pids(0/1) call is required after r6 source deployment."
+    },
+    "training_started": false
+  },
+  "documentation": {
+    "spec": "docs/superpowers/specs/2026-07-11-r6-runtime-launch-contract-design.md",
+    "plan": "docs/superpowers/plans/2026-07-11-r6-runtime-launch-contract.md",
+    "runbook": "docs/runbooks/2026-07-11-e1-pass-risk04-08-experiment-manual.md",
+    "superseded_runbook": "docs/runbooks/2026-07-10-aaai27-seed100-resident-queue.md"
+  }
+}

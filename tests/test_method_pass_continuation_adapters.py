@@ -35,7 +35,7 @@ def _protocol() -> dict:
         "source_manifest_sha256": "d" * 64,
         "ledger_path": "/srv/bundle/issues/execution.csv",
         "ledger_sha256": "e" * 64,
-        "gpu_ids": [0, 1],
+        "gpu_ids": [1],
         "gpu_budget_hours": 168.0,
         "min_free_disk_gib": 40.0,
         "code_revision": "a" * 40,
@@ -132,14 +132,25 @@ class MethodPassContinuationAdapterTests(unittest.TestCase):
 
     def test_builds_exact_seed100_continuation_matrix_and_validates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            manifest = self._build(Path(tmp))
+            try:
+                manifest = self._build(Path(tmp))
+            except ContinuationSafetyError as exc:
+                self.fail(f"GPU1-only continuation contract was rejected: {exc}")
             continuation = [task for task in manifest["tasks"] if task["phase"] == "continuation"]
             self.assertEqual(1 + 8 + 12 + 12, len(continuation))
             self.assertEqual(8, sum(task["ledger_id"] == "RISK-13" for task in continuation))
             self.assertEqual(12, sum(task["ledger_id"] == "RISK-14" for task in continuation))
             self.assertEqual(12, sum(task["ledger_id"] == "RISK-10" for task in continuation))
             self.assertEqual(0, sum(task["ledger_id"] == "RISK-11" for task in continuation))
+            self.assertEqual([1], manifest["gpu_ids"])
             self.assertTrue(all(task["seed"] == 100 for task in continuation if task["kind"] == "gpu"))
+            self.assertTrue(
+                all(
+                    task["cwd"] == task["run_dir"]
+                    for task in continuation
+                    if task["kind"] == "gpu"
+                )
+            )
             self.assertTrue(all(task["max_attempts"] == 1 and task["failure_policy"] == "fail_closed" for task in continuation))
             self.assertEqual(len({task["run_dir"] for task in continuation}), len(continuation))
             self.assertTrue(all(task["evaluator_version"] == "e0_full_tail_v2" for task in continuation if task["kind"] == "gpu"))
@@ -187,6 +198,11 @@ class MethodPassContinuationAdapterTests(unittest.TestCase):
             too_expensive["estimates"] = {name: {"low": 10.0, "high": 10.0, "output_gib": 0.1} for name in too_expensive["estimates"]}
             with self.assertRaisesRegex(ContinuationSafetyError, "168"):
                 self._build(root, protocol=too_expensive)
+
+            wrong_gpu = _protocol()
+            wrong_gpu["gpu_ids"] = [0, 1]
+            with self.assertRaisesRegex(ContinuationSafetyError, "GPU1"):
+                self._build(root, protocol=wrong_gpu)
 
             wrong_risk08 = _write_json(root / "wrong-risk08.json", {"exit": "audit_only"})
             e1 = _write_json(root / "e1.json", _e1_marker())

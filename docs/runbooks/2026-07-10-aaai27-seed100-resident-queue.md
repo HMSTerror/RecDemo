@@ -4,6 +4,8 @@ _Operator runbook for the fail-closed controller and the isolated l20 deployment
 
 ---
 
+> ⚠️ **Superseded:** This historical runbook describes the pre-r6 queue contract and its `[0,1]` allowlist. It must not be used to launch or resume r6. Use [the dated r6 E1/RISK-04–08 manual](2026-07-11-e1-pass-risk04-08-experiment-manual.md), which requires a new immutable source/root, `gpu_ids=[1]`, GPU-task `cwd==run_dir`, and a real Hydra startup probe.
+
 ## 🔐 Authorization gate
 
 This runbook separates local verification, remote no-op validation, and real experiment launch. The current user authorization covers implementation, server verification, and a real seed-100 launch, but authorization is consumed only after every DEPLOY-01 hard gate passes. A local unit test, a printed SSH command, or a no-op smoke is not evidence that a scientific run started.

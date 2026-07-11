@@ -13,6 +13,8 @@ SSH_BASE = ["ssh", "-n", "-T", "-o", "BatchMode=yes"]
 DEFAULT_HOST = "zijian@172.18.0.40"
 DEFAULT_REMOTE_PYTHON = "/data/Zijian/goal/PreferGrow/.venv/bin/python"
 DEFAULT_REMOTE_ENTRY = "/data/Zijian/goal/aaai27_bundle/scripts/aaai27_remote_tmux_entry.py"
+DEFAULT_CONTROLLER_PYTHON = DEFAULT_REMOTE_PYTHON
+DEFAULT_CONTROLLER_ENTRY = "/data/Zijian/goal/aaai27_bundle/scripts/aaai27_resident_queue.py"
 DEFAULT_QUEUE_ROOT = "/data/Zijian/goal/RecDemoRuns/aaai27_seed100_resident_20260710-220000"
 DEFAULT_MANIFEST = f"{DEFAULT_QUEUE_ROOT}/queue/queue_seed100.json"
 DEFAULT_SESSION = "aaai27_seed100_queue"
@@ -26,6 +28,8 @@ def build_ssh_argv(
     queue_root: str,
     manifest: str,
     session: str,
+    python_bin: str,
+    controller_entry: str,
     connect_timeout: int | None = None,
 ) -> list[str]:
     base = list(SSH_BASE)
@@ -42,6 +46,10 @@ def build_ssh_argv(
         manifest,
         "--session",
         session,
+        "--python-bin",
+        python_bin,
+        "--controller-entry",
+        controller_entry,
     ]
     return [*base, host, shlex.join(remote_argv)]
 
@@ -54,6 +62,8 @@ def launch_queue(
     queue_root: str,
     manifest: str,
     session: str,
+    python_bin: str,
+    controller_entry: str,
     connect_timeout: int | None = None,
     print_only: bool = False,
 ) -> list[str]:
@@ -64,6 +74,8 @@ def launch_queue(
         queue_root=queue_root,
         manifest=manifest,
         session=session,
+        python_bin=python_bin,
+        controller_entry=controller_entry,
         connect_timeout=connect_timeout,
     )
     if not print_only:
@@ -79,6 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--queue-root", default=DEFAULT_QUEUE_ROOT)
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST)
     parser.add_argument("--session", default=DEFAULT_SESSION)
+    parser.add_argument("--python-bin", default=DEFAULT_CONTROLLER_PYTHON)
+    parser.add_argument("--controller-entry", default=DEFAULT_CONTROLLER_ENTRY)
     parser.add_argument("--connect-timeout", type=int, default=None)
     parser.add_argument("--print-only", action="store_true")
     return parser
@@ -93,6 +107,8 @@ def main(argv: Sequence[str] | None = None) -> None:
         queue_root=args.queue_root,
         manifest=args.manifest,
         session=args.session,
+        python_bin=args.python_bin,
+        controller_entry=args.controller_entry,
         connect_timeout=args.connect_timeout,
         print_only=args.print_only,
     )

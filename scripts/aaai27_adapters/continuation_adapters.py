@@ -154,8 +154,10 @@ def _validate_protocol(protocol: Mapping[str, Any]) -> dict[str, Any]:
         raise ContinuationSafetyError("run_root and source_root must be absolute POSIX paths")
     result["run_root"] = run_root
     result["source_root"] = source_root
-    if tuple(result.get("gpu_ids", (0, 1))) != (0, 1):
-        raise ContinuationSafetyError("continuation queue must expose GPU 0 and GPU 1")
+    if result.get("gpu_ids") != [1]:
+        raise ContinuationSafetyError(
+            "continuation queue must explicitly expose GPU1 only"
+        )
     if float(result.get("gpu_budget_hours", 168.0)) != 168.0:
         raise ContinuationSafetyError("continuation queue must freeze 168 GPU-hours")
     if float(result.get("min_free_disk_gib", 40.0)) != 40.0:
@@ -268,7 +270,7 @@ def _task(
         env.update({str(key): str(value) for key, value in extra_env.items()})
     return {
         "schema_version": 1, "task_id": task_id, "ledger_id": ledger_id, "phase": "continuation", "branch": "method_pass",
-        "kind": "gpu", "argv": argv, "cwd": str(protocol["source_root"]), "env": env,
+        "kind": "gpu", "argv": argv, "cwd": run_dir, "env": env,
         "dependencies": list(dependencies),
         "required_markers": ["markers/RISK-02_PASS.json", "markers/RISK-05_PASS.json", "markers/RISK-08_EXIT.json"],
         "success_artifacts": [f"{relative_dir}/artifact_manifest.json"], "failure_policy": "fail_closed", "max_attempts": 1,
@@ -388,7 +390,7 @@ def build_method_pass_manifest(
         "schema_version": 1, "queue_id": str(config["queue_id"]), "created_at": str(config["created_at"]),
         "run_root": str(config["run_root"]), "source_root": str(config["source_root"]),
         "source_manifest_sha256": str(config["source_manifest_sha256"]), "ledger_path": str(config["ledger_path"]),
-        "ledger_sha256": str(config["ledger_sha256"]), "gpu_ids": [0, 1], "gpu_budget_hours": 168.0,
+        "ledger_sha256": str(config["ledger_sha256"]), "gpu_ids": list(config["gpu_ids"]), "gpu_budget_hours": 168.0,
         "min_free_disk_gib": 40.0, "tasks": all_tasks,
     }
     try:

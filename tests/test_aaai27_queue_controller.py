@@ -138,7 +138,7 @@ class QueueControllerTests(unittest.TestCase):
             controller.tick(runtime)
 
             saved = controller.load_records()["front.one"]
-            self.assertEqual(("front.one", (0, 1)), runtime.started[0])
+            self.assertEqual(("front.one", (1,)), runtime.started[0])
             self.assertEqual("running", saved.status)
             self.assertEqual(1, saved.attempt)
             self.assertEqual(456, saved.pid)
@@ -178,7 +178,7 @@ class QueueControllerTests(unittest.TestCase):
             saved = controller.load_records()["front.unverified"]
             self.assertEqual("running", saved.status)
             self.assertEqual(1, saved.attempt)
-            self.assertEqual([("front.unverified", (0, 1))], runtime.started)
+            self.assertEqual([("front.unverified", (1,))], runtime.started)
             live_process.assert_not_called()
 
     def test_valid_completion_passes_and_accounts_gpu_time(self) -> None:

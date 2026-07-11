@@ -519,6 +519,11 @@ def build_risk0607_manifest(
         "run_root_posix",
     )
     source_root_posix = _posix_path(protocol_template.get("source_root_posix"), "source_root_posix")
+    gpu_ids = protocol_template.get("gpu_ids")
+    if gpu_ids != [1]:
+        raise QueueSafetyError(
+            "RISK-06/RISK-07 pilot gpu_ids must explicitly equal [1]"
+        )
     if run_root_posix != queue_root_posix:
         raise QueueSafetyError(
             "run_root_posix is the manifest containment root and must equal queue_root_posix"
@@ -564,6 +569,7 @@ def build_risk0607_manifest(
         "source_manifest_sha256": source_manifest_sha256,
         "ledger_path": _posix_path(protocol_template.get("ledger_path_posix"), "ledger_path_posix"),
         "ledger_sha256": ledger_sha256,
+        "gpu_ids": list(gpu_ids),
         "code_revision": code_revision,
         "config_sha256": config_sha256,
         "python_bin": str(protocol_template["python_bin"]),

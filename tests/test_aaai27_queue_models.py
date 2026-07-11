@@ -32,7 +32,7 @@ class QueueModelTests(unittest.TestCase):
         manifest = QueueManifest.from_dict(raw)
 
         self.assertIsInstance(manifest.tasks[0], TaskSpec)
-        self.assertEqual((0, 1), manifest.gpu_ids)
+        self.assertEqual((1,), manifest.gpu_ids)
         self.assertEqual(raw, manifest.to_dict())
 
     def test_task_rejects_unknown_and_missing_fields(self) -> None:

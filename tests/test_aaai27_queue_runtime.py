@@ -55,11 +55,30 @@ class FakeLockBackend:
 
 
 class QueueRuntimeTests(unittest.TestCase):
+    def runtime_task(self, root: Path, *, task_id: str, **overrides) -> TaskSpec:
+        run_dir = root / "runs" / task_id
+        return TaskSpec.from_dict(
+            make_task(
+                task_id=task_id,
+                cwd=str(run_dir),
+                run_dir=str(run_dir),
+                **overrides,
+            )
+        )
+
     def test_gpu_probe_parses_integer_pids(self) -> None:
-        runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "123\n456\nN/A\n", ""))
+        runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "123\n456\n", ""))
 
         self.assertEqual({123, 456}, probe_gpu_pids(1, runner=runner))
         self.assertIn("--id=1", runner.call_args.args[0])
+
+    def test_gpu_probe_unknown_row_is_fail_closed(self) -> None:
+        runner = mock.Mock(
+            return_value=subprocess.CompletedProcess([], 0, "N/A\n", "")
+        )
+
+        with self.assertRaisesRegex(GpuBusyError, "unrecognized"):
+            probe_gpu_pids(1, runner=runner)
 
     def test_gpu_probe_failure_is_fail_closed(self) -> None:
         runner = mock.Mock(return_value=subprocess.CompletedProcess([], 9, "", "driver error"))
@@ -98,6 +117,125 @@ class QueueRuntimeTests(unittest.TestCase):
         self.assertIsNone(runtime.start_task(task, (0,)))
         popen.assert_not_called()
 
+    def test_runtime_creates_contained_task_cwd_before_spawn(self) -> None:
+        process = FakeProcess(97)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            run_dir = root / "runs" / "gpu.contained"
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+            task = TaskSpec.from_dict(
+                make_task(
+                    task_id="gpu.contained",
+                    cwd=str(run_dir),
+                    run_dir=str(run_dir),
+                )
+            )
+
+            try:
+                runtime.start_task(task, (1,))
+
+                self.assertTrue(run_dir.is_dir())
+                self.assertEqual(str(run_dir), popen.call_args.kwargs["cwd"])
+            finally:
+                runtime._running[97].spawned.log_handle.close()
+
+    def test_runtime_rejects_task_cwd_outside_queue_root(self) -> None:
+        process = FakeProcess(99)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            outside = root.parent / "outside-r6-task"
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+            )
+            task = TaskSpec.from_dict(
+                make_task(
+                    task_id="gpu.outside",
+                    cwd=str(outside),
+                    run_dir=str(outside),
+                )
+            )
+
+            try:
+                with self.assertRaisesRegex(ValueError, "outside allowed root"):
+                    runtime.start_task(task, (1,))
+                popen.assert_not_called()
+            finally:
+                if 99 in runtime._running:
+                    runtime._running[99].spawned.log_handle.close()
+
+    def test_runtime_rejects_task_cwd_that_differs_from_run_dir(self) -> None:
+        process = FakeProcess(100)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+            )
+            task = TaskSpec.from_dict(
+                make_task(
+                    task_id="gpu.mismatch",
+                    cwd=str(root / "runs" / "cwd"),
+                    run_dir=str(root / "runs" / "different"),
+                )
+            )
+
+            try:
+                with self.assertRaisesRegex(ValueError, "cwd must equal run_dir"):
+                    runtime.start_task(task, (1,))
+                popen.assert_not_called()
+            finally:
+                if 100 in runtime._running:
+                    runtime._running[100].spawned.log_handle.close()
+
+    def test_runtime_preserves_existing_source_cwd_for_cpu_contract_gate(self) -> None:
+        process = FakeProcess(110)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "queue"
+            source_root = Path(tmpdir) / "immutable-source"
+            source_root.mkdir()
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+            task = TaskSpec.from_dict(
+                make_task(
+                    task_id="contract.gate",
+                    kind="contract_gate",
+                    gpu_slots=0,
+                    seed=None,
+                    cwd=str(source_root),
+                    run_dir=str(root / "gates" / "contract"),
+                )
+            )
+
+            try:
+                try:
+                    started = runtime.start_task(task, (1,))
+                except ValueError as exc:
+                    self.fail(f"CPU contract gate source cwd was rejected: {exc}")
+                self.assertEqual("contract.gate", started.task_id)
+                self.assertEqual(str(source_root), popen.call_args.kwargs["cwd"])
+            finally:
+                if 110 in runtime._running:
+                    runtime._running[110].spawned.log_handle.close()
+
     def test_two_gpu_tasks_get_distinct_physical_cards_and_third_waits(self) -> None:
         processes = [FakeProcess(101), FakeProcess(102), FakeProcess(103)]
         popen = mock.Mock(side_effect=processes)
@@ -111,9 +249,9 @@ class QueueRuntimeTests(unittest.TestCase):
                 process_start_token=lambda pid: f"token-{pid}",
                 monotonic=lambda: 10.0,
             )
-            first = runtime.start_task(TaskSpec.from_dict(make_task(task_id="gpu.first")), (0, 1))
-            second = runtime.start_task(TaskSpec.from_dict(make_task(task_id="gpu.second")), (0, 1))
-            third = runtime.start_task(TaskSpec.from_dict(make_task(task_id="gpu.third")), (0, 1))
+            first = runtime.start_task(self.runtime_task(root, task_id="gpu.first"), (0, 1))
+            second = runtime.start_task(self.runtime_task(root, task_id="gpu.second"), (0, 1))
+            third = runtime.start_task(self.runtime_task(root, task_id="gpu.third"), (0, 1))
 
             self.assertEqual(0, first.gpu_id)
             self.assertEqual(1, second.gpu_id)
@@ -141,8 +279,10 @@ class QueueRuntimeTests(unittest.TestCase):
                 gpu_probe=lambda gpu_id: set(),
                 process_start_token=lambda pid: f"token-{pid}",
             )
-            task = TaskSpec.from_dict(
-                make_task(task_id="gpu.cuda-override", argv=["python", "single_train.py", "cuda=0"])
+            task = self.runtime_task(
+                root,
+                task_id="gpu.cuda-override",
+                argv=["python", "single_train.py", "cuda=0"],
             )
 
             try:
@@ -160,7 +300,7 @@ class QueueRuntimeTests(unittest.TestCase):
         locks = FakeLockBackend()
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            task = TaskSpec.from_dict(make_task(task_id="gpu.unverified"))
+            task = self.runtime_task(root, task_id="gpu.unverified")
             runtime = QueueRuntime(
                 queue_root=root,
                 supervisor=ProcessSupervisor(popen=popen),
@@ -175,7 +315,9 @@ class QueueRuntimeTests(unittest.TestCase):
             self.assertEqual("unverified:151", started.process_start_time)
             lock = locks.handles[str(root / "state" / "gpu0.lock")]
             self.assertFalse(lock.closed)
-            self.assertIsNone(runtime.start_task(TaskSpec.from_dict(make_task(task_id="gpu.waits")), (0,)))
+            self.assertIsNone(
+                runtime.start_task(self.runtime_task(root, task_id="gpu.waits"), (0,))
+            )
             process.exit_code = 9
             finished = runtime.observe_finished()
             self.assertEqual("exit_code=9", finished[0].reason)
@@ -187,7 +329,11 @@ class QueueRuntimeTests(unittest.TestCase):
         times = iter((10.0, 25.5))
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            task = TaskSpec.from_dict(make_task(task_id="gpu.done", success_artifacts=["artifacts/done.json"]))
+            task = self.runtime_task(
+                root,
+                task_id="gpu.done",
+                success_artifacts=["artifacts/done.json"],
+            )
             artifact = root / "artifacts" / "done.json"
             artifact.parent.mkdir()
             artifact.write_text("{}\n", encoding="utf-8")

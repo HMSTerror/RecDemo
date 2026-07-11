@@ -1,5 +1,7 @@
 import importlib.util
+import inspect
 import json
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -20,6 +22,42 @@ def load(name: str):
 
 
 class QueueLaunchTests(unittest.TestCase):
+    def test_local_launcher_forwards_controller_python_and_entry(self) -> None:
+        module = load("launch_aaai27_seed100_queue")
+        parameters = inspect.signature(module.build_ssh_argv).parameters
+        self.assertIn("python_bin", parameters)
+        self.assertIn("controller_entry", parameters)
+
+        argv = module.build_ssh_argv(
+            host="l20",
+            remote_python="/opt/bootstrap/bin/python3",
+            remote_entry="/srv/r6/scripts/aaai27_remote_tmux_entry.py",
+            queue_root="/srv/r6/queue",
+            manifest="/srv/r6/queue/queue/queue_seed100.json",
+            session="aaai27_r6_seed100",
+            python_bin="/opt/train/bin/python3",
+            controller_entry="/srv/r6/source/scripts/aaai27_resident_queue.py",
+        )
+
+        remote_tokens = shlex.split(argv[-1])
+        self.assertEqual(
+            [
+                "/opt/bootstrap/bin/python3",
+                "/srv/r6/scripts/aaai27_remote_tmux_entry.py",
+                "--queue-root",
+                "/srv/r6/queue",
+                "--manifest",
+                "/srv/r6/queue/queue/queue_seed100.json",
+                "--session",
+                "aaai27_r6_seed100",
+                "--python-bin",
+                "/opt/train/bin/python3",
+                "--controller-entry",
+                "/srv/r6/source/scripts/aaai27_resident_queue.py",
+            ],
+            remote_tokens,
+        )
+
     def test_local_launcher_uses_ssh_argv_and_batch_mode(self) -> None:
         module = load("launch_aaai27_seed100_queue")
         argv = module.build_ssh_argv(
@@ -29,6 +67,8 @@ class QueueLaunchTests(unittest.TestCase):
             queue_root="/data/Zijian/goal/RecDemoRuns/aaai27_seed100_resident_20260710-220000",
             manifest="/data/Zijian/goal/RecDemoRuns/aaai27_seed100_resident_20260710-220000/queue/queue_seed100.json",
             session="aaai27_seed100_queue",
+            python_bin="/data/Zijian/goal/PreferGrow/.venv/bin/python",
+            controller_entry="/data/Zijian/goal/aaai27_bundle/scripts/aaai27_resident_queue.py",
         )
         self.assertEqual(["ssh", "-n", "-T", "-o", "BatchMode=yes"], argv[:5])
         self.assertEqual("zijian@172.18.0.40", argv[5])
@@ -45,6 +85,8 @@ class QueueLaunchTests(unittest.TestCase):
                 queue_root="/data/with spaces/queue root",
                 manifest="/data/with spaces/queue root/queue/seed100.json",
                 session="aaai27_seed100_queue",
+                python_bin="/data/with spaces/controller python",
+                controller_entry="/data/with spaces/controller entry.py",
                 print_only=True,
             )
         run.assert_not_called()

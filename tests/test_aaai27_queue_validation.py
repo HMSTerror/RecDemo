@@ -27,7 +27,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                 arm="host",
                 argv=[
                     "/opt/venv/bin/python",
-                    "single_train.py",
+                    "/srv/bundle/source/single_train.py",
                     "graph.type=adaptive",
                 ],
                 success_artifacts=[
@@ -47,7 +47,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                     arm=f"text_anchor_only_c{level}",
                     argv=[
                         "/opt/venv/bin/python",
-                        "single_train.py",
+                        "/srv/bundle/source/single_train.py",
                         "graph.type=proposal_adaptive",
                     ],
                     success_artifacts=[
@@ -68,7 +68,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                         arm=f"risk_gated_full_c{level}",
                         argv=[
                             "/opt/venv/bin/python",
-                            "single_train.py",
+                            "/srv/bundle/source/single_train.py",
                             "graph.type=proposal_adaptive",
                         ],
                         success_artifacts=[
@@ -153,8 +153,12 @@ class QueueValidationTests(unittest.TestCase):
         )
 
     def test_rejects_noncanonical_resource_contract(self) -> None:
-        with self.assertRaisesRegex(ManifestError, "GPU 0 and GPU 1"):
-            validate_manifest(decoded(valid_pilots(), gpu_ids=[0]))
+        for gpu_ids in ([], [1, 1], [-1]):
+            with self.subTest(gpu_ids=gpu_ids):
+                with self.assertRaisesRegex(
+                    ManifestError, "nonempty unique nonnegative"
+                ):
+                    validate_manifest(decoded(valid_pilots(), gpu_ids=gpu_ids))
         with self.assertRaisesRegex(ManifestError, "168 GPU-hours"):
             validate_manifest(decoded(valid_pilots(), gpu_budget_hours=169.0))
         with self.assertRaisesRegex(ManifestError, "40 GiB"):

@@ -86,7 +86,12 @@ def probe_gpu_pids(
     result = runner(command, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise GpuBusyError(f"GPU probe failed for {gpu_id}: {(result.stderr or '').strip()}")
-    return {int(line.strip()) for line in result.stdout.splitlines() if line.strip().isdigit()}
+    rows = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if any(re.fullmatch(r"[1-9][0-9]*", row) is None for row in rows):
+        raise GpuBusyError(
+            f"GPU probe returned unrecognized rows for {gpu_id}: {rows!r}"
+        )
+    return {int(row) for row in rows}
 
 
 def linux_process_start_token(pid: int) -> str:
@@ -210,6 +215,14 @@ class QueueRuntime:
         gpu_id: int | None,
         lock_handle: LockHandle | None,
     ) -> StartedChild:
+        if task.gpu_slots == 1:
+            cwd = require_within(Path(task.cwd), self.queue_root)
+            run_dir = require_within(Path(task.run_dir), self.queue_root)
+            if cwd != run_dir:
+                raise ValueError(f"{task.task_id}: runtime cwd must equal run_dir")
+            cwd.mkdir(parents=True, exist_ok=True)
+        else:
+            cwd = Path(task.cwd)
         env = dict(task.env)
         bound_argv = list(task.argv)
         if gpu_id is not None:
@@ -220,7 +233,7 @@ class QueueRuntime:
         try:
             spawned = self.supervisor.start(
                 argv=bound_argv,
-                cwd=Path(task.cwd),
+                cwd=cwd,
                 env=env,
                 stdout_path=self._task_log_path(task.task_id),
             )

@@ -16,7 +16,7 @@ def make_task(**overrides: Any) -> dict[str, Any]:
         "branch": "common",
         "kind": "gpu",
         "argv": ["/opt/venv/bin/python", "scripts/fake_adapter.py", "--seed", "100"],
-        "cwd": "/srv/bundle/source",
+        "cwd": f"{DEFAULT_RUN_ROOT}/runs/{task_id}",
         "env": {"PYTHONHASHSEED": "100"},
         "dependencies": [],
         "required_markers": [],
@@ -50,8 +50,11 @@ def make_manifest(tasks: list[dict[str, Any]], **overrides: Any) -> dict[str, An
     normalized: list[dict[str, Any]] = []
     for source in tasks:
         task = dict(source)
-        if str(task["run_dir"]).startswith(f"{DEFAULT_RUN_ROOT}/runs/"):
+        original_run_dir = str(task["run_dir"])
+        if original_run_dir.startswith(f"{DEFAULT_RUN_ROOT}/runs/"):
             task["run_dir"] = f"{run_root}/runs/{task['task_id']}"
+            if task["cwd"] == original_run_dir:
+                task["cwd"] = task["run_dir"]
         normalized.append(task)
     payload: dict[str, Any] = {
         "schema_version": 1,
@@ -62,7 +65,7 @@ def make_manifest(tasks: list[dict[str, Any]], **overrides: Any) -> dict[str, An
         "source_manifest_sha256": "d" * 64,
         "ledger_path": "/srv/bundle/issues/2026-07-10_21-18-20-aaai27-evidence-risk-rescue.csv",
         "ledger_sha256": "e" * 64,
-        "gpu_ids": [0, 1],
+        "gpu_ids": [1],
         "gpu_budget_hours": 168.0,
         "min_free_disk_gib": 40.0,
         "tasks": normalized,
@@ -85,7 +88,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                 arm="host",
                 argv=[
                     "/opt/venv/bin/python",
-                    "single_train.py",
+                    "/srv/bundle/source/single_train.py",
                     "graph.type=adaptive",
                 ],
                 success_artifacts=[
@@ -105,7 +108,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                     arm=f"text_anchor_only_c{level}",
                     argv=[
                         "/opt/venv/bin/python",
-                        "single_train.py",
+                        "/srv/bundle/source/single_train.py",
                         "graph.type=proposal_adaptive",
                     ],
                     success_artifacts=[
@@ -126,7 +129,7 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                         arm=f"risk_gated_full_c{level}",
                         argv=[
                             "/opt/venv/bin/python",
-                            "single_train.py",
+                            "/srv/bundle/source/single_train.py",
                             "graph.type=proposal_adaptive",
                         ],
                         success_artifacts=[

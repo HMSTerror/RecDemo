@@ -23,6 +23,17 @@ def _expected_pilot_ids(branch: str, include_full: bool) -> set[str]:
     return expected
 
 
+def _require_gpu_ids(protocol: dict[str, Any]) -> list[int]:
+    raw = protocol.get("gpu_ids")
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("pilot protocol gpu_ids must be a nonempty explicit list")
+    if any(type(value) is not int or value < 0 for value in raw):
+        raise ValueError("pilot protocol gpu_ids must contain nonnegative integers")
+    if len(raw) != len(set(raw)):
+        raise ValueError("pilot protocol gpu_ids must be unique")
+    return list(raw)
+
+
 def _base_argv(protocol: dict[str, Any], dataset: str, dataset_cfg: dict[str, Any], run_dir: str, graph_type: str) -> list[str]:
     argv = [
         str(protocol["python_bin"]),
@@ -96,7 +107,7 @@ def _task(
         "branch": branch,
         "kind": "gpu",
         "argv": argv,
-        "cwd": str(protocol["source_root"]),
+        "cwd": run_dir,
         "env": env,
         "dependencies": [],
         "required_markers": ["markers/RISK-02_PASS.json" if branch == "e1_pass" else "markers/RISK-02_FAIL.json"],
@@ -126,6 +137,7 @@ def _task(
 def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
     if set(protocol.get("datasets", {})) != set(DATASETS):
         raise ValueError("pilot manifest requires exactly Beauty and Steam dataset specifications")
+    gpu_ids = _require_gpu_ids(protocol)
     tasks: list[dict[str, Any]] = []
     for branch, include_full in (("e1_pass", True), ("e1_fail_audit", False)):
         for dataset in DATASETS:
@@ -226,7 +238,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
         "source_manifest_sha256": str(protocol["source_manifest_sha256"]),
         "ledger_path": str(protocol["ledger_path"]),
         "ledger_sha256": str(protocol["ledger_sha256"]),
-        "gpu_ids": [0, 1],
+        "gpu_ids": gpu_ids,
         "gpu_budget_hours": 168.0,
         "min_free_disk_gib": 40.0,
         "tasks": tasks,
