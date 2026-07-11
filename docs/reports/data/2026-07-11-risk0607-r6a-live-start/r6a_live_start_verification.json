@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-07-11T22:51:03+08:00",
+  "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-946a167-r6a",
+  "session": "aaai27_r6a_seed100_controller_20260711",
+  "manifest_sha256": "34b20ec58e2619d1326a45f1dd3d08cf717a10f8073532e7fd7f585f17c62227",
+  "controller": {"pid": 2914346, "status": "running"},
+  "first_task": {
+    "task_id": "pilot.e1_pass.Beauty.host",
+    "pid": 2914349,
+    "seed": 100,
+    "gpu_id": 1,
+    "status": "running",
+    "started_at": "2026-07-11T14:50:41.975601+00:00",
+    "run_dir": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-946a167-r6a/runs/e1_pass/Beauty/host",
+    "step_observed": 1000,
+    "log_markers": ["EARLY_STOP_MONITOR", "NEW_BEST"]
+  },
+  "gpu_snapshot": {
+    "gpu0_utilization_percent": 0,
+    "gpu0_memory_mib": 9,
+    "gpu1_utilization_percent": 46,
+    "gpu1_memory_mib": 1493,
+    "compute_pid_gpu1": 2914349,
+    "new_training_pid_on_gpu0": false
+  },
+  "startup_probe": {
+    "status": "pass",
+    "path": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-946a167-r6a/probe/startup_beauty_full_c60/startup_probe.json",
+    "step": 0,
+    "dataloader_constructed": false,
+    "optimizer_step_called": false,
+    "checkpoint_files": [],
+    "summary_files": []
+  },
+  "production_gpu_probe": {
+    "gpu0_pids": [],
+    "gpu1_pids": [2912482, 2912640],
+    "post_probe_gpu0_pids": [],
+    "post_probe_gpu1_pids": []
+  },
+  "free_disk_gib": 47,
+  "training_evidence_boundary": "live_single_run_observation_only",
+  "completion_or_performance_evidence": false
+}
