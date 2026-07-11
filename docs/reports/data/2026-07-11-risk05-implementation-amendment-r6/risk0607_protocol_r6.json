@@ -6,9 +6,9 @@
   "source_root_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c",
   "source_manifest_sha256": "acbf4aefeb3c9e580ce2e97e8ca94610abbe6de206fb92a0270f4750bed39aea",
   "ledger_path_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c/issues/2026-07-11_host-core-v2-preflight.csv",
-  "ledger_sha256": "a57ba05ec4fd66dafaa6bd0f9266f5eafc755ee9528ffa7b4f326f8aa63dc0e4",
+  "ledger_sha256": "7154d289c7773f2c902bb768c0f792b7b0c219f77256362abb90a28f56420610",
   "code_revision": "6f0fa3c2ca43a97b0da93a98f4fa88a0a7618dbd",
-  "config_sha256": "6adc55709503b2b63e2af43bf15906013b38178e7c26dabbe00f580d89c50d71",
+  "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
   "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
   "single_train": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c/single_train.py",
   "risk04_root_posix": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
@@ -43,13 +43,13 @@
       "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
       "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
       "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
-      "config_sha256": "6adc55709503b2b63e2af43bf15906013b38178e7c26dabbe00f580d89c50d71"
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92"
     },
     "Steam": {
       "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
       "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv",
       "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
-      "config_sha256": "6adc55709503b2b63e2af43bf15906013b38178e7c26dabbe00f580d89c50d71"
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92"
     }
   },
   "frozen_scientific_contract": {

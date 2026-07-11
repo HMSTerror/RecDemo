@@ -10,7 +10,7 @@ This dated amendment authorizes preparation of a new immutable r6 source and que
 
 ## 🔒 Immutable r6 identity
 
-The source revision is `6f0fa3c2ca43a97b0da93a98f4fa88a0a7618dbd`, archived as `prefergrow_source_6f0fa3c.tar` with SHA-256 `acbf4aefeb3c9e580ce2e97e8ca94610abbe6de206fb92a0270f4750bed39aea` and size `41,308,160` bytes. The intended source root is `/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c`; the intended queue root is `/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f0fa3c-r6`. Both are new dated roots. The machine-readable protocol is [risk0607_protocol_r6.json](risk0607_protocol_r6.json), SHA-256 `caca8605e7e555cd4ae67ec1d3050a43d313e90f0d5e4954f803a27c9d9501ca`.
+The source revision is `6f0fa3c2ca43a97b0da93a98f4fa88a0a7618dbd`, archived as `prefergrow_source_6f0fa3c.tar` with SHA-256 `acbf4aefeb3c9e580ce2e97e8ca94610abbe6de206fb92a0270f4750bed39aea` and size `41,308,160` bytes. The intended source root is `/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c`; the intended queue root is `/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f0fa3c-r6`. Both are new dated roots. The machine-readable protocol is [risk0607_protocol_r6.json](risk0607_protocol_r6.json), SHA-256 `73b22ede2acec6a545324250b3fce87a7fda22a10b6ba811d5af7ef50d66cfb2`.
 
 ## 🧪 Frozen scientific fields
 

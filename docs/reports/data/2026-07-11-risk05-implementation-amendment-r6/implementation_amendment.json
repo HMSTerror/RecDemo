@@ -20,15 +20,15 @@
     "archive_sha256": "acbf4aefeb3c9e580ce2e97e8ca94610abbe6de206fb92a0270f4750bed39aea",
     "archive_size_bytes": 41308160,
     "source_root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c",
-    "ledger_sha256": "a57ba05ec4fd66dafaa6bd0f9266f5eafc755ee9528ffa7b4f326f8aa63dc0e4",
-    "config_sha256": "6adc55709503b2b63e2af43bf15906013b38178e7c26dabbe00f580d89c50d71",
-    "single_train_sha256": "ff773deb86c9c24db1fe85b23686372dfe36e4fc412a33f90d552e44de4d8ccd",
-    "pilot_adapter_sha256": "bdacff05b892a29c8973f685ba0f7ebd88aa1bf4c064b6ec36dbe8db44544deb",
-    "queue_validator_sha256": "61b59d16836ba928f0896ca5f5d62ba0e30dfa8bcfd5d2f3591b5466405961e6"
+    "ledger_sha256": "7154d289c7773f2c902bb768c0f792b7b0c219f77256362abb90a28f56420610",
+    "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
+    "single_train_sha256": "46505044ff829bf40ac5aa42ebc04cb80a97adc8c245bea51d6d4c46c88c4812",
+    "pilot_adapter_sha256": "c52654e3bd77a90f98ebd05ded19258eacc3a1bc9ff4beac6f9ac38cda980257",
+    "queue_validator_sha256": "85679635ed6d12a298e880a12812d825a7a8392ccda2e888304228cd0c9e7345"
   },
   "protocol": {
     "path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r6/risk0607_protocol_r6.json",
-    "sha256": "caca8605e7e555cd4ae67ec1d3050a43d313e90f0d5e4954f803a27c9d9501ca",
+    "sha256": "73b22ede2acec6a545324250b3fce87a7fda22a10b6ba811d5af7ef50d66cfb2",
     "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f0fa3c-r6",
     "run_root_equals_queue_root": true
   },
