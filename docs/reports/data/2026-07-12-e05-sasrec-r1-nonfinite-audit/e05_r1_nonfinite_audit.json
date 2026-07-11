@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "audit_id": "E05.SASRec.r1.nonfinite.20260712",
+  "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-e05-sasrec-seed100-gpu0-r1-29b8483",
+  "manifest_sha256": "fbdfcc06620e16c7944881bdeb8a8498370fde168aa76968db6509aace924171",
+  "queue_status_sha256_after_stop": "5909dd4b8e310816d3ae64e23ec4fbdf91b5801b40bec985f0addbae3ef3b1e0",
+  "first_task": "E05.SASRec.Steam.seed100",
+  "first_task_log_sha256": "e9e23cd5adc32310a6fa637f19c3e981cbb6bfc6b5e4eada36af5440552a1468",
+  "failure_signature": "mean_train_loss_nan_at_epochs_1_2_3",
+  "performance_evidence": false,
+  "tasks_launched": ["Steam"],
+  "tasks_not_launched": ["ML1M", "Beauty", "ATG"],
+  "gpu0_stopped_empty": true,
+  "gpu1_r6a_intervened": false,
+  "retry_or_resume": false,
+  "repair_revision": "332b662d532fea02744e1492be1fe50ff9ea8569",
+  "repair": [
+    "canonicalize_left_padded_histories_to_right_padding_using_len_seq",
+    "fail_closed_on_nonfinite_startup_logits_training_logits_loss_or_eval_logits",
+    "keep_evaluator_selector_seed_and_model_config_fixed"
+  ]
+}
