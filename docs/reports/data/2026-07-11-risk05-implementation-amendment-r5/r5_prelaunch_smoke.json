@@ -1,0 +1,62 @@
+{
+  "artifact_sha256": "d4af733527c3174fcf8fb22a4855bdd48f91971a41bfdeb14d71a2c8617f92ef",
+  "evidence_scope": "production object identity, temporary checkpoint replay, and strict real-asset construction without training",
+  "generated_at": "2026-07-11T19:49:27+08:00",
+  "host_ownership_checkpoint_common_evaluator": {
+    "checkpoint_graph_p1_sha256": "afc8b68db518e55a1e45825bf60c049a023bd46f00bbcd3678313c06cff83c34",
+    "checkpoint_keys": [
+      "ema",
+      "graph",
+      "model",
+      "optimizer",
+      "step",
+      "training_parameter_names"
+    ],
+    "checkpoint_parameter_count": 24,
+    "common_evaluator_restored_p1_sha256": "afc8b68db518e55a1e45825bf60c049a023bd46f00bbcd3678313c06cff83c34",
+    "graph_class": "AdaptiveWise",
+    "graph_p1_ema_index": 23,
+    "graph_p1_name_count": 1,
+    "graph_p1_named_count": 1,
+    "graph_p1_numel": 12102,
+    "graph_p1_optimizer_group_count": 1,
+    "graph_p1_optimizer_parameter_count": 1,
+    "optimizer_state_entries_without_step": 0,
+    "task_id": "pilot.e1_pass.Beauty.host",
+    "temporary_checkpoint_deleted": true
+  },
+  "manifest_sha256": "5a7d1c253c88f4689f96e1c9f57b5edac9f429818284e879b702ddb20358f2ed",
+  "no_training_boundary": {
+    "gpu_requested": false,
+    "optimizer_step_called": false,
+    "performance_evidence": false,
+    "queue_checkpoint_count_after": 0,
+    "queue_checkpoint_count_before": 0,
+    "queue_runs_absent_after": true,
+    "queue_runs_absent_before": true,
+    "state_step": 0,
+    "temporary_checkpoint_deleted": true
+  },
+  "report_name": "AAAI-27 r5 final-revision no-training prelaunch smoke",
+  "schema_version": 1,
+  "source_manifest_sha256": "c28ce7da6047fd0a35372566e4eaf77efd2175048ce4e8a868e1ade4899fd266",
+  "source_revision": "6f18b3d8ecf945fd3230d827db2e813e675af492",
+  "status": "pass",
+  "strict_real_asset_full": {
+    "ablation_mode": "none",
+    "builder_class": "TextSideProposalBuilder",
+    "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Beauty/level-060/embeddings.pt",
+    "embedding_sha256": "b597c077470baa49188bf59d5f9d2c387def8a3dbdf2905af564a994c999519a",
+    "gate_dataset_scale_actual": 0.1366311174092942,
+    "gate_dataset_scale_expected": 0.1366311174092942,
+    "graph_class": "ProposalAdaptiveWise",
+    "kernel_version": "v2",
+    "null_curve_length_count": 7,
+    "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+    "null_curve_sha256": "7d7bb94850ddef882ae037724261b21cc2e0bba623d8e9651510297a96d0948b",
+    "proposal_p1_numel": 12102,
+    "task_id": "pilot.e1_pass.Beauty.full.c60",
+    "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
+    "text_bank_sha256": "bfecee6acfbdbb3566955943a5d54162dbfdc744faba680927ab4379597777e8"
+  }
+}

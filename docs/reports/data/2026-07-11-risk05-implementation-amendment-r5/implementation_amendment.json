@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "report_name": "RISK-05 successor implementation amendment with corrected host identity",
+  "generated_at": "2026-07-11T19:40:23+08:00",
+  "status": "pass_authorized_for_single_gpu1_controller_launch",
+  "finalized_at": "2026-07-11T19:51:21+08:00",
+  "does_not_supersede_scientific_preregistration": true,
+  "predecessor": {
+    "attempt": "r4",
+    "status": "stop_prelaunch_host_identity_mismatch",
+    "manifest_sha256": "8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838",
+    "training_started": false,
+    "audit_path": "docs/reports/data/2026-07-11-risk0607-r4-prelaunch-host-identity-audit/risk0607_r4_prelaunch_host_identity_audit.json"
+  },
+  "immutable_source": {
+    "code_revision": "6f18b3d8ecf945fd3230d827db2e813e675af492",
+    "archive_path_local": "C:/Users/14466/AppData/Local/Temp/prefergrow_source_6f18b3d.tar",
+    "archive_path_remote": "/data/Zijian/goal/prefergrow_source_6f18b3d.tar",
+    "archive_sha256": "c28ce7da6047fd0a35372566e4eaf77efd2175048ce4e8a868e1ade4899fd266",
+    "archive_size_bytes": 41154560,
+    "source_root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d",
+    "ledger_sha256": "d2e291a9c6695a94ec76575a9259c4753acd4c486f222d238edf6f9929aee39d",
+    "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809",
+    "single_train_sha256": "e50c69f573fb4e41269bdfbb5a12ed9595ad11db5636fcdfd8f4849ce21f2196",
+    "pilot_adapter_sha256": "241bb21b314c6d560c67164af65649b66d07d09bec50271dd68091c3de5c836d",
+    "queue_validator_sha256": "419e98f90189082a32017bb89aa89002c051f80c6b2f93be69cadb12828e6469"
+  },
+  "protocol": {
+    "path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r5/risk0607_protocol_r5.json",
+    "sha256": "3bf4cba9a71bf0232dc9e4d46e451879104428d6037bf5610a2f17faf561afeb",
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+    "run_root_equals_queue_root": true
+  },
+  "frozen_sources": {
+    "risk04_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+    "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+    "risk05_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk05_2026-07-11_332efb8",
+    "risk05_preregistration_semantic_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+    "risk05_preregistration_file_sha256": "d08e7988a4e25c0236b725274d34af21d933fb16f8e18f5e542bdc0fe1f62537",
+    "e1_marker_file_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c"
+  },
+  "frozen_scientific_contract": {
+    "seed": 100,
+    "datasets": ["Beauty", "Steam"],
+    "pilot_levels": [0, 60, 100],
+    "task_counts": {"e1_pass": 14, "e1_fail_audit": 8},
+    "primary_risk_statistic": "EPE",
+    "phi_R_formula": "clip((R_100 - R_D) / (R_100 - R_clean), 0, 1)",
+    "phi_R_pilot": {
+      "Beauty": {"0": 1.0, "60": 0.1366311174092942, "100": 0.0},
+      "Steam": {"0": 1.0, "60": 0.05808110271503808, "100": 0.0}
+    },
+    "evaluator_version": "e0_full_tail_v2",
+    "selector_version": "validation-ndcg10-rowweighted-v1",
+    "max_attempts": 1,
+    "failure_policy": "fail_closed",
+    "no_rescue": true,
+    "no_second_seed": true
+  },
+  "host_identity_correction": {
+    "classification": "implementation identity correction to the already-defined learned-proposal host; not rescue tuning",
+    "host_graph_type": "adaptive",
+    "host_proposal_owner": "graph.p1",
+    "host_summary": "best_summary_adaptive.json",
+    "evidence_graph_type": "proposal_adaptive",
+    "evidence_summary": "best_summary_proposal_adaptive.json",
+    "validator_enforced": true
+  },
+  "claim_boundary": {
+    "phi_R_role": "controlled-corruption pilot gate",
+    "phi_R_is_paper_phi_U_ds_replacement": false,
+    "manifest_or_smoke_is_performance_evidence": false,
+    "single_seed_wording": "single-run result/observation only"
+  },
+  "finalization_evidence": {
+    "manifest_sha256": "5a7d1c253c88f4689f96e1c9f57b5edac9f429818284e879b702ddb20358f2ed",
+    "manifest_invariant_audit": "pass",
+    "controller_validate": "pass",
+    "dry_run_e1_pass_count": 14,
+    "dry_run_e1_fail_audit_count": 8,
+    "prelaunch_smoke_path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r5/r5_prelaunch_smoke.json",
+    "prelaunch_smoke_file_sha256": "571ce664eaf987bc920780af2aeceec10b6fa7f63103d93cdbd52beb01e94c71",
+    "prelaunch_smoke_artifact_sha256": "d4af733527c3174fcf8fb22a4855bdd48f91971a41bfdeb14d71a2c8617f92ef",
+    "resource_audit_path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r5/r5_prelaunch_resource_audit.json",
+    "training_started_at_finalization": false
+  },
+  "launch_authorization": {
+    "authorized": true,
+    "gpu_id": 1,
+    "controller_count": 1,
+    "seed": 100,
+    "branch": "e1_pass",
+    "performance_claim_authorized": false,
+    "risk08_authorized_before_complete_artifacts": false
+  }
+}

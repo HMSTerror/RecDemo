@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "report_name": "AAAI-27 r5 prelaunch resource and predecessor-queue audit",
+  "checked_at": "2026-07-11T19:51:21+08:00",
+  "status": "pass",
+  "r3": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-332efb8-r3",
+    "manifest_sha256": "559808f19da0bc066d9a658bd022757b9573a00ea38583736e4c76d247891653",
+    "controller_pid": 2798369,
+    "controller_liveness": true,
+    "stop_requested": true,
+    "running_tasks": 0,
+    "ready_tasks": 0,
+    "disposition": "leave controller and STOP_AFTER_CURRENT untouched"
+  },
+  "r4": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-f4a4e90-r4",
+    "manifest_sha256": "8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838",
+    "controller": null,
+    "running_tasks": 0,
+    "record_count": 0,
+    "training_started": false
+  },
+  "r5": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+    "manifest_sha256": "5a7d1c253c88f4689f96e1c9f57b5edac9f429818284e879b702ddb20358f2ed",
+    "controller": null,
+    "running_tasks": 0,
+    "record_count": 0,
+    "prelaunch_smoke_file_sha256": "571ce664eaf987bc920780af2aeceec10b6fa7f63103d93cdbd52beb01e94c71"
+  },
+  "gpu0": {
+    "model": "NVIDIA L20",
+    "memory_total_mib": 46068,
+    "memory_used_mib": 8085,
+    "utilization_percent": 95,
+    "external_pid": 2568867,
+    "external_used_memory_mib": 8070,
+    "external_command": "python3 -m src.trainers.train_slowfast_e2e --config configs/ablation/long_semantic_only.yaml --dataset_name Beauty --output_dir results/Beauty_ablation/long_semantic_only --device cuda:0 --llm_model_path /data/models/Qwen/Qwen2.5-1.5B",
+    "action": "untouched"
+  },
+  "gpu1": {
+    "model": "NVIDIA L20",
+    "memory_total_mib": 46068,
+    "memory_used_mib": 12,
+    "utilization_percent": 0,
+    "compute_processes": 0,
+    "eligible_for_r5": true
+  },
+  "disk": {
+    "mount": "/data",
+    "free_gib_controller_probe": 46.776615142822266,
+    "hard_stop_gib": 40.0,
+    "passed": true
+  },
+  "launch_constraints": {
+    "gpu_id": 1,
+    "one_new_training_process_per_gpu": true,
+    "r3_resume_forbidden": true,
+    "r4_reuse_forbidden": true,
+    "performance_evidence": false
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "queue_id": "aaai27-risk0607-2026-07-11-6f18b3d-r5",
+  "created_at": "2026-07-11T19:40:23+08:00",
+  "queue_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+  "run_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+  "source_root_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d",
+  "source_manifest_sha256": "c28ce7da6047fd0a35372566e4eaf77efd2175048ce4e8a868e1ade4899fd266",
+  "ledger_path_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d/issues/2026-07-11_host-core-v2-preflight.csv",
+  "ledger_sha256": "d2e291a9c6695a94ec76575a9259c4753acd4c486f222d238edf6f9929aee39d",
+  "code_revision": "6f18b3d8ecf945fd3230d827db2e813e675af492",
+  "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809",
+  "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
+  "single_train": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f18b3d/single_train.py",
+  "risk04_root_posix": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "scientific_identity": {
+    "host_graph_type": "adaptive",
+    "host_summary": "best_summary_adaptive.json",
+    "host_proposal": "learned graph.p1",
+    "evidence_graph_type": "proposal_adaptive",
+    "evidence_summary": "best_summary_proposal_adaptive.json"
+  },
+  "training_overrides": [
+    "model.hidden_size=256",
+    "model.cond_dim=256",
+    "training.batch_size=256",
+    "training.n_iters=2000000",
+    "training.eval_freq=1000",
+    "training.snapshot_freq=1000",
+    "training.snapshot_freq_for_preemption=1000",
+    "training.snapshot_sampling=True",
+    "training.early_stop_patience=5",
+    "training.early_stop_min_step=5000",
+    "training.early_stop_metric=ndcg10",
+    "training.early_stop_strength=p5",
+    "training.early_stop_min_delta=0.0",
+    "+training.write_snapshot_checkpoint=False",
+    "+training.write_best_checkpoint=True"
+  ],
+  "estimated_gpu_hours": {
+    "low": 1.0,
+    "high": 4.0,
+    "output_gib": 1.0
+  },
+  "datasets": {
+    "Beauty": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+      "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809"
+    },
+    "Steam": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
+      "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809"
+    }
+  }
+}
