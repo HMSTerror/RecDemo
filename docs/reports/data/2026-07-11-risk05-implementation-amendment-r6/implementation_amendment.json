@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "report_name": "RISK-05 r6 implementation-only amendment after runtime launch-contract repair",
+  "generated_at": "2026-07-11T22:05:00+08:00",
+  "status": "prepared_for_r6_remote_deploy",
+  "does_not_supersede_scientific_preregistration": true,
+  "predecessor": {
+    "attempt": "r5",
+    "status": "closed_failed_before_training",
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f18b3d-r5",
+    "audit_path": "docs/reports/data/2026-07-11-risk0607-r5-live-startup-fail-closed-audit/risk0607_r5_live_startup_fail_closed_audit.json",
+    "retry_allowed": false,
+    "reuse_allowed": false,
+    "risk08_eligible": false
+  },
+  "immutable_source": {
+    "code_revision": "6f0fa3c2ca43a97b0da93a98f4fa88a0a7618dbd",
+    "archive_path_local": "C:/Users/14466/AppData/Local/Temp/prefergrow_source_200ea5b.tar",
+    "archive_path_remote": "/data/Zijian/goal/prefergrow_source_6f0fa3c.tar",
+    "archive_sha256": "acbf4aefeb3c9e580ce2e97e8ca94610abbe6de206fb92a0270f4750bed39aea",
+    "archive_size_bytes": 41308160,
+    "source_root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_6f0fa3c",
+    "ledger_sha256": "a57ba05ec4fd66dafaa6bd0f9266f5eafc755ee9528ffa7b4f326f8aa63dc0e4",
+    "config_sha256": "6adc55709503b2b63e2af43bf15906013b38178e7c26dabbe00f580d89c50d71",
+    "single_train_sha256": "ff773deb86c9c24db1fe85b23686372dfe36e4fc412a33f90d552e44de4d8ccd",
+    "pilot_adapter_sha256": "bdacff05b892a29c8973f685ba0f7ebd88aa1bf4c064b6ec36dbe8db44544deb",
+    "queue_validator_sha256": "61b59d16836ba928f0896ca5f5d62ba0e30dfa8bcfd5d2f3591b5466405961e6"
+  },
+  "protocol": {
+    "path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r6/risk0607_protocol_r6.json",
+    "sha256": "caca8605e7e555cd4ae67ec1d3050a43d313e90f0d5e4954f803a27c9d9501ca",
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f0fa3c-r6",
+    "run_root_equals_queue_root": true
+  },
+  "frozen_sources": {
+    "risk04_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+    "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+    "risk05_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk05_2026-07-11_332efb8",
+    "risk05_preregistration_semantic_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+    "risk05_preregistration_file_sha256": "d08e7988a4e25c0236b725274d34af21d933fb16f8e18f5e542bdc0fe1f62537",
+    "e1_marker_file_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c"
+  },
+  "frozen_scientific_contract": {
+    "seed": 100,
+    "datasets": ["Beauty", "Steam"],
+    "pilot_levels": [0, 60, 100],
+    "task_counts": {"e1_pass": 14, "e1_fail_audit": 8},
+    "primary_risk_statistic": "EPE",
+    "phi_R_formula": "clip((R_100 - R_D) / (R_100 - R_clean), 0, 1)",
+    "phi_R_pilot": {
+      "Beauty": {"0": 1.0, "60": 0.1366311174092942, "100": 0.0},
+      "Steam": {"0": 1.0, "60": 0.05808110271503808, "100": 0.0}
+    },
+    "evaluator_version": "e0_full_tail_v2",
+    "selector_version": "validation-ndcg10-rowweighted-v1",
+    "max_attempts": 1,
+    "failure_policy": "fail_closed",
+    "no_rescue": true,
+    "no_second_seed": true
+  },
+  "implementation_only_changes": [
+    "GPU tasks execute with cwd equal to their contained run_dir",
+    "r6 manifest exposes gpu_ids=[1] and rejects other allowlists",
+    "absolute immutable source entries and explicit controller launcher arguments",
+    "ambiguous GPU probe rows fail closed",
+    "real Hydra startup_probe_only exits after state construction and before dataloader/optimizer/checkpoint/metric paths",
+    "CPU contract_gate may retain immutable source cwd because it has zero GPU slots"
+  ],
+  "scientific_fields_unchanged": [
+    "seed=100",
+    "Beauty/Steam pilot datasets and c0/c60/c100 levels",
+    "RISK-04 assets and bank hashes",
+    "six frozen phi_R values",
+    "e0_full_tail_v2 evaluator",
+    "validation-ndcg10-rowweighted-v1 selector",
+    "max_attempts=1 and fail_closed",
+    "host AdaptiveWise graph.p1 and evidence ProposalAdaptiveWise identities"
+  ],
+  "claim_boundary": {
+    "phi_R_role": "controlled-corruption pilot gate",
+    "phi_R_is_paper_phi_U_ds_replacement": false,
+    "amendment_or_manifest_is_performance_evidence": false,
+    "single_seed_wording": "single-run result/observation only",
+    "risk08_authorized_before_live_artifacts": false
+  },
+  "prelaunch_status": {
+    "local_tests": "156_passed_1_expected_windows_flock_skip",
+    "protocol_json_valid": true,
+    "source_archive_hash_recorded": true,
+    "remote_upload": "pending",
+    "source_immutability": "pending_remote_extraction",
+    "controller_started": false,
+    "training_started": false
+  }
+}
