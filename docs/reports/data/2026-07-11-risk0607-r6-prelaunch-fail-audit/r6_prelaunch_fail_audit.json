@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "attempt": "2026-07-11-risk0607-6f0fa3c-r6",
+  "generated_at": "2026-07-11T22:30:00+08:00",
+  "status": "closed_prelaunch_root_created_before_builder",
+  "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-6f0fa3c-r6",
+  "reuse_allowed": false,
+  "overwrite_allowed": false,
+  "training_started": false,
+  "performance_evidence": false,
+  "evidence": {
+    "root_mode": "dr-xr-xr-x",
+    "present_files": [
+      "protocol/implementation_amendment_r6.json",
+      "protocol/implementation_amendment_r6.md",
+      "protocol/risk0607_protocol_r6.json"
+    ],
+    "missing_required_files": [
+      "queue/queue_seed100.json",
+      "state/controller.json",
+      "runs/"
+    ],
+    "training_process": false,
+    "gpu_utilization": {"gpu0_percent": 0, "gpu1_percent": 0},
+    "gpu_memory_mib": {"gpu0": 9, "gpu1": 9}
+  },
+  "successor_requirement": "new source revision/archive and never-used dated r6a root"
+}
