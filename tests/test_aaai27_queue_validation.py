@@ -25,6 +25,15 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                 branch=branch,
                 dataset=dataset,
                 arm="host",
+                argv=[
+                    "/opt/venv/bin/python",
+                    "single_train.py",
+                    "graph.type=adaptive",
+                ],
+                success_artifacts=[
+                    f"runs/{branch}/{dataset}/host/checkpoints-meta/"
+                    f"{dataset}/best_summary_adaptive.json"
+                ],
             )
         )
         for level in (0, 60, 100):
@@ -36,6 +45,16 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                     branch=branch,
                     dataset=dataset,
                     arm=f"text_anchor_only_c{level}",
+                    argv=[
+                        "/opt/venv/bin/python",
+                        "single_train.py",
+                        "graph.type=proposal_adaptive",
+                    ],
+                    success_artifacts=[
+                        f"runs/{branch}/{dataset}/anchor_c{level}/"
+                        f"checkpoints-meta/{dataset}/"
+                        "best_summary_proposal_adaptive.json"
+                    ],
                 )
             )
             if include_full:
@@ -47,6 +66,16 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                         branch=branch,
                         dataset=dataset,
                         arm=f"risk_gated_full_c{level}",
+                        argv=[
+                            "/opt/venv/bin/python",
+                            "single_train.py",
+                            "graph.type=proposal_adaptive",
+                        ],
+                        success_artifacts=[
+                            f"runs/{branch}/{dataset}/full_c{level}/"
+                            f"checkpoints-meta/{dataset}/"
+                            "best_summary_proposal_adaptive.json"
+                        ],
                     )
                 )
     return tasks
@@ -143,6 +172,28 @@ class QueueValidationTests(unittest.TestCase):
                 task["arm"] = "risk_gated_full_c60"
                 break
         with self.assertRaisesRegex(ManifestError, "8-run design"):
+            validate_manifest(decoded(bad))
+
+    def test_rejects_pilot_host_without_learned_adaptive_proposal(self) -> None:
+        bad = valid_pilots()
+        host = next(task for task in bad if task["arm"] == "host")
+        host["argv"] = [
+            "graph.type=hybrid" if token == "graph.type=adaptive" else token
+            for token in host["argv"]
+        ]
+
+        with self.assertRaisesRegex(ManifestError, "AdaptiveWise"):
+            validate_manifest(decoded(bad))
+
+    def test_rejects_pilot_host_with_wrong_summary_identity(self) -> None:
+        bad = valid_pilots()
+        host = next(task for task in bad if task["arm"] == "host")
+        host["success_artifacts"] = [
+            path.replace("best_summary_adaptive.json", "best_summary_hybrid.json")
+            for path in host["success_artifacts"]
+        ]
+
+        with self.assertRaisesRegex(ManifestError, "best_summary_adaptive"):
             validate_manifest(decoded(bad))
 
     def test_rejects_partial_classic_baseline_group(self) -> None:

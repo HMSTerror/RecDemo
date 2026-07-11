@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "report_name": "RISK-06/RISK-07 r4 prelaunch host-identity fail-closed audit",
+  "generated_at": "2026-07-11T19:29:28+08:00",
+  "status": "prelaunch_invalid",
+  "evidence_class": "manifest_and_read_only_runtime_status_only",
+  "queue": {
+    "queue_id": "aaai27-risk0607-2026-07-11-f4a4e90-r4",
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-f4a4e90-r4",
+    "manifest_sha256": "8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838",
+    "source_revision": "f4a4e90641dc18f484e09db0a74bb4b276d17659",
+    "source_manifest_sha256": "31496d26fd26e9ed7f0722f7d45ffaf17ea041f9054ad3183d6fd0905512d335"
+  },
+  "failed_invariant": {
+    "name": "fallback_host_scientific_identity",
+    "observed": "all four host tasks use graph.type=hybrid and expect best_summary_hybrid.json",
+    "required": "host tasks use graph.type=adaptive with learned graph.p1 and expect best_summary_adaptive.json",
+    "reason": "The paper defines the host proposal as softmax(p1), and the E1/R12 trace binds the designated host to AdaptiveWise. HybridWise has no learned p1, so it is not the fallback-core identity used by proposal_adaptive at gate zero.",
+    "root_cause": "scripts/aaai27_adapters/pilot_adapters.py hard-coded hybrid for the pilot host while queue validation checked only the dataset/arm matrix and did not validate graph identity or summary identity."
+  },
+  "read_only_remote_verification": {
+    "status": "present",
+    "controller": null,
+    "tmux": null,
+    "record_count": 0,
+    "actual_gpu_hours": 0.0,
+    "running_tasks": 0,
+    "ready_tasks": 14,
+    "pending_tasks": 8,
+    "runs_directory_absent": true,
+    "free_disk_gib": 46.8542594909668
+  },
+  "disposition": {
+    "training_started": false,
+    "performance_evidence": false,
+    "risk08_eligible": false,
+    "resume_or_reuse_allowed": false,
+    "delete_or_overwrite_allowed": false,
+    "preserve_as_failed_audit_artifact": true,
+    "successor_requirement": "Use a new committed immutable source archive and a never-used dated queue root after the host-identity regression, manifest validator, and final-revision no-training smoke pass."
+  },
+  "claim_boundary": "This audit establishes a prelaunch manifest identity failure and zero training only. It is not a model result, an efficacy observation, or a RISK-08 input."
+}

@@ -145,6 +145,41 @@ def _validate_pilot_matrix(tasks: tuple[TaskSpec, ...]) -> None:
             expected_ledger = "RISK-06" if task.dataset == "Beauty" else "RISK-07"
             if task.ledger_id != expected_ledger:
                 raise ManifestError(f"{task.task_id}: pilot ledger mismatch")
+            graph_types = [
+                token
+                for token in task.argv
+                if token.startswith("graph.type=")
+            ]
+            expected_graph_type = (
+                "graph.type=adaptive"
+                if task.arm == "host"
+                else "graph.type=proposal_adaptive"
+            )
+            if graph_types != [expected_graph_type]:
+                identity = (
+                    "AdaptiveWise learned-proposal host"
+                    if task.arm == "host"
+                    else "ProposalAdaptiveWise evidence arm"
+                )
+                raise ManifestError(
+                    f"{task.task_id}: pilot must use the {identity}"
+                )
+            summary_name = (
+                "best_summary_adaptive.json"
+                if task.arm == "host"
+                else "best_summary_proposal_adaptive.json"
+            )
+            summary_suffix = (
+                f"/checkpoints-meta/{task.dataset}/{summary_name}"
+            )
+            if (
+                len(task.success_artifacts) != 1
+                or not task.success_artifacts[0].endswith(summary_suffix)
+            ):
+                raise ManifestError(
+                    f"{task.task_id}: pilot success artifact must end with "
+                    f"{summary_name}"
+                )
 
 
 def _validate_baseline_groups(tasks: tuple[TaskSpec, ...]) -> None:

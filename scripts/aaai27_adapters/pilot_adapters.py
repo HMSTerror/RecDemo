@@ -64,7 +64,10 @@ def _task(
         level = arm.rsplit("c", 1)[-1]
         task_id = f"pilot.{branch}.{dataset}.full.c{level}"
     run_dir = f"{protocol['run_root']}/{run_rel}"
-    summary_name = "best_summary_hybrid.json" if graph_type == "hybrid" else "best_summary_proposal_adaptive.json"
+    summary_name = {
+        "adaptive": "best_summary_adaptive.json",
+        "proposal_adaptive": "best_summary_proposal_adaptive.json",
+    }[graph_type]
     env = {
         "PYTHONHASHSEED": "100",
         "AAAI_DATASET": dataset,
@@ -128,7 +131,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
         for dataset in DATASETS:
             dataset_cfg = protocol["datasets"][dataset]
             host_rel = f"runs/{branch}/{dataset}/host"
-            host_argv = _base_argv(protocol, dataset, dataset_cfg, f"{protocol['run_root']}/{host_rel}", "hybrid")
+            host_argv = _base_argv(protocol, dataset, dataset_cfg, f"{protocol['run_root']}/{host_rel}", "adaptive")
             tasks.append(
                 _task(
                     protocol=protocol,
@@ -140,7 +143,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                     argv=host_argv,
                     bank_sha256=None,
                     embedding_sha256=None,
-                    graph_type="hybrid",
+                    graph_type="adaptive",
                     priority=0,
                 )
             )

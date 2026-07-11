@@ -228,6 +228,19 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 ]
                 self.assertEqual([task["run_dir"]], work_dirs, task["task_id"])
                 if task["arm"] == "host":
+                    self.assertIn(
+                        "graph.type=adaptive",
+                        task["argv"],
+                        task["task_id"],
+                    )
+                    self.assertEqual(
+                        [
+                            f"runs/{task['branch']}/{task['dataset']}/host/"
+                            f"checkpoints-meta/{task['dataset']}/best_summary_adaptive.json"
+                        ],
+                        task["success_artifacts"],
+                        task["task_id"],
+                    )
                     continue
                 level = task["arm"].rsplit("c", 1)[-1]
                 expected_embedding = (

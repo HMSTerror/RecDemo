@@ -102,7 +102,9 @@ python "$Root\scripts\build_risk05_preregistration.py" `
 | `e1_pass` | 7 | 7 | 14 | 一个 host；`text_anchor_only` 与 `risk_gated_full` 在 0/60/100 |
 | `e1_fail_audit` | 4 | 4 | 8 | 一个 host；仅 `text_anchor_only` 在 0/60/100 |
 
-每个任务都必须是 seed 100、`max_attempts=1`、`failure_policy=fail_closed`、一个 GPU slot、独立 run directory、common evaluator `e0_full_tail_v2` 和 validation-only selector `validation-ndcg10-rowweighted-v1`。manifest builder 不创建 checkpoints，不启动 controller，也不创建 tmux。
+每个任务都必须是 seed 100、`max_attempts=1`、`failure_policy=fail_closed`、一个 GPU slot、独立 run directory、common evaluator `e0_full_tail_v2` 和 validation-only selector `validation-ndcg10-rowweighted-v1`。四个 host task 必须使用 `graph.type=adaptive` 并等待 `best_summary_adaptive.json`；其 learned proposal 是 graph-owned `p1`。18 个 evidence-conditioned task 必须使用 `graph.type=proposal_adaptive` 并等待 `best_summary_proposal_adaptive.json`。manifest builder 不创建 checkpoints，不启动 controller，也不创建 tmux。
+
+r4 manifest SHA-256 `8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838` 因把 host 错绑为 `graph.type=hybrid` 而在训练前 STOP；`controller=null`、`record_count=0`、`actual_gpu_hours=0.0`，且没有 `runs/` 目录。r4 不得恢复、覆盖或进入 RISK-08。任何后继 attempt 必须使用修复后的新 commit、immutable source 和 never-used dated root。
 
 ### 构建与验证命令
 
@@ -131,19 +133,19 @@ python -m scripts.aaai27_queue.cli dry-run `
 
 在 Linux/l20 上，`--queue-root` 必须等于 manifest 中的绝对 POSIX `run_root`/queue containment root；不能把 Windows 路径或工作站路径混入远端 manifest。`validate` 和 `dry-run` 不启动训练。用户已授权“全部 gate 通过后继续”，但任一 gate 未通过仍必须 fail closed。
 
-生成后必须逐任务核验：`argv work_dir == task.run_dir`；6 个 full 使用独立 `full_c{0,60,100}`；embedding 路径来自 RISK-04 的 `level-000/060/100`；embedding SHA 可复算；full 的 `gate_dataset_scale_override` 与冻结 `phi_R` 精确相等；evidence task 带 RISK-04/RISK-05 hash；strict full 能加载 null curve 且不会自动回退到默认 U_ds report。
+生成后必须逐任务核验：`argv work_dir == task.run_dir`；4 个 host 使用 `graph.type=adaptive` 和 `best_summary_adaptive.json`；18 个 evidence arm 使用 `graph.type=proposal_adaptive`；6 个 full 使用独立 `full_c{0,60,100}`；embedding 路径来自 RISK-04 的 `level-000/060/100`；embedding SHA 可复算；full 的 `gate_dataset_scale_override` 与冻结 `phi_R` 精确相等；evidence task 带 RISK-04/RISK-05 hash；strict full 能加载 null curve 且不会自动回退到默认 U_ds report。
 
 ## 🧾 训练授权、监控与产物要求
 
-controller 只能消费已验证的 `queue/queue_seed100.json`，并在每张 L20 卡上同时保持最多一个训练进程。GPU0 的 CLOSE-10 仍然独立运行，不得杀进程、抢卡或删除目录。新 queue 必须重新跑完整 branch；不得把 r3 的两个 host summary 跨 manifest 拼入 RISK-08。
+controller 只能消费已验证的 `queue/queue_seed100.json`，并在每张 L20 卡上同时保持最多一个训练进程。GPU0 的 CLOSE-10 仍然独立运行，不得杀进程、抢卡或删除目录。新 queue 必须重新跑完整 branch；不得把 r3 的两个 hybrid host summary 或 r4 的任何 manifest/task identity 跨 manifest 拼入 RISK-08。
 
-每个成功任务必须产生：task artifact manifest、validation-selected best checkpoint、latest checkpoint、真实 stdout/stderr log、summary、split/bank/config/evaluator/selector hashes。日志必须是实际文件，不得使用没有落盘内容的 `pipe-pane` 代替 structured heartbeat。缺失 summary、非零退出、OOM、hash mismatch 或 run directory 越界均写 terminal fail，不触发 retry。
+每个成功任务必须产生：task artifact manifest、validation-selected best checkpoint、真实 stdout/stderr log、summary、split/bank/config/evaluator/selector hashes。当前协议显式设置 `write_snapshot_checkpoint=False`，因此不得把 periodic/latest checkpoint 当作成功前置；best checkpoint 仍由 `write_best_checkpoint=True` 保留。日志必须是实际文件，不得使用没有落盘内容的 `pipe-pane` 代替 structured heartbeat。缺失 summary、非零退出、OOM、hash mismatch 或 run directory 越界均写 terminal fail，不触发 retry。
 
 状态审计命令（只读）：
 
 ```bash
 # Set this to the absolute POSIX run_root recorded in queue_seed100.json.
-QUEUE_RUN_ROOT=/data/Zijian/goal/aaai27_queue/<new-dated-r4-root>
+QUEUE_RUN_ROOT=/data/Zijian/goal/aaai27_queue/<new-dated-r5-root>
 python -m scripts.aaai27_queue.cli status --queue-root "$QUEUE_RUN_ROOT" --json
 ```
 
@@ -182,7 +184,7 @@ python "$Root\scripts\run_risk08_decision.py" `
 - 任一 `argv work_dir` 与 `task.run_dir` 不相等
 - 任一 embedding 路径/hash 不等于冻结 RISK-04 记录
 - full 缺少或改变冻结 `phi_R`，或 strict gate/null-curve 构造失败
-- host graph `p1` 不在 optimizer/EMA/checkpoint/common-evaluator 的同一参数合同中
+- host 不是 `graph.type=adaptive`、summary 不是 `best_summary_adaptive.json`，或 host graph `p1` 不在 optimizer/EMA/checkpoint/common-evaluator 的同一参数合同中
 - 出现 seed 101/102、retry、DiffuRec/BERT4Rec、destructive argv 或不在 dated root 下的 run directory
 - GPU 被未知进程占用、`/data` 小于 40 GiB 或预算 forecast 超过 168 GPU-hours
 - RISK-08 输入缺失、重复、手工 metrics 或 artifact provenance 无法复算

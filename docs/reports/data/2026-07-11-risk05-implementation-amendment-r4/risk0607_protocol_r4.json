@@ -1,0 +1,51 @@
+{
+  "queue_id": "aaai27-risk0607-2026-07-11-f4a4e90-r4",
+  "created_at": "2026-07-11T17:54:03+08:00",
+  "queue_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-f4a4e90-r4",
+  "run_root_posix": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-f4a4e90-r4",
+  "source_root_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_f4a4e90",
+  "source_manifest_sha256": "31496d26fd26e9ed7f0722f7d45ffaf17ea041f9054ad3183d6fd0905512d335",
+  "ledger_path_posix": "/data/Zijian/goal/RecDemo_aaai27_risk0607_f4a4e90/issues/2026-07-11_host-core-v2-preflight.csv",
+  "ledger_sha256": "fead992ce34da46376c23ca420a410ce95aaeb3ecf757e8a23755a7db3d41190",
+  "code_revision": "f4a4e90641dc18f484e09db0a74bb4b276d17659",
+  "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809",
+  "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
+  "single_train": "/data/Zijian/goal/RecDemo_aaai27_risk0607_f4a4e90/single_train.py",
+  "risk04_root_posix": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "training_overrides": [
+    "model.hidden_size=256",
+    "model.cond_dim=256",
+    "training.batch_size=256",
+    "training.n_iters=2000000",
+    "training.eval_freq=1000",
+    "training.snapshot_freq=1000",
+    "training.snapshot_freq_for_preemption=1000",
+    "training.snapshot_sampling=True",
+    "training.early_stop_patience=5",
+    "training.early_stop_min_step=5000",
+    "training.early_stop_metric=ndcg10",
+    "training.early_stop_strength=p5",
+    "training.early_stop_min_delta=0.0",
+    "+training.write_snapshot_checkpoint=False",
+    "+training.write_best_checkpoint=True"
+  ],
+  "estimated_gpu_hours": {
+    "low": 1.0,
+    "high": 4.0,
+    "output_gib": 1.0
+  },
+  "datasets": {
+    "Beauty": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+      "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809"
+    },
+    "Steam": {
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
+      "config_sha256": "7dcb3eead20011a4f74317506f4b1c6e20f77dd778fd0acba302dabbf660b809"
+    }
+  }
+}

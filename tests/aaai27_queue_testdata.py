@@ -83,6 +83,15 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                 branch=branch,
                 dataset=dataset,
                 arm="host",
+                argv=[
+                    "/opt/venv/bin/python",
+                    "single_train.py",
+                    "graph.type=adaptive",
+                ],
+                success_artifacts=[
+                    f"runs/{branch}/{dataset}/host/checkpoints-meta/"
+                    f"{dataset}/best_summary_adaptive.json"
+                ],
             )
         )
         for level in (0, 60, 100):
@@ -94,6 +103,16 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                     branch=branch,
                     dataset=dataset,
                     arm=f"text_anchor_only_c{level}",
+                    argv=[
+                        "/opt/venv/bin/python",
+                        "single_train.py",
+                        "graph.type=proposal_adaptive",
+                    ],
+                    success_artifacts=[
+                        f"runs/{branch}/{dataset}/anchor_c{level}/"
+                        f"checkpoints-meta/{dataset}/"
+                        "best_summary_proposal_adaptive.json"
+                    ],
                 )
             )
             if include_full:
@@ -105,6 +124,16 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict[str, Any]]:
                         branch=branch,
                         dataset=dataset,
                         arm=f"risk_gated_full_c{level}",
+                        argv=[
+                            "/opt/venv/bin/python",
+                            "single_train.py",
+                            "graph.type=proposal_adaptive",
+                        ],
+                        success_artifacts=[
+                            f"runs/{branch}/{dataset}/full_c{level}/"
+                            f"checkpoints-meta/{dataset}/"
+                            "best_summary_proposal_adaptive.json"
+                        ],
                     )
                 )
     return tasks

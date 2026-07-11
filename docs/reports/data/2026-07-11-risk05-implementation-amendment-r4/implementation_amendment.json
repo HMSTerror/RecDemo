@@ -2,7 +2,8 @@
   "schema_version": 1,
   "report_name": "RISK-05 implementation-only amendment for a post-r3 attempt",
   "generated_at": "2026-07-11T17:18:42+08:00",
-  "status": "draft_pending_final_commit_and_server_smoke",
+  "status": "stop_prelaunch_host_identity_mismatch",
+  "finalized_at": "2026-07-11T19:29:28+08:00",
   "supersedes_runtime_template_only": "docs/reports/data/2026-07-11-risk05-freeze/risk0607_protocol_template.json",
   "does_not_supersede_scientific_preregistration": true,
   "frozen_sources": {
@@ -64,11 +65,19 @@
     "unit_or_smoke_is_performance_evidence": false,
     "single_seed_wording": "single-run result/observation only"
   },
-  "finalization_required": [
-    "replace pending status with pass or stop after fresh local verification",
-    "record repaired source commit and source manifest SHA-256",
-    "record exact new queue root, ledger SHA-256 and config SHA-256",
-    "generate a runnable protocol JSON with no placeholder and hash it",
-    "complete server-side no-training smoke before controller launch"
-  ]
+  "r4_finalization": {
+    "decision": "stop",
+    "protocol_path": "docs/reports/data/2026-07-11-risk05-implementation-amendment-r4/risk0607_protocol_r4.json",
+    "protocol_sha256": "b37661a887d3c583e4528c73bec56451b272da18bcfac08637488eae19e02f06",
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-11-risk0607-f4a4e90-r4",
+    "manifest_sha256": "8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838",
+    "failed_invariant": "pilot host tasks used graph.type=hybrid instead of the learned-proposal AdaptiveWise identity",
+    "controller_started": false,
+    "training_started": false,
+    "actual_gpu_hours": 0.0,
+    "runs_directory_absent": true,
+    "risk08_eligible": false,
+    "audit_path": "docs/reports/data/2026-07-11-risk0607-r4-prelaunch-host-identity-audit/risk0607_r4_prelaunch_host_identity_audit.json"
+  },
+  "successor_requirement": "Any successor must use a new amendment, committed immutable source archive, and never-used dated queue root after the host-identity builder and validator regressions pass."
 }

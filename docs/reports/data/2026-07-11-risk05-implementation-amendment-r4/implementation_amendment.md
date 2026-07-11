@@ -1,12 +1,14 @@
 # RISK-05 Implementation-Only Amendment for r4
 
-_PreferGrow AAAI-27 · drafted 2026-07-11 · not yet a launch marker_
+_PreferGrow AAAI-27 · finalized 2026-07-11 · STOP before training_
+
+---
 
 ## 📋 Scope
 
 This amendment preserves the frozen RISK-05 scientific protocol and changes only the implementation/provenance contract required after the failed r3 queue. It does not alter seed, datasets, EPE definition, corruption levels, `phi_R`, thresholds, evaluator, selector, task counts, retry policy, or reporting obligations.
 
-The document is currently `draft_pending_final_commit_and_server_smoke`. It must not be used as a PASS marker or training authorization by itself.
+The r4 amendment is finalized as `stop_prelaunch_host_identity_mismatch`. It is not a PASS marker and does not authorize training.
 
 ## 🔒 Frozen Scientific Fields
 
@@ -37,7 +39,7 @@ Pilot-level `phi_R` values remain:
 3. Pass the frozen `phi_R` as an explicit dataset-gate override for controlled full arms, and require the agreement null curve plus exactly one dataset-gate source.
 4. Bind bank, embedding, and RISK-05 preregistration provenance to each evidence-conditioned task.
 5. Run only from a clean immutable source root that contains optimizer, EMA, checkpoint, and common-evaluator ownership for graph `p1`.
-6. Treat R12 as evidence for revision `0338cc2…`; perform a fresh final-revision verification before r4 launch.
+6. Treat R12 as evidence for revision `0338cc2…`; require a fresh final-revision verification before any successor launch.
 
 ## 🧠 Scientific Claim Boundary
 
@@ -45,16 +47,10 @@ Pilot-level `phi_R` values remain:
 
 Unit tests, manifest validation, and no-training smoke establish engineering contracts only. Any completed seed-100 task remains a single-run result/observation; no significance, stability, equivalence, or within-noise wording is authorized.
 
-## 🛑 Finalization Gate
+## 🚫 r4 finalization outcome
 
-Before this draft becomes runnable, a dated final artifact must record all of the following without placeholders:
+The r4 protocol was emitted with SHA-256 `b37661a887d3c583e4528c73bec56451b272da18bcfac08637488eae19e02f06`, and its 22-task manifest was emitted with SHA-256 `8d5989f6e91006b0ab7ffe0e3326945719964d9ffec98e4f2742450723801838`. Independent inspection then found that all four host tasks used `graph.type=hybrid`, whereas the paper and E1/R12 define the learned-proposal fallback host as `AdaptiveWise` with graph-owned `p1`.
 
-- repaired source commit and clean source-manifest SHA-256;
-- exact immutable source and new queue roots;
-- ledger and config SHA-256;
-- exact RISK-04 and RISK-05 bindings;
-- validated 22-task manifest SHA-256;
-- server-side no-training smoke result;
-- a final decision of PASS or STOP.
+The controller never started, `record_count=0`, `actual_gpu_hours=0.0`, `running=0`, and the queue had no `runs/` directory. r4 is therefore preserved as a prelaunch-invalid audit artifact and is ineligible for RISK-08. It must not be deleted, overwritten, resumed, or reinterpreted as a model result.
 
-The frozen values and machine-readable change list are in [implementation_amendment.json](implementation_amendment.json). The original runtime template is retained but marked stale in [RISK-05 freeze status](../2026-07-11-risk05-freeze/STALE.md).
+The frozen values and machine-readable STOP decision are in [implementation_amendment.json](implementation_amendment.json). The exact failure evidence is in the [r4 host-identity audit](../2026-07-11-risk0607-r4-prelaunch-host-identity-audit/risk0607_r4_prelaunch_host_identity_audit.md). The original runtime template remains retained and marked stale in [RISK-05 freeze status](../2026-07-11-risk05-freeze/STALE.md).
