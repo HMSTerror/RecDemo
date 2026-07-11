@@ -15,6 +15,7 @@ ALLOWED_BRANCHES = {"common", "e1_pass", "e1_fail_audit", "method_pass"}
 ALLOWED_KINDS = {"cpu", "gpu", "contract_gate"}
 FOUR_DOMAINS = {"Steam", "ML1M", "Beauty", "ATG"}
 CLASSIC_MODELS = {"SASRec", "Caser", "GRURec"}
+RISK14_ARMS = {"host", "text_anchor_only", "global_p", "dataset_gate_only", "full", "u_shuffle"}
 DESTRUCTIVE_TOKENS = {
     "--force",
     "--no-skip-existing",
@@ -151,6 +152,63 @@ def _validate_baseline_groups(tasks: tuple[TaskSpec, ...]) -> None:
             raise ManifestError(f"{model}: baseline group requires one atomic_group")
 
 
+def _validate_continuation_matrix(tasks: tuple[TaskSpec, ...]) -> None:
+    continuation = [task for task in tasks if task.phase == "continuation"]
+    if not continuation:
+        return
+    if any(task.branch != "method_pass" for task in continuation):
+        raise ManifestError("continuation tasks must use method_pass branch")
+
+    gate_tasks = [
+        task
+        for task in continuation
+        if task.task_id == "continuation.method_pass_gate" and task.kind == "contract_gate"
+    ]
+    if len(gate_tasks) != 1:
+        raise ManifestError("continuation requires exactly one method-pass contract gate")
+    gate_id = gate_tasks[0].task_id
+    gpu_continuation = [task for task in continuation if task.kind == "gpu"]
+    if any(gate_id not in task.dependencies for task in gpu_continuation):
+        raise ManifestError("every continuation GPU task must depend on method-pass contract gate")
+
+    r13 = [task for task in continuation if task.ledger_id == "RISK-13"]
+    expected_r13 = {(dataset, arm) for dataset in FOUR_DOMAINS for arm in ("host", "risk_gated_full")}
+    actual_r13 = {(task.dataset or "", task.arm or "") for task in r13}
+    if len(r13) != 8 or actual_r13 != expected_r13:
+        raise ManifestError("RISK-13 continuation matrix must contain eight host/full four-domain tasks")
+    if any(task.model != "PreferGrow" for task in r13):
+        raise ManifestError("RISK-13 continuation model must be PreferGrow")
+
+    r14 = [task for task in continuation if task.ledger_id == "RISK-14"]
+    if len(r14) != 12:
+        raise ManifestError("RISK-14 continuation matrix must contain twelve controls")
+    rank_arm_pairs: set[tuple[str, str]] = set()
+    for task in r14:
+        parts = task.task_id.split(".")
+        if len(parts) < 6 or parts[2] not in {"high_risk", "low_risk"} or parts[5] not in RISK14_ARMS:
+            raise ManifestError(f"{task.task_id}: malformed RISK-14 condition/control identity")
+        rank_arm_pairs.add((parts[2], parts[5]))
+        if task.model != "PreferGrow" or task.dataset not in FOUR_DOMAINS:
+            raise ManifestError(f"{task.task_id}: RISK-14 identity mismatch")
+    if rank_arm_pairs != {(rank, arm) for rank in ("high_risk", "low_risk") for arm in RISK14_ARMS}:
+        raise ManifestError("RISK-14 must contain all six arms for high- and low-risk selections")
+
+    r10 = [task for task in continuation if task.ledger_id == "RISK-10"]
+    if len(r10) != 12 or {(task.model, task.dataset) for task in r10} != {
+        (model, dataset) for model in CLASSIC_MODELS for dataset in FOUR_DOMAINS
+    }:
+        raise ManifestError("RISK-10 continuation matrix must contain SASRec/Caser/GRURec on all four domains")
+
+    r11 = [task for task in continuation if task.ledger_id == "RISK-11"]
+    if r11 and (len(r11) != 4 or {task.dataset for task in r11} != FOUR_DOMAINS or any(task.model != "DiffRec" for task in r11)):
+        raise ManifestError("RISK-11 continuation must be an all-four DiffRec group")
+
+    allowed = {"RISK-08", "RISK-10", "RISK-11", "RISK-13", "RISK-14"}
+    unexpected = [task.task_id for task in continuation if task.ledger_id not in allowed]
+    if unexpected:
+        raise ManifestError(f"unexpected continuation ledger IDs: {unexpected}")
+
+
 def _validate_dependencies(tasks: tuple[TaskSpec, ...]) -> None:
     graph = {task.task_id: set(task.dependencies) for task in tasks}
     known = set(graph)
@@ -199,5 +257,10 @@ def validate_manifest(manifest: QueueManifest) -> None:
         _validate_task(task, manifest)
 
     _validate_dependencies(manifest.tasks)
-    _validate_pilot_matrix(manifest.tasks)
+    if any(task.phase == "pilot" for task in manifest.tasks):
+        _validate_pilot_matrix(manifest.tasks)
     _validate_baseline_groups(manifest.tasks)
+    _validate_continuation_matrix(manifest.tasks)
+    high_forecast = sum(task.gpu_hours_high for task in manifest.tasks if task.gpu_slots == 1)
+    if high_forecast > manifest.gpu_budget_hours:
+        raise ManifestError(f"GPU-hour high forecast exceeds {manifest.gpu_budget_hours:g}: {high_forecast:g}")
