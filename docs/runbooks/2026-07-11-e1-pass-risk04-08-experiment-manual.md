@@ -213,6 +213,48 @@ python "$Root\scripts\run_risk08_decision.py" `
 | RISK-05 | preregistration、freeze marker、RISK-04/E1/preflight hashes |
 | RISK-06/07 | 22-task queue manifest、controller `validate`、pass/audit 分支计数 |
 | RISK-08 | artifact-backed pilot report、唯一 `RISK-08_EXIT.json` |
+
+## E5：SASRec 四域 atomic baseline（GPU0，seed=100）
+
+本节是 2026-07-11 dated implementation amendment 的执行入口，设计约束见
+[`2026-07-11-e05-sasrec-seed100-gpu0-design.md`](../superpowers/specs/2026-07-11-e05-sasrec-seed100-gpu0-design.md)。E5 的作用是给
+PreferGrow 提供一个非扩散 sequential-recommendation 外部参照；它不是新的方法调参，也不改变 Gate-2 的前置关系。
+
+### 固定身份与数据协议
+
+- 方法身份固定为最小标准 SASRec：item embedding（含 padding row）、absolute position embedding、causal Transformer encoder 和 full-catalog score head；不复用外部项目的预处理或 checkpoint。
+- 只读 l20 的 `dataset/paper_raw_v1/{Steam,ML1M,Beauty,ATG}`，直接消费各目录的 `train_data.df`、`val_data.df`、`test_data.df`、`item_mapping.csv` 和 `protocol.json`；禁止 native resplit、重映射和 sampled-candidate evaluator。
+- 四域属于同一个 `E05.SASRec.four-domain` atomic group，必须同时出现在同一 `manifest.json`。任一域失败、缺 artifact 或行数/hash 不一致时，整个组标记 `failed_incomplete_atomic_group`，不报告有利子集。
+- 所有任务 `seed=100`、`gpu_ids=[0]`、`max_attempts=1`、`failure_policy=fail_closed`、`cwd==run_dir`；GPU1 上的 r6a 不修改、不抢占、不并入 E5 queue。
+- evaluator 固定 `e0_full_tail_v2`，selector 固定 `validation-ndcg10-rowweighted-v1`。checkpoint 只由 validation NDCG@10 选择；test 只在选定 checkpoint 后记录开发期 readout，论文保留：`model selection used validation only; test metrics were logged during development`，不得称 untouched final holdout。
+
+### 代码、manifest 和启动门
+
+以下命令只在新的 immutable source root 和从未使用过的 dated queue root 上执行；根目录已存在时命令必须失败，不得覆盖：
+
+```bash
+python3 /data/Zijian/goal/<immutable-source>/scripts/build_e05_sasrec_manifest.py \
+  --queue-root /data/Zijian/goal/aaai27_queue/2026-07-11-e05-sasrec-seed100-gpu0 \
+  --source-root /data/Zijian/goal/<immutable-source> \
+  --dataset-root /data/Zijian/goal/RecDemo/dataset/paper_raw_v1 \
+  --ledger-path /data/Zijian/goal/<immutable-source>/issues/2026-07-11_host-core-v2-preflight.csv \
+  --code-revision <40-char-immutable-revision>
+```
+
+manifest 生成后必须只读核验：任务数为 4、数据集恰为 Steam/ML1M/Beauty/ATG、seed 集合为 `{100}`、GPU 集合为 `{0}`、四个 `atomic_group` 相同、每个 `cwd` 等于自己的 `run_dir`，并且每个 `split_sha256` 与 `protocol.json` 行数契约绑定。正式任务 argv 禁止携带 `--startup-probe-only`。
+
+在正式 queue 前，先使用同一 source 和一个新的 `probe` 目录执行一次 GPU0 startup probe：它必须构造模型并完成一个前向 batch，写出 `startup_probe.json` 的 `STARTUP_PROBE_PASS`，且 optimizer steps、checkpoint 和 metrics 均为 0。随后再读取 `nvidia-smi`、`ps`、`df -h /data`；GPU0 必须无 compute PID、GPU1 的 r6a PID/session 不变、`/data` 可用空间必须大于 40 GiB。任何 probe、hash、PID 或磁盘检查失败均硬停止。
+
+### 正式启动、保留物和审计
+
+```bash
+python3 /data/Zijian/goal/<immutable-source>/scripts/run_e05_sasrec_queue.py \
+  --manifest /data/Zijian/goal/aaai27_queue/2026-07-11-e05-sasrec-seed100-gpu0/manifest.json
+```
+
+queue runner 串行执行 GPU0 上的四个任务，不启动第二个 GPU0 进程；它在每个任务前后检查 GPU occupancy，在非零退出、缺 artifact、hash mismatch 或 GPU 残留时 fail closed，不 retry。每个域必须产生 `sasrec_best.pt`、`best_summary_sasrec.json`、`metrics_sasrec.json`、`artifact_manifest.json` 与真实 `stdout.log`；只保留 best checkpoint，不写周期快照。
+
+最终回读并存档：`manifest_sha256`、`queue_status.json`、四个 task 的 PID/argv/cwd/elapsed、首次 training-loop 日志行、validation-selected epoch、test readout、row counts、split/config/evaluator/selector hashes、GPU0/GPU1 前后快照和磁盘余量。结果在手册和论文中只能标为 `single-run observation`；未完成四域时写 `incomplete/NA`，不得推断或补数字。
 | 论文措辞 | 单 seed 只写 observation；不写 significant/stable/statistically equivalent/within noise |
 
 本手册没有把计划数字、unit test 或 no-training smoke 当作性能结果；如果某个产物不存在，论文表格应写 `NA` 和原因，不能推断或补造数值。单 seed 结果只能写 single-run result/observation，不能使用 significant、stable、statistically equivalent 或 within noise。
