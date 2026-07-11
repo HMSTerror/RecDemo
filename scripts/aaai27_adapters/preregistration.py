@@ -59,6 +59,7 @@ def build_preregistration(
     *,
     generated_at: str | None = None,
     code_revision: str = "unbound-until-adapter-commit",
+    bindings: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     output_dir = Path(output_dir)
     if output_dir.exists():
@@ -133,6 +134,11 @@ def build_preregistration(
         "downstream_training_authorized": False,
         "decision": "continue_to_pilot_after_E1_terminal" if range_pass else "no_go_stop_pilot",
     }
+    if bindings is not None:
+        if not isinstance(bindings, dict):
+            raise ValueError("RISK-05 bindings must be a JSON object")
+        _reject_validation_test_keys(bindings, "bindings")
+        result["bindings"] = dict(bindings)
     result["artifact_sha256"] = stable_sha256(result)
     output_dir.mkdir(parents=True)
     atomic_write_json(output_dir / "risk_preregistration.json", result)
@@ -146,6 +152,7 @@ def build_preregistration(
             "preregistration_sha256": stable_sha256(result),
             "preflight_sha256": result["preflight_sha256"],
             "generated_at": generated_at,
+            "bindings": dict(bindings or {}),
         },
     )
     markdown = [
@@ -181,4 +188,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

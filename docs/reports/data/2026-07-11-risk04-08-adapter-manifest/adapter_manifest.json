@@ -1,0 +1,69 @@
+{
+  "artifact_sha256": "75f6727eb5acd3fc218f5fe673d7c33ad01d222a92c47ff1d1b3e66084e64ff6",
+  "base_revision": "13ce61386b2a08a913863cba63a1f8e390214533",
+  "branch": "codex/aaai27-seed100-controller",
+  "dated_id": "2026-07-11-risk04-08-adapter-manifest",
+  "e1_evidence": {
+    "comparisons": 2986,
+    "failed_comparisons": 0,
+    "first_divergence": null,
+    "risk02_pass_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+    "source_revision": "0338cc219f9ee983b8e9464b4df85f34471c7d6f",
+    "trace_report_sha256": "b912d5b6807320e9466048bc6e98ec470e85e510433b3471c65c94a569e387ce"
+  },
+  "file_sha256": {
+    "docs/runbooks/2026-07-11-e1-pass-risk04-08-experiment-manual.md": "e0869febe21c8e34cf7ea41f9781f6f62a1ab50deb9dd4a7242e40821bd37381",
+    "docs/reports/data/2026-07-11-risk04-08-adapter-manifest/adapter_manifest.md": "174b0d0b364350dfa9a41657f1a5a3eb32c64218e77c387a2ca4cee802a5ee31",
+    "docs/superpowers/plans/2026-07-11-risk04-08-queue-safe-adapters.md": "b19e31934de94940cd11c9fcdd020bac4cffca63ca4d61509535fc552961bdaf",
+    "issues/2026-07-10_22-34-15-aaai27-seed100-resident-queue-execution.csv": "0f7f1beb447716a8994e723b7929430ff99dc8b7a6138b0bbb93b2257ea8c3f9",
+    "scripts/aaai27_adapters/bank_builder.py": "bb37810b69eb4c99ccebc09cf376df6ace2233d15a83d9342dd05e875bc43de1",
+    "scripts/aaai27_adapters/preregistration.py": "6cb59b72230f84a2a0b8164373d45aa4d36fd77deab02f270983e64aad5e0c82",
+    "scripts/aaai27_adapters/risk04_08.py": "c668dd1387b911a272f4af1503f6910fdfbc678a6736eb1585723869ba0f92c1",
+    "scripts/build_risk04_corruption_banks.py": "493e9def74d016ffee70dce9eedf864d163d91af46cd16e8ace2ceda444e7dfa",
+    "scripts/build_risk05_preregistration.py": "8a1adfc7cd8ee1aec836ce68242a31118c044425b266734bf4dd54b8f8913a90",
+    "scripts/build_risk0607_pilot_manifest.py": "0a39d8d2682333998f77e1e9886d2a273bf26dec1797a5aecc73b109d1c21942",
+    "scripts/run_risk08_decision.py": "be8e7dffa3170fcdcd1d95c576c26481dcf1e84b84112ed70b59cc61e54e4b2b",
+    "scripts/validate_risk04_banks.py": "bd2ccddc50537d45470e89598990058b5c23713f0b97acd5d4398d12236c057a",
+    "tests/test_risk04_08_queue_safe_adapters.py": "4d688b4c757c4416daff212d67b87024730d62bc8534fbcc988e04a5678c2e52"
+  },
+  "manifest_name": "AAAI-27 RISK-04--RISK-08 queue-safe adapter dated manifest",
+  "outputs": {
+    "adapter_module": "scripts/aaai27_adapters/risk04_08.py",
+    "ledger": "issues/2026-07-10_22-34-15-aaai27-seed100-resident-queue-execution.csv",
+    "manual": "docs/runbooks/2026-07-11-e1-pass-risk04-08-experiment-manual.md",
+    "plan": "docs/superpowers/plans/2026-07-11-risk04-08-queue-safe-adapters.md",
+    "r04_builder": "scripts/build_risk04_corruption_banks.py",
+    "r04_validator": "scripts/validate_risk04_banks.py",
+    "r05_builder": "scripts/build_risk05_preregistration.py",
+    "r0607_builder": "scripts/build_risk0607_pilot_manifest.py",
+    "r08_decision": "scripts/run_risk08_decision.py"
+  },
+  "protocol": {
+    "adaptive_backoff": false,
+    "corruption_levels": [0, 20, 40, 60, 80, 100],
+    "evaluator_version": "e0_full_tail_v2",
+    "failure_policy": "fail_closed",
+    "max_attempts": 1,
+    "pilot_levels": [0, 60, 100],
+    "seed": 100,
+    "selector_version": "validation-ndcg10-rowweighted-v1",
+    "steam_severe_corruption": "popularity-stratified 60% item-embedding permutation",
+    "steam_start_gate": "mean gate relative clean drop >= 0.20"
+  },
+  "schema_version": 1,
+  "scope": {
+    "frozen_artifacts_modified": false,
+    "gpu0_close10_interfered": false,
+    "remote_deployment": false,
+    "risk_ids": ["RISK-04", "RISK-05", "RISK-06", "RISK-07", "RISK-08"],
+    "training_started": false
+  },
+  "verification": {
+    "compileall": "pass",
+    "focused_adapter_tests": "5 passed",
+    "front_gate_tests": "16 passed",
+    "git_diff_check": "pass",
+    "queue_model_validation_scheduler_cli_controller": "59 passed"
+  },
+  "worktree": "E:/PreferGrow/.worktrees/aaai27-seed100-controller"
+}

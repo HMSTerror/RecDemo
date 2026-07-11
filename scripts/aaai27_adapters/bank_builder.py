@@ -176,9 +176,13 @@ def build_corruption_bank(
         "row_norm_max_abs_diff": float(np.max(np.abs(row_norms_before - row_norms_after))),
         "candidate_policy": "real_item_embeddings_only; no_padding_or_pseudo_item_rows",
     }
+    # Hash the JSON-normalised manifest.  ``permutation.mapping`` uses integer
+    # item IDs in memory but JSON object keys are strings on disk; hashing the
+    # pre-serialisation object made a valid bank unverifiable after reload.
+    manifest_for_hash = json.loads(json.dumps(manifest, sort_keys=True, ensure_ascii=False))
     manifest["bank_sha256"] = stable_sha256(
         {
-            "manifest": manifest,
+            "manifest": manifest_for_hash,
             "numpy_sha256": sha256_file(output_dir / "embeddings.npy"),
             "torch_sha256": sha256_file(output_dir / "embeddings.pt"),
             "item_ids_sha256": sha256_file(output_dir / "item_ids.json"),
