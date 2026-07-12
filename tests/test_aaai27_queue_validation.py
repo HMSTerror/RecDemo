@@ -32,7 +32,8 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                 ],
                 success_artifacts=[
                     f"runs/{branch}/{dataset}/host/checkpoints-meta/"
-                    f"{dataset}/best_summary_adaptive.json"
+                    f"{dataset}/best_summary_adaptive.json",
+                    f"runs/{branch}/{dataset}/host/artifact_manifest.json",
                 ],
             )
         )
@@ -53,7 +54,8 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                     success_artifacts=[
                         f"runs/{branch}/{dataset}/anchor_c{level}/"
                         f"checkpoints-meta/{dataset}/"
-                        "best_summary_proposal_adaptive.json"
+                        "best_summary_proposal_adaptive.json",
+                        f"runs/{branch}/{dataset}/anchor_c{level}/artifact_manifest.json",
                     ],
                 )
             )
@@ -74,7 +76,8 @@ def make_pilot_tasks(branch: str, include_full: bool) -> list[dict]:
                         success_artifacts=[
                             f"runs/{branch}/{dataset}/full_c{level}/"
                             f"checkpoints-meta/{dataset}/"
-                            "best_summary_proposal_adaptive.json"
+                            "best_summary_proposal_adaptive.json",
+                            f"runs/{branch}/{dataset}/full_c{level}/artifact_manifest.json",
                         ],
                     )
                 )

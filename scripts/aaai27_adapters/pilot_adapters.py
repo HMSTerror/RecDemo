@@ -79,19 +79,49 @@ def _task(
         "adaptive": "best_summary_adaptive.json",
         "proposal_adaptive": "best_summary_proposal_adaptive.json",
     }[graph_type]
+    summary_relative = f"{run_rel}/checkpoints-meta/{dataset}/{summary_name}"
+    artifact_relative = f"{run_rel}/artifact_manifest.json"
     env = {
         "PYTHONHASHSEED": "100",
         "AAAI_DATASET": dataset,
         "AAAI_ARM": arm,
+        "AAAI_TASK_ID": task_id,
+        "AAAI_QUEUE_ROOT": str(protocol["run_root"]),
+        "AAAI_RUN_DIR": run_dir,
+        "AAAI_QUEUE_MANIFEST_PATH": (
+            f"{protocol['run_root']}/queue/queue_seed100.json"
+        ),
+        "AAAI_SUMMARY_RELATIVE": summary_relative,
+        "AAAI_ARTIFACT_MANIFEST_RELATIVE": artifact_relative,
+        "AAAI_CODE_REVISION": str(protocol["code_revision"]),
+        "AAAI_CONFIG_SHA256": str(
+            dataset_cfg.get("config_sha256", protocol["config_sha256"])
+        ),
+        "AAAI_SPLIT_SHA256": str(dataset_cfg["split_sha256"]),
+        "AAAI_EVALUATOR_VERSION": "e0_full_tail_v2",
+        "AAAI_SELECTOR_VERSION": "validation-ndcg10-rowweighted-v1",
     }
     if bank_sha256 is not None:
         env["AAAI_BANK_SHA256"] = str(bank_sha256)
         if embedding_sha256 is None:
             raise ValueError("evidence-conditioned task lacks embedding SHA-256")
         env["AAAI_EMBEDDING_SHA256"] = str(embedding_sha256)
+        env["AAAI_CURRENT_EMBEDDING_SHA256"] = str(embedding_sha256)
         env["AAAI_RISK05_PREREG_SHA256"] = str(
             protocol["risk05_preregistration_sha256"]
         )
+        env["AAAI_NULL_CURVE_REFERENCE_POLICY"] = (
+            "frozen_clean_calibration"
+        )
+        env["AAAI_NULL_CURVE_PATH"] = str(dataset_cfg["null_curve_path"])
+        env["AAAI_NULL_CURVE_SHA256"] = str(
+            dataset_cfg["null_curve_sha256"]
+        )
+        env["AAAI_NULL_CURVE_SOURCE_BANK_SHA256"] = str(
+            dataset_cfg["banks"]["0"]["bank_sha256"]
+        )
+    else:
+        env["AAAI_NULL_CURVE_REFERENCE_POLICY"] = "not_applicable"
     gate_scale_tokens = [
         token.split("=", 1)[1]
         for token in argv
@@ -99,6 +129,14 @@ def _task(
     ]
     if gate_scale_tokens:
         env["AAAI_GATE_DATASET_SCALE"] = gate_scale_tokens[0]
+    training_argv = list(argv)
+    wrapper_path = str(
+        protocol.get(
+            "pilot_wrapper",
+            f"{protocol['source_root']}/scripts/run_aaai27_pilot_task.py",
+        )
+    )
+    argv = [str(protocol["python_bin"]), wrapper_path, "--", *training_argv]
     return {
         "schema_version": 1,
         "task_id": task_id,
@@ -111,7 +149,10 @@ def _task(
         "env": env,
         "dependencies": [],
         "required_markers": ["markers/RISK-02_PASS.json" if branch == "e1_pass" else "markers/RISK-02_FAIL.json"],
-        "success_artifacts": [f"{run_rel}/checkpoints-meta/{dataset}/{summary_name}"],
+        "success_artifacts": [
+            summary_relative,
+            artifact_relative,
+        ],
         "failure_policy": "fail_closed",
         "max_attempts": 1,
         "gpu_slots": 1,

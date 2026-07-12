@@ -23,6 +23,20 @@ from scripts.aaai27_queue.validation import validate_manifest
 
 
 class Risk0408QueueSafeAdapterTests(unittest.TestCase):
+    def _null_curves(self, root: Path) -> dict[str, dict[str, str]]:
+        curves: dict[str, dict[str, str]] = {}
+        for dataset in ("Beauty", "Steam"):
+            path = root / f"{dataset}_agreement_null_curves.json"
+            path.write_text(
+                json.dumps({"dataset": dataset, "reference": "clean"}),
+                encoding="utf-8",
+            )
+            curves[dataset] = {
+                "path": path.resolve().as_posix(),
+                "sha256": sha256_file(path),
+            }
+        return curves
+
     def test_cli_wrappers_are_directly_invokable(self) -> None:
         root = Path(__file__).resolve().parents[1]
         for name in (
@@ -170,6 +184,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             )
             self.assertTrue(risk05["preregistration_sha256"])
             queue_root = root / "queue-2026-07-11"
+            null_curves = self._null_curves(root)
             risk04_runtime_root = risk04_root.resolve().as_posix()
             if not risk04_runtime_root.startswith("/"):
                 risk04_runtime_root = "/srv/aaai27/risk04-2026-07-11"
@@ -194,7 +209,8 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                     dataset: {
                         "dataset_dir": f"/srv/data/{dataset}",
                         "text_bank_path": f"/srv/data/{dataset}/text_bank.csv",
-                        "null_curve_path": f"/srv/data/{dataset}/null.json",
+                        "null_curve_path": null_curves[dataset]["path"],
+                        "null_curve_sha256": null_curves[dataset]["sha256"],
                         "config_sha256": "2" * 64,
                     }
                     for dataset in ("Beauty", "Steam")
@@ -248,7 +264,9 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                     self.assertEqual(
                         [
                             f"runs/{task['branch']}/{task['dataset']}/host/"
-                            f"checkpoints-meta/{task['dataset']}/best_summary_adaptive.json"
+                            f"checkpoints-meta/{task['dataset']}/best_summary_adaptive.json",
+                            f"runs/{task['branch']}/{task['dataset']}/host/"
+                            "artifact_manifest.json",
                         ],
                         task["success_artifacts"],
                         task["task_id"],
@@ -307,6 +325,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             risk05_root = root / "risk05-2026-07-11"
             build_risk05_bundle(risk04_root, preflight, e1, risk05_root, generated_at="2026-07-11T08:10:00+08:00")
             queue_root = root / "queue-2026-07-11"
+            null_curves = self._null_curves(root)
             risk04_runtime_root = risk04_root.resolve().as_posix()
             if not risk04_runtime_root.startswith("/"):
                 risk04_runtime_root = "/srv/aaai27/risk04-2026-07-11"
@@ -331,7 +350,8 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                     dataset: {
                         "dataset_dir": f"/srv/data/{dataset}",
                         "text_bank_path": f"/srv/data/{dataset}/text_bank.csv",
-                        "null_curve_path": f"/srv/data/{dataset}/null.json",
+                        "null_curve_path": null_curves[dataset]["path"],
+                        "null_curve_sha256": null_curves[dataset]["sha256"],
                         "config_sha256": "2" * 64,
                     }
                     for dataset in ("Beauty", "Steam")
@@ -347,20 +367,74 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 relative_run = task["run_dir"].split("/runs/", 1)[1]
                 run_dir = queue_root / "runs" / relative_run
                 run_dir.mkdir(parents=True, exist_ok=True)
-                metrics_path = run_dir / "metrics.json"
-                metrics_path.write_text(json.dumps({"validation_ndcg10": 0.1, "test_ndcg10": 0.1}), encoding="utf-8")
+                metrics_path = queue_root / task["success_artifacts"][0]
+                metrics_path.parent.mkdir(parents=True, exist_ok=True)
+                metrics_path.write_text(
+                    json.dumps(
+                        {
+                            "best_step": 10,
+                            "validation": {
+                                "p5": {
+                                    "hr": [0.0, 0.0, 0.2],
+                                    "ndcg": [0.0, 0.0, 0.1],
+                                }
+                            },
+                            "test": {
+                                "p5": {
+                                    "hr": [0.0, 0.0, 0.2],
+                                    "ndcg": [0.0, 0.0, 0.1],
+                                }
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                log_path = run_dir / "single_train.log"
+                log_path.write_text("AAAI_PILOT_WRAPPER_START\nAAAI_PILOT_WRAPPER_END\n", encoding="utf-8")
+                task_env = task["env"]
+                null_policy = task_env["AAAI_NULL_CURVE_REFERENCE_POLICY"]
+                null_reference = {"policy": null_policy}
+                if null_policy == "frozen_clean_calibration":
+                    null_reference.update(
+                        {
+                            "path": str(Path(task_env["AAAI_NULL_CURVE_PATH"]).resolve()),
+                            "sha256": task_env["AAAI_NULL_CURVE_SHA256"],
+                            "source_bank_sha256": task_env[
+                                "AAAI_NULL_CURVE_SOURCE_BANK_SHA256"
+                            ],
+                            "current_embedding_sha256": task_env[
+                                "AAAI_CURRENT_EMBEDDING_SHA256"
+                            ],
+                        }
+                    )
+                gate_scale = task_env.get("AAAI_GATE_DATASET_SCALE")
                 artifact = {
                     "schema_version": 1,
                     "task_id": task["task_id"],
                     "status": "pass",
                     "queue_manifest_sha256": queue_hash,
+                    "source_revision": task["code_revision"],
+                    "config_sha256": task["config_sha256"],
+                    "split_sha256": task["split_sha256"],
+                    "bank_sha256": task["bank_sha256"],
+                    "evaluator_version": task["evaluator_version"],
+                    "selector_version": task["selector_version"],
+                    "gate_dataset_scale": (
+                        float(gate_scale) if gate_scale is not None else None
+                    ),
                     "metrics_provenance": {
                         "path": metrics_path.relative_to(queue_root).as_posix(),
                         "sha256": sha256_file(metrics_path),
                     },
+                    "log_provenance": {
+                        "path": log_path.relative_to(queue_root).as_posix(),
+                        "sha256": sha256_file(log_path),
+                        "size_bytes": log_path.stat().st_size,
+                    },
+                    "null_curve_reference": null_reference,
                 }
                 artifact["artifact_sha256"] = stable_sha256(artifact)
-                artifact_path = run_dir / "artifact_manifest.json"
+                artifact_path = queue_root / task["success_artifacts"][1]
                 artifact_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
                 artifact_paths[task["task_id"]] = artifact_path.relative_to(queue_root).as_posix()
             report = {

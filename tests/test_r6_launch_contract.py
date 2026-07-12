@@ -50,6 +50,7 @@ def make_protocol(*, gpu_ids: list[int] | None = None) -> dict[str, object]:
                 "split_sha256": "f" * 64,
                 "text_bank_path": f"/srv/data/{dataset}/text_bank.csv",
                 "null_curve_path": f"/srv/data/{dataset}/agreement_null_curves.json",
+                "null_curve_sha256": "4" * 64,
                 "config_sha256": "1" * 64,
                 "banks": {
                     str(level): {
@@ -70,6 +71,78 @@ def make_protocol(*, gpu_ids: list[int] | None = None) -> dict[str, object]:
 
 
 class R6LaunchContractTests(unittest.TestCase):
+    def test_pilot_task_env_binds_wrapper_and_frozen_clean_null_provenance(self) -> None:
+        manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
+
+        for task in manifest["tasks"]:
+            env = task["env"]
+            self.assertEqual(task["task_id"], env["AAAI_TASK_ID"])
+            self.assertEqual(manifest["run_root"], env["AAAI_QUEUE_ROOT"])
+            self.assertEqual(task["run_dir"], env["AAAI_RUN_DIR"])
+            self.assertEqual(
+                f"{manifest['run_root']}/queue/queue_seed100.json",
+                env["AAAI_QUEUE_MANIFEST_PATH"],
+            )
+            self.assertEqual(task["success_artifacts"][0], env["AAAI_SUMMARY_RELATIVE"])
+            self.assertEqual(
+                task["success_artifacts"][1],
+                env["AAAI_ARTIFACT_MANIFEST_RELATIVE"],
+            )
+            self.assertEqual(task["code_revision"], env["AAAI_CODE_REVISION"])
+            self.assertEqual(task["config_sha256"], env["AAAI_CONFIG_SHA256"])
+            self.assertEqual(task["split_sha256"], env["AAAI_SPLIT_SHA256"])
+            self.assertEqual(
+                task["evaluator_version"], env["AAAI_EVALUATOR_VERSION"]
+            )
+            self.assertEqual(
+                task["selector_version"], env["AAAI_SELECTOR_VERSION"]
+            )
+            if task["arm"] == "host":
+                self.assertEqual(
+                    "not_applicable", env["AAAI_NULL_CURVE_REFERENCE_POLICY"]
+                )
+                continue
+            dataset_cfg = make_protocol(gpu_ids=[0, 1])["datasets"][task["dataset"]]
+            self.assertEqual(
+                "frozen_clean_calibration",
+                env["AAAI_NULL_CURVE_REFERENCE_POLICY"],
+            )
+            self.assertEqual(
+                dataset_cfg["null_curve_path"], env["AAAI_NULL_CURVE_PATH"]
+            )
+            self.assertEqual(
+                dataset_cfg["null_curve_sha256"], env["AAAI_NULL_CURVE_SHA256"]
+            )
+            self.assertEqual(
+                dataset_cfg["banks"]["0"]["bank_sha256"],
+                env["AAAI_NULL_CURVE_SOURCE_BANK_SHA256"],
+            )
+            self.assertEqual(
+                task["env"]["AAAI_EMBEDDING_SHA256"],
+                env["AAAI_CURRENT_EMBEDDING_SHA256"],
+            )
+
+    def test_pilot_tasks_use_source_wrapper_and_require_summary_plus_manifest(self) -> None:
+        manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
+        expected_wrapper = "/srv/aaai27/source-r6/scripts/run_aaai27_pilot_task.py"
+
+        for task in manifest["tasks"]:
+            self.assertEqual(expected_wrapper, task["argv"][1], task["task_id"])
+            self.assertEqual("--", task["argv"][2], task["task_id"])
+            self.assertEqual(
+                "/opt/prefergrow/bin/python3", task["argv"][3], task["task_id"]
+            )
+            self.assertEqual(
+                "/srv/aaai27/source-r6/single_train.py",
+                task["argv"][4],
+                task["task_id"],
+            )
+            self.assertEqual(2, len(task["success_artifacts"]), task["task_id"])
+            self.assertTrue(
+                task["success_artifacts"][1].endswith("/artifact_manifest.json"),
+                task["task_id"],
+            )
+
     def test_e1_pass_anchor_tasks_bind_one_full_scale_and_no_utility_report(self) -> None:
         manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
         anchors = [
@@ -191,8 +264,14 @@ class R6LaunchContractTests(unittest.TestCase):
             self.assertEqual(task["run_dir"], task["cwd"], task["task_id"])
             self.assertTrue(PurePosixPath(task["argv"][0]).is_absolute(), task["task_id"])
             self.assertEqual(
-                "/srv/aaai27/source-r6/single_train.py",
+                "/srv/aaai27/source-r6/scripts/run_aaai27_pilot_task.py",
                 task["argv"][1],
+                task["task_id"],
+            )
+            self.assertEqual("--", task["argv"][2], task["task_id"])
+            self.assertEqual(
+                "/srv/aaai27/source-r6/single_train.py",
+                task["argv"][4],
                 task["task_id"],
             )
 

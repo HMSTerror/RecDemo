@@ -192,12 +192,15 @@ def _validate_pilot_matrix(tasks: tuple[TaskSpec, ...]) -> None:
                 f"/checkpoints-meta/{task.dataset}/{summary_name}"
             )
             if (
-                len(task.success_artifacts) != 1
+                len(task.success_artifacts) != 2
                 or not task.success_artifacts[0].endswith(summary_suffix)
+                or not task.success_artifacts[1].endswith(
+                    "/artifact_manifest.json"
+                )
             ):
                 raise ManifestError(
-                    f"{task.task_id}: pilot success artifact must end with "
-                    f"{summary_name}"
+                    f"{task.task_id}: pilot success artifacts must be the "
+                    f"selected {summary_name} and artifact_manifest.json"
                 )
 
 

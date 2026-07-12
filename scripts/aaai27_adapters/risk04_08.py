@@ -619,6 +619,10 @@ def build_risk0607_manifest(
             "split_sha256": str(risk04_dataset["split_sha256"]),
             "text_bank_path": str(template["text_bank_path"]),
             "null_curve_path": str(template["null_curve_path"]),
+            "null_curve_sha256": _require_hash(
+                template.get("null_curve_sha256"),
+                f"{dataset} null_curve_sha256",
+            ),
             "phi_R": {
                 str(level): float(phi_r[dataset][str(level)])
                 for level in PILOT_LEVELS
@@ -695,6 +699,12 @@ def _resolve_below(root: Path, value: str | Path, label: str) -> Path:
     return resolved
 
 
+def _inside_path(path: Path, root: Path) -> bool:
+    resolved = Path(path).resolve()
+    resolved_root = Path(root).resolve()
+    return resolved == resolved_root or resolved_root in resolved.parents
+
+
 def _validate_artifact_manifest(root: Path, path: Path, task: Mapping[str, Any], queue_hash: str) -> str:
     task_run_dir = str(task.get("run_dir", ""))
     if "/runs/" not in task_run_dir:
@@ -711,12 +721,98 @@ def _validate_artifact_manifest(root: Path, path: Path, task: Mapping[str, Any],
         raise QueueSafetyError(f"pilot artifact queue hash mismatch: {path}")
     if artifact.get("artifact_sha256") != _payload_hash(artifact):
         raise QueueSafetyError(f"pilot artifact self hash mismatch: {path}")
+    identity_fields = {
+        "source_revision": "code_revision",
+        "config_sha256": "config_sha256",
+        "split_sha256": "split_sha256",
+        "bank_sha256": "bank_sha256",
+        "evaluator_version": "evaluator_version",
+        "selector_version": "selector_version",
+    }
+    for artifact_field, task_field in identity_fields.items():
+        if artifact.get(artifact_field) != task.get(task_field):
+            label = "source revision" if artifact_field == "source_revision" else artifact_field
+            raise QueueSafetyError(
+                f"pilot artifact {label} mismatch: {path}"
+            )
+    success_artifacts = task.get("success_artifacts")
+    if not isinstance(success_artifacts, (list, tuple)) or len(success_artifacts) != 2:
+        raise QueueSafetyError(f"pilot task lacks summary/manifest artifact contract: {path}")
+    expected_metrics_path = _resolve_below(
+        root, str(success_artifacts[0]), "expected metrics path"
+    )
+    expected_manifest_path = _resolve_below(
+        root, str(success_artifacts[1]), "expected artifact-manifest path"
+    )
+    if resolved_path != expected_manifest_path:
+        raise QueueSafetyError(f"pilot artifact manifest path mismatch: {path}")
     provenance = artifact.get("metrics_provenance")
     if not isinstance(provenance, Mapping) or not provenance.get("path") or not provenance.get("sha256"):
         raise QueueSafetyError(f"pilot metrics lack artifact provenance: {path}")
     metrics_path = _resolve_below(root, str(provenance["path"]), "metrics provenance path")
+    if metrics_path != expected_metrics_path or not _inside_path(metrics_path, resolved_run):
+        raise QueueSafetyError(f"pilot metrics provenance path mismatch: {metrics_path}")
     if not metrics_path.is_file() or sha256_file(metrics_path) != str(provenance["sha256"]):
         raise QueueSafetyError(f"pilot metrics provenance hash mismatch: {metrics_path}")
+    log_provenance = artifact.get("log_provenance")
+    if not isinstance(log_provenance, Mapping):
+        raise QueueSafetyError(f"pilot log provenance is missing: {path}")
+    log_path = _resolve_below(
+        root, str(log_provenance.get("path", "")), "log provenance path"
+    )
+    if log_path != resolved_run / "single_train.log" or not _inside_path(
+        log_path, resolved_run
+    ):
+        raise QueueSafetyError(f"pilot log provenance path mismatch: {log_path}")
+    expected_log_size = log_provenance.get("size_bytes")
+    if (
+        not log_path.is_file()
+        or not isinstance(expected_log_size, int)
+        or isinstance(expected_log_size, bool)
+        or expected_log_size <= 0
+        or log_path.stat().st_size != expected_log_size
+        or sha256_file(log_path) != str(log_provenance.get("sha256", ""))
+    ):
+        raise QueueSafetyError(f"pilot log provenance hash/size mismatch: {log_path}")
+    task_env = task.get("env")
+    if not isinstance(task_env, Mapping):
+        raise QueueSafetyError(f"pilot task environment binding is missing: {path}")
+    null_reference = artifact.get("null_curve_reference")
+    if not isinstance(null_reference, Mapping):
+        raise QueueSafetyError(f"pilot null-curve provenance is missing: {path}")
+    expected_policy = str(task_env.get("AAAI_NULL_CURVE_REFERENCE_POLICY", ""))
+    if null_reference.get("policy") != expected_policy:
+        raise QueueSafetyError(f"pilot null-curve policy mismatch: {path}")
+    if expected_policy == "frozen_clean_calibration":
+        expected_null_path = Path(str(task_env.get("AAAI_NULL_CURVE_PATH", ""))).resolve()
+        expected_null_hash = str(task_env.get("AAAI_NULL_CURVE_SHA256", ""))
+        if (
+            Path(str(null_reference.get("path", ""))).resolve() != expected_null_path
+            or null_reference.get("sha256") != expected_null_hash
+            or not expected_null_path.is_file()
+            or sha256_file(expected_null_path) != expected_null_hash
+            or null_reference.get("source_bank_sha256")
+            != task_env.get("AAAI_NULL_CURVE_SOURCE_BANK_SHA256")
+            or null_reference.get("current_embedding_sha256")
+            != task_env.get("AAAI_CURRENT_EMBEDDING_SHA256")
+            or task_env.get("AAAI_CURRENT_EMBEDDING_SHA256")
+            != task_env.get("AAAI_EMBEDDING_SHA256")
+        ):
+            raise QueueSafetyError(f"pilot null-curve provenance mismatch: {path}")
+    elif expected_policy != "not_applicable":
+        raise QueueSafetyError(f"pilot null-curve policy is unsupported: {path}")
+    expected_gate = task_env.get("AAAI_GATE_DATASET_SCALE")
+    observed_gate = artifact.get("gate_dataset_scale")
+    if expected_gate is None:
+        if observed_gate is not None:
+            raise QueueSafetyError(f"pilot gate-scale provenance mismatch: {path}")
+    else:
+        try:
+            gate_matches = float(expected_gate) == float(observed_gate)
+        except (TypeError, ValueError):
+            gate_matches = False
+        if not gate_matches:
+            raise QueueSafetyError(f"pilot gate-scale provenance mismatch: {path}")
     return sha256_file(path)
 
 

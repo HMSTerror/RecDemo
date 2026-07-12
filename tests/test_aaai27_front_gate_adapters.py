@@ -51,6 +51,7 @@ class FrontGateAdapterTests(unittest.TestCase):
                     "split_sha256": "e" * 64,
                     "text_bank_path": f"/srv/data/{dataset}/text_bank.csv",
                     "null_curve_path": f"/srv/data/{dataset}/agreement_null_curves.json",
+                    "null_curve_sha256": "7" * 64,
                     "banks": {
                         str(level): {
                             "embedding_path": f"/srv/banks/{dataset}/{level}/embeddings.pt",
