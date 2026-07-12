@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "report_name": "AAAI-27 r7 resident controller live-start verification",
+  "captured_at": "2026-07-12T17:03:24+08:00",
+  "launch_result": "started",
+  "execution_state": "waiting_external_gpu",
+  "session": {
+    "name": "aaai27_r7_seed100_987eb19",
+    "detached": true,
+    "pane_dead": false,
+    "metadata_present": true
+  },
+  "controller": {
+    "pid": 3277670,
+    "owner": "zijian",
+    "process_start_time": "71220858",
+    "started_at": "2026-07-12T17:02:15+08:00",
+    "liveness": true,
+    "survived_client_disconnect": true,
+    "entry": "/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7/scripts/aaai27_r7_resident_queue.py"
+  },
+  "bindings": {
+    "source_revision": "987eb1957cf74528ef81f2fd673aabb5a25e42f7",
+    "source_manifest_file_sha256": "38e448dc26a11b785363fff076bd389fd3543189e5fedf9de75b65aa92b4b513",
+    "queue_manifest_sha256": "387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e",
+    "finalizer_config_sha256": "1796f59f9ed1c4b9a984ae0ed8a8d3d9e8e8164d1ea2bba90166353412c3ab86"
+  },
+  "queue_status": {
+    "task_count": 22,
+    "ready": 14,
+    "pending": 8,
+    "running": 0,
+    "passed": 0,
+    "failed": 0,
+    "interrupted_unverified": 0,
+    "record_count": 0,
+    "actual_gpu_hours": 0.0,
+    "stop_requested": false,
+    "risk08_exit": null,
+    "runs_directory_absent": true,
+    "task_records_directory_absent": true
+  },
+  "gpu_snapshot": {
+    "gpu0": {
+      "compute_pid": 2987761,
+      "owner": "root",
+      "r7_colocated": false
+    },
+    "gpu1": {
+      "compute_pid": 3072363,
+      "owner": "root",
+      "r7_colocated": false
+    }
+  },
+  "r7_training_pids": [],
+  "root_jobs_touched": false,
+  "no_rescue": true,
+  "claim_scope": "controller liveness and safe waiting only; training and RISK-08 remain incomplete"
+}
