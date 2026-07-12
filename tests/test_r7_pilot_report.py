@@ -204,7 +204,7 @@ class R7PilotReportTests(unittest.TestCase):
             "queue_root_posix": "/srv/aaai27/queue/r7-test",
             "run_root_posix": "/srv/aaai27/queue/r7-test",
             "source_root_posix": "/srv/aaai27/source-r7",
-            "gpu_ids": [1],
+            "gpu_ids": [0, 1],
             "source_manifest_sha256": "c" * 64,
             "ledger_path_posix": "/srv/aaai27/source-r7/issues/r7.csv",
             "ledger_sha256": "d" * 64,

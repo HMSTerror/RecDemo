@@ -520,9 +520,9 @@ def build_risk0607_manifest(
     )
     source_root_posix = _posix_path(protocol_template.get("source_root_posix"), "source_root_posix")
     gpu_ids = protocol_template.get("gpu_ids")
-    if gpu_ids != [1]:
+    if gpu_ids != [0, 1]:
         raise QueueSafetyError(
-            "RISK-06/RISK-07 pilot gpu_ids must explicitly equal [1]"
+            "RISK-06/RISK-07 pilot gpu_ids must explicitly equal [0, 1]"
         )
     if run_root_posix != queue_root_posix:
         raise QueueSafetyError(

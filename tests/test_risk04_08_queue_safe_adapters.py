@@ -194,7 +194,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 "queue_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "run_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "source_root_posix": "/srv/aaai27/source",
-                "gpu_ids": [1],
+                "gpu_ids": [0, 1],
                 "source_manifest_sha256": "d" * 64,
                 "ledger_path_posix": "/srv/aaai27/ledger.csv",
                 "ledger_sha256": "e" * 64,
@@ -218,7 +218,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             }
             manifest = build_risk0607_manifest(risk05_root, e1, queue_root, protocol)
             wrong_gpu_protocol = dict(protocol)
-            wrong_gpu_protocol["gpu_ids"] = [0]
+            wrong_gpu_protocol["gpu_ids"] = [1]
             with self.assertRaisesRegex(QueueSafetyError, "explicitly equal"):
                 build_risk0607_manifest(
                     risk05_root,
@@ -229,7 +229,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
             decoded = QueueManifest.from_dict(manifest)
             validate_manifest(decoded)
             self.assertEqual(22, len(decoded.tasks))
-            self.assertEqual((1,), decoded.gpu_ids)
+            self.assertEqual((0, 1), decoded.gpu_ids)
             self.assertEqual(14, sum(task.branch == "e1_pass" for task in decoded.tasks))
             self.assertEqual(8, sum(task.branch == "e1_fail_audit" for task in decoded.tasks))
             self.assertTrue((queue_root / "queue" / "queue_seed100.json").exists())
@@ -335,7 +335,7 @@ class Risk0408QueueSafeAdapterTests(unittest.TestCase):
                 "queue_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "run_root_posix": "/srv/aaai27/queue/2026-07-11",
                 "source_root_posix": "/srv/aaai27/source",
-                "gpu_ids": [1],
+                "gpu_ids": [0, 1],
                 "source_manifest_sha256": "d" * 64,
                 "ledger_path_posix": "/srv/aaai27/ledger.csv",
                 "ledger_sha256": "e" * 64,
