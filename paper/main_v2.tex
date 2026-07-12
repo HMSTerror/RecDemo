@@ -61,6 +61,7 @@
 \newcommand{\ut}{\tilde{u}}
 \newcommand{\Uds}{U_{\mathrm{ds}}}
 \newcommand{\phids}{\phi(\Uds)}
+\newcommand{\sD}{s_D}
 \newcommand{\TV}{\mathrm{TV}}
 \newtheorem{proposition}{Proposition}
 \newtheorem{lemma}{Lemma}
@@ -85,37 +86,31 @@ acts entirely on the \emph{score} side: the transition kernel is shared
 by all users. We personalize the kernel, and in doing so surface a
 counterintuitive fact: because the proposal is a \emph{corruption}
 distribution, text evidence can be too good to use. On four benchmarks,
-a train-only measure of how well text similarity predicts the next item
-inversely rank-orders the outcome of text-tilting the kernel in all four
-cases: the tilt helps where text defines informative hard negatives and
-fails where text predicts future positives; corruption then becomes
-false-negative pollution. We operationalize this with a two-factor,
-history-only gate (a per-user coherence signal calibrated against a
-length-matched random-history null, damped by a frozen dataset-level
-utility factor) that interpolates between the host's learned proposal
-and a frozen text anchor. The design is \emph{fallback-safe} at the
-kernel level: the conditioned chain retains Markovianity, detailed
-balance, and the analytic reversal of the host kernel; it reduces
-\emph{exactly} to the host when the gate closes. The bounded-deviation
-claim concerns only the proposal and one forward transition row:
-$\TV(\pu,\pcore)\le g$ and
-$\TV(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot))\le
-(1-\alpha_\sigma)g$; it is not a bound on end-to-end recommendation
-loss. Controls show that the mechanism requires an \emph{aligned}
-per-user signal. A pre-registered four-dataset validation returned a
-mixed single-run observation: fully open Steam kept a small positive
-gain, closed-gate Beauty held its parity band, while the closed-gate
-ML1M miss exceeded its measured host noise floor. The barely-open ATG
-($\phids{=}0.117$) miss was $4.37\times$ a provenance-limited observed
-three-run spread, but all three run manifests are absent, so we do not
-call that spread a fully manifested noise floor. An initial E1 trace
-found a step-0 optimizer-ownership mismatch; after the ownership repair,
-the revision-scoped R12 trace passed all 2,986 designated comparisons.
-That trace does not establish standalone checkpoint replay or metric
-equivalence. We report the two misses as open implementation questions rather than evidence
-in either direction about gate efficacy. The cross-dataset inversion rests on four points;
-where text utility is high, the design closes the kernel toward the
-host rather than promising an empirical gain.
+a legacy train-only next-item text-utility statistic gives a descriptive
+inverse ordering of first-generation tilt outcomes. The ordering is
+perfect on the archived measurement scale but becomes three-of-four
+under the corrected common evaluator through an adjacent Beauty--ATG
+swap; we therefore treat it as a discovery signal, not a population
+law. We measure the proposed mechanism more directly with train-only
+observed-next-positive exposure (EPE/PNE@10), and use a two-factor,
+history-only gate $g=g_{\max}\sD\mathrm{clip}(\ut,0,1)$ to interpolate
+between the host's learned proposal and a frozen text anchor. The frozen
+dataset scale $\sD$ is generation-specific: the legacy four-domain hinge
+and the dated controlled-corruption reliability scale are reported
+separately. The design is \emph{fallback-safe} at the kernel level: it
+reduces exactly to the host at $g=0$, while
+$\TV(\pu,\pcore)\le g$ and one-step transition-row TV is at most
+$(1-\alpha_\sigma)g$; these are not end-to-end performance bounds. After
+repairing an optimizer-ownership mismatch, a revision-scoped E1 trace
+passed 2,986 designated comparisons, without testing standalone
+checkpoint replay or metric equivalence. In a seed-100
+controlled-corruption precursor, Steam c60 moved validation and test
+NDCG@10 in the same direction; Beauty's positive differences were
+test-only, and c100 recovered the host best summary under an explicit
+zero dataset scale. Missing anchor artifacts and user-level uncertainty
+prevent an efficacy claim or a multi-run reliability assessment. The contribution is thus a
+reliability audit and a kernel-scoped safe construction, not uniform
+empirical improvement.
 % Frozen Family D main + boundary sentences implemented above; freeze memo:
 % docs/reports/2026-07-04-family-d-claim-freeze-cn.md (upgrade only via
 % documented amendment at CLOSE-05).
@@ -176,24 +171,35 @@ to the quality of the evidence, a failure mode the negative-sampling
 literature pays dearly to avoid~\cite{srns,debiased}. Measuring
 evidence quality with a train-only statistic $\Uds$ (how well text
 similarity discriminates the next item from sampled negatives), we
-find that $\Uds$ \emph{inversely} rank-orders the outcome of
-text-tilting the kernel on all four of our benchmarks
-(Sec.~\ref{sec:inversion}): the largest gain occurs on the dataset
-with the \emph{weakest} next-item text signal, and a severe loss on
-the dataset with the \emph{strongest}.
+find a descriptive inverse ordering of first-generation text-tilting
+outcomes on the archived four-benchmark measurement scale
+(Sec.~\ref{sec:inversion}): the largest gain occurs on the dataset with
+the \emph{weakest} next-item text signal, and the severe loss on the
+dataset with the \emph{strongest}. The corrected common evaluator keeps
+this endpoint contrast but swaps the adjacent Beauty and ATG positions,
+so strict rank agreement is three-of-four rather than an unconditional
+four-of-four replication.
 
 The inversion dictates what a reliability signal for kernel
 conditioning must do, and motivates our design, \emph{fallback-safe
 evidence conditioning}. A low-capacity gate
 \begin{equation*}
-  g(\ut,\Uds) \;=\; g_{\max}\;\phids\;\mathrm{clip}(\ut,0,1)
+  g(\ut,D) \;=\; g_{\max}\;\sD\;\mathrm{clip}(\ut,0,1)
 \end{equation*}
 combines two history-only factors: a per-user coherence signal $\ut$,
 calibrated against a length-matched \emph{random-history null} of the
 evidence space (raw coherence has a high, dataset-dependent floor that
 otherwise couples the kernel's operating point to embedding geometry);
-and a frozen dataset-level utility factor $\phids$ that \emph{closes}
-the gate as $\Uds$ enters the false-negative regime. The gated kernel
+and a frozen dataset-level scale $\sD$. We keep three evidence objects
+separate. Legacy $\Uds$ is a discovery descriptor and supplies the
+original four-domain hinge $\phids$. RISK-03 EPE/PNE@10 measures how
+much a frozen text proposal exposes the observed next positive and its
+text neighborhood. The dated controlled-corruption pilot uses a
+different pre-registered scale $\phi_R$, interpreted as evidence
+retention under corruption. For the frozen Beauty/Steam values,
+$\phi_R$ is increasing in EPE; it therefore does \emph{not} establish
+the stronger claim that high positive exposure automatically closes the
+gate. The gated kernel
 interpolates between the host's \emph{learned} global proposal and a
 frozen text anchor and leaves the host's pseudo-item mass untouched.
 Conditional on the fixed history-derived signals, all structural
@@ -208,33 +214,33 @@ cannot even express: a provable reduction to the host when evidence is
 uninformative \emph{or misleading}. Neither ingredient is tied to the
 host: $\Uds$ uses only the evidence bank and training transitions, and
 the gate and its guarantees are stated for rank-one absorbing kernels
-rather than for one architecture. A pre-registered four-dataset
-validation and mechanism controls then test the design under a frozen
-protocol. The single-run readout contains one closed-gate parity hit
+rather than for one architecture. The legacy four-domain validation and
+the controlled-corruption pilot are consequently reported as different
+evidence generations. The former contains one closed-gate parity hit
 (Beauty), one closed-gate miss (ML1M), one barely-open miss (ATG,
-$\phids{=}0.117$), and a fully open directional gain that misses its
-reference magnitude (Steam). We keep the two misses as open
-implementation questions and do not treat them as an end-to-end
-demonstration of exact reduction.
+$\phids{=}0.117$), and a fully open directional gain below its reference
+magnitude (Steam). The latter supplies seed-100 exposure and fallback
+observations but is not RISK-08 eligible until its complete same-root
+anchor matrix exists. Neither is treated as an end-to-end demonstration
+of exact reduction or uniform gate efficacy.
 
 Our contributions:
 \begin{itemize}
-  \item \textbf{The utility-inversion finding.} A train-only text
-  utility statistic inversely rank-orders the outcome of text-tilting a
-  discrete preference-diffusion kernel on all four benchmarks. Under
-  exchangeability, one specified order among $4!$ equally likely label
-  orders gives the descriptive fraction $1/4!=1/24$; this is not a
-  confirmatory p-value. We give a mechanism-level account: corruption
-  proposals reward hard negatives and punish predicted positives
-  (Sec.~\ref{sec:inversion}). We
-  further propose $\Uds$ as a train-only \emph{preflight} statistic
-  for any scheme that mines negatives from content similarity; our
-  kernel results are its first evidence.
+  \item \textbf{A utility-inversion discovery and direct exposure
+  audit.} A train-only text-utility statistic descriptively
+  rank-orders legacy first-generation outcomes in the opposite
+  direction on the archived four-domain scale; corrected-evaluator
+  arbitration weakens strict agreement to three-of-four. Under
+  exchangeability, $1/24$ is only the descriptive fraction for one
+  specified four-label order, not a confirmatory p-value. We explain the
+  false-negative channel and complement the rank descriptor with
+  train-only EPE/PNE@10 observed-positive exposure measurements
+  (Sec.~\ref{sec:inversion}).
   % FOLLOWUP-09 did not confirm the inversion at user level, so the
   % preflight proposal remains supported at the cross-dataset level
   % only in this draft.
   \item \textbf{Kernel-side personalization with fallback safety.} The
-  first discrete preference-diffusion recommender whose transition
+  first, to our knowledge, discrete preference-diffusion recommender whose transition
   kernel is conditioned per user by an explicit, history-only evidence
   signal; conditional Markovianity, the stationary proposal, detailed
   balance, and the analytic reverse ratio all carry over
@@ -242,18 +248,18 @@ Our contributions:
   (Prop.~\ref{prop:reduction}) and nonzero-gate bounds limited to
   proposal TV and one-step forward transition-row TV
   (Lemma~\ref{lem:tv}), not end-to-end recommendation performance.
-  \item \textbf{Calibration methodology.} A length-matched
-  random-history null for user-level coherence---raw and even
-  null-calibrated coherence mismeasure utility, which is why the
-  dataset-level factor is estimated from utility directly and frozen
-  before any retraining (pre-registered thresholds,
-  Appendix~\ref{app:uds}).
-  \item \textbf{Mechanism evidence.} Controls (reliability shuffle,
-  global proposal, ungated anchor) show that aligned per-user gating is
-  load-bearing. First-generation corruption diagnostics are reported as
-  limited observations rather than evidence for a final-v2
-  corruption-response claim
-  (Sec.~\ref{sec:mechanism}).
+  \item \textbf{A staged reliability methodology.} A length-matched
+  random-history null calibrates user coherence; a train-only discovery
+  statistic, a direct exposure audit, and a frozen controlled-corruption
+  scale are then versioned rather than conflated. We preserve the
+  implemented $\phi_R$ sign and narrow its interpretation instead of
+  tuning it after outcomes are observed.
+  \item \textbf{Bounded mechanism evidence.} First-generation controls
+  and the controlled-corruption precursor expose where alignment,
+  fallback, and evidence quality enter. Every seed-100 value is reported
+  as a single-run observation; incomplete anchors and unestimable
+  user-level uncertainty are retained as limitations rather than
+  repaired with a favorable subset (Sec.~\ref{sec:mechanism}).
 \end{itemize}
 
 \section{Preliminaries: Discrete Preference Diffusion}
@@ -297,7 +303,7 @@ docs/reports/2026-07-08-figure-prompts.md, then replace this box with
 an includegraphics call.}
 \caption{Overview of fallback-safe evidence conditioning. A frozen
 text bank defines a per-history content anchor $\ch$; a two-factor,
-history-only gate $g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$
+history-only gate $g=g_{\max}\,\sD\,\mathrm{clip}(\ut,0,1)$
 interpolates the corruption proposal between the host's learned
 $\pcore$ and $\ch$. When the gate closes ($g{=}0$) the kernel is
 exactly the host's (Prop.~\ref{prop:reduction}); otherwise,
@@ -354,18 +360,17 @@ the median $\ut$ ranks ML1M ($1.43$) $>$ Beauty ($0.80$) $>$ ATG
 (Sec.~\ref{sec:inversion}). This mismatch is exactly why a second,
 utility-facing factor is required.
 
-\subsection{Dataset factor: frozen text utility}
+\subsection{Dataset evidence: discovery, measurement, intervention}
 \label{sec:uds}
-We measure directly on the training split what the gate actually
-needs to know: does text similarity predict \emph{positives}? For sampled
-train transitions $(h,\text{next})$, $\Uds$ is the probability that the
-anchor similarity ranks the true next item above a popularity-sampled
-negative (an AUC; estimator frozen in Appendix~\ref{app:uds}). Like the
-host's popularity prior, $\Uds$ is a train-only dataset constant; no
-validation or test information enters. The gate's dataset factor is the
-frozen hinge
+The evidence chain has three versioned objects. First, for sampled train
+transitions $(h,y)$, legacy $\Uds$ is the probability that anchor
+similarity ranks the observed next item $y$ above a popularity-sampled
+negative (an AUC; estimator frozen in Appendix~\ref{app:uds}). It is a
+train-only discovery descriptor: no validation or test information
+enters. The original four-domain instantiation maps it to
 \begin{equation}
-  \phids \;=\; \mathrm{clip}\!\big((0.70-\Uds)/0.10,\;0,\;1\big),
+  \phi_U(\Uds) \;=\;
+  \mathrm{clip}\!\big((0.70-\Uds)/0.10,\;0,\;1\big),
   \label{eq:phi}
 \end{equation}
 fully open when $\Uds\le 0.60$ (text defines hard negatives but does
@@ -375,11 +380,43 @@ fixed \emph{before} the production statistics were computed and were
 not adjusted afterwards (pre-registration note in
 Appendix~\ref{app:uds}).
 
+Second, RISK-03 measures the mass mechanism directly. For frozen text
+and core proposals $q_{\mathrm{text}}(\cdot\mid h)$ and
+$q_{\mathrm{core}}$, define observed next-positive exposure
+\begin{equation}
+  \mathrm{EPE}_{D,c} = \frac{1}{N}\sum_{(h,y)}
+  \left[\log\!\big(q_{\mathrm{text},c}(y\mid h)+\epsilon\big)
+  -\log\!\big(q_{\mathrm{core}}(y)+\epsilon\big)\right],
+  \label{eq:epe}
+\end{equation}
+and PNE@10 as the mean text-proposal mass on the frozen ten-item text
+neighborhood of $y$. EPE/PNE@10 are train-only exposure proxies. They
+are neither a complete false-negative rate nor an end-to-end metric,
+and the frozen records lack the user identifiers needed for user-level
+bootstrap uncertainty.
+
+Third, the Beauty/Steam controlled-corruption pilot freezes
+\begin{equation}
+  \phi_R(D,c)=\mathrm{clip}\!\left(
+  \frac{R_{D,100}-R_{D,c}}{R_{D,100}-R_{D,0}},0,1\right),
+  \qquad R_{D,c}=\mathrm{EPE}_{D,c}.
+  \label{eq:phir}
+\end{equation}
+For both frozen ladders $R_{D,0}>R_{D,100}$, so the implemented mapping
+is \emph{increasing} in EPE: clean evidence receives scale one and the
+fully permuted bank scale zero. We therefore interpret $\phi_R$ as an
+evidence-retention/corruption-reliability intervention, not as a
+demonstrated rule that suppresses high EPE. We do not alter this sign or
+its numbers after observing outcomes. In what follows $\sD$ denotes the
+declared frozen scale---$\phi_U(\Uds)$ for the legacy four-domain study
+or $\phi_R(D,c)$ for the dated controlled-corruption pilot---and the two
+are never pooled as one result.
+
 \subsection{The gated kernel}
 Let $\pcore=\mathrm{softmax}(p_1)$ be the host's learned proposal
 (including the pseudo-item coordinate $\star$) and $\pcorer$ its
 restriction to real items, renormalized. With
-$g=g_{\max}\,\phids\,\mathrm{clip}(\ut,0,1)$,
+$g=g_{\max}\,\sD\,\mathrm{clip}(\ut,0,1)$,
 \begin{equation}
 \begin{aligned}
   \pu \;=\;& \pcore(\star)\, e_\star \\
@@ -400,7 +437,8 @@ analytic reverse ratio, not just negative sampling.
 \subsection{Theory}
 \label{sec:theory}
 Proofs are in Appendix~\ref{app:proofs}. Fix a user history $h$, hence
-$\ut$, $\Uds$, and $\pu$, for the whole trajectory.
+$\ut$, the declared frozen dataset scale $\sD$, and $\pu$, for the whole
+trajectory.
 
 \begin{proposition}[Kernel validity]
 \label{prop:validity}
@@ -422,10 +460,12 @@ the host kernel's.
 \end{proposition}
 \begin{lemma}[Bounded deviation]
 \label{lem:tv}
-$\TV(\pu,\pcore)\le g$, and each row of the forward transition
-satisfies
-$\TV\big(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot)\big)\le
-(1-\alpha_\sigma)\,g$.
+The proposal and each row of the forward transition satisfy
+\begin{align*}
+  \TV(\pu,\pcore) &\le g, \\
+  \TV\!\left(P_{\sigma,\pu}(i,\cdot),
+  P_{\sigma,\pcore}(i,\cdot)\right) &\le (1-\alpha_\sigma)\,g.
+\end{align*}
 \end{lemma}
 \begin{remark}[Why the kernel is the right injection site]
 \label{rem:site}
@@ -456,7 +496,7 @@ hard negatives. Right (high $\Uds$): text similarity ranks the true
 next item highly, so the same tilt lands corruption on likely future
 positives and manufactures false negatives
 (Prop.~\ref{prop:collision}). The frozen hinge $\phids$ closes the
-gate in the right-hand regime.}
+gate in the right-hand regime in the legacy four-domain instantiation.}
 \label{fig:inversion}
 \end{figure}
 
@@ -483,28 +523,31 @@ Beauty & 0.712 & 0.000 & $-0.0006$ \\
 ML1M   & 0.754 & 0.000 & $-0.0622$ \\
 \bottomrule
 \end{tabular}
-\caption{Train-only text utility $\Uds$ (popularity-negative AUC)
-inversely rank-orders the test outcome of user-gated kernel tilting
-relative to the host, $4/4$. If the four dataset labels are
-exchangeable and all $4!$ orders are treated as equally likely, one
-specified order has the descriptive fraction $1/24$; this is not a
-confirmatory p-value. The frozen hinge $\phids$ closes the gate
-precisely where tilting hurt.}
+\caption{Legacy-scale discovery table. Train-only text utility $\Uds$
+(popularity-negative AUC) inversely rank-orders the archived test
+outcome of first-generation user-gated kernel tilting, $4/4$ on that
+measurement scale. Under the corrected common evaluator, an adjacent
+Beauty--ATG swap weakens strict agreement to $3/4$ while preserving the
+Steam/ML1M endpoint contrast. If the labels and all $4!$ orders are
+treated as exchangeable, $1/24$ is only the descriptive fraction for
+one specified order, not a confirmatory p-value.}
 % artifacts: docs/reports/data/2026-07-02-gate0/gate0_text_utility_summary.csv
 %            docs/reports/data/2026-07-01-text-side-vs-core-main-table-remote-v77.csv
 \label{tab:inversion}
 \end{table}
 
-Three readings. \emph{First}, the ordering is perfectly inverted: the
-only clear gain (Steam, $+0.0064$) occurs at the \emph{lowest} text
-utility, and the severe loss (ML1M, $-0.0622$) at the \emph{highest}.
-With four datasets this is suggestive rather than conclusive. Under
-exchangeability, one specified order among $4!$ equally likely label
-orders gives the descriptive calculation $1/24$; no confirmatory
-inference is attached to that number. The ordering is train-computable,
-pre-registered into $\phids$, and mechanistically expected: a proposal
-is a corruption law, so evidence that predicts positives converts tilt
-into false-negative pollution, while evidence that merely structures
+Three readings. \emph{First}, on the archived scale the ordering is
+perfectly inverted: the only clear gain (Steam, $+0.0064$) occurs at the
+\emph{lowest} text utility, and the severe loss (ML1M, $-0.0622$) at the
+\emph{highest}. The corrected common evaluator preserves those endpoints
+but swaps the adjacent Beauty/ATG positions, giving three-of-four strict
+rank agreement. With four aggregate datasets this is a discovery rather
+than a population law. Under exchangeability, one specified order among
+$4!$ equally likely label orders gives the descriptive calculation
+$1/24$; no confirmatory inference is attached. The statistic is
+train-computable and motivates the exposure audit: a proposal is a
+corruption law, so evidence that predicts positives can convert tilt
+into observed-positive exposure, while evidence that merely structures
 the item space supplies informative hard negatives. \emph{Second}, the
 inversion is invisible to coherence: ML1M users are the \emph{most}
 coherent relative to their null (median $\ut=1.43$), which is why
@@ -546,9 +589,11 @@ preserves both frozen qualitative conclusions (ML1M closed at
 $\phi\le0.2$, Steam open at $\phi\ge0.5$); the pre-registered point
 $(0.70,0.10)$ lies inside this plateau and admits \emph{all} of the
 observed first-generation gain ($0.0066$ summed
-$\phi$-weighted) and \emph{none} of the observed harm. Leave-one-out,
-the inversion holds in all four cases ($\rho=-1$; each three-point
-test is individually weak, exact $p=1/6$).
+$\phi$-weighted) and \emph{none} of the observed harm. Each of the four
+archived leave-one-domain-out subsets retains the legacy-scale ordering
+($\rho=-1$); under
+three-label exchangeability, each specified order has only the
+descriptive fraction $1/6$.
 % artifact: docs/reports/data/2026-07-04-phi-sensitivity-grid.csv
 %           docs/reports/data/2026-07-04-phi-sensitivity-summary.md
 
@@ -602,21 +647,23 @@ and ATG (row-level regenerated split statistics in
 Table~\ref{tab:dataset_stats}), rebuilt from raw data under a frozen protocol (raw
 source, mapping, filtering, dedup, split rules recorded); all methods
 share the regenerated splits and frozen banks. Metrics: HR@10 and
-NDCG@10 under the production checkpoint selector; the host baseline is
-the frozen PreferGrow run set. External baseline: DiffuRec, selected as
-the single external closeout baseline and executed through a local
-wrapper that reads the regenerated shared-protocol artifacts directly.
-The dated E0 amendment confirms DiffuRec test-evaluator comparability
-on all four datasets under the corrected common full-tail, row-weighted,
-real-item test contract. This confirmation is limited to legacy-selected
-frozen checkpoints under corrected test evaluation: validation
-selection was not recomputed, and checkpoint-selection equivalence is
-not claimed. Table~\ref{tab:validation} remains frozen in this cycle;
-any later numeric replacement must move all systems together under the
-same evaluator rather than selectively backfill one method~\cite{diffurec}.
+NDCG@10 under the production checkpoint selector; model selection uses
+validation only, while test metrics were logged during development and
+are not described as an untouched final holdout. The host baseline is
+the frozen PreferGrow run set. The confirmatory external reference is a
+  minimal SASRec~\cite{sasrec} trained once per domain (seed 100) on the same mappings
+and splits, with full-catalog evaluation and the same validation-only
+selector. DiffuRec is excluded from the confirmatory comparison; its
+archived wrapper results remain only as evaluator-audit provenance and
+as related work~\cite{diffurec}. The dated E0 amendment establishes the
+corrected common full-tail, row-weighted, real-item test contract but
+does not recompute legacy validation selection. Table~\ref{tab:validation}
+therefore remains a clearly labeled legacy-scale table in this cycle;
+any later replacement must move all systems together rather than
+selectively backfill one method.
 % artifact: docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json
 Hyperparameters ($\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$; frozen
-$\phi$ per Eq.~\eqref{eq:phi}) and infrastructure in
+dataset scale per the declared evidence generation) and infrastructure in
 Appendix~\ref{app:impl}.
 
 \begin{table}[t]
@@ -636,6 +683,36 @@ ATG    & 11921 & 15529  & 1941  & 1942  \\
 % artifact: docs/reports/data/2026-07-09-paper-dataset-stats-table.csv
 \label{tab:dataset_stats}
 \end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Dataset & best epoch & val NDCG@10 & test NDCG@10 \\
+\midrule
+Steam  & 10 & 0.043570 & 0.046416 \\
+ML1M   & 10 & 0.137651 & 0.121677 \\
+Beauty &  4 & 0.011383 & 0.002680 \\
+ATG    &  3 & 0.010644 & 0.009062 \\
+\bottomrule
+\end{tabular}
+\caption{SASRec common-contract external reference. Each row is a
+seed-100 single-run observation from one four-domain atomic group;
+validation NDCG@10 selects the checkpoint and test is a development-time
+readout. Beauty's large validation-to-test drop is unresolved and is
+reported rather than used to claim superiority.}
+% artifact: /data/Zijian/goal/aaai27_queue/2026-07-12-e05-sasrec-seed100-gpu0-c5c9280
+% manifest sha256: 8ae6126352600dba1cf297fb7567ea7200e72023dd172785f0875fc831a2d8e0
+\label{tab:sasrec}
+\end{table}
+
+SASRec is substantially stronger than the frozen host on Steam and
+ML1M but weak on Beauty and ATG. This mixed external reference makes the
+paper's scope explicit: we study reliability and exact kernel fallback
+inside a deliberately simple diffusion host, not state-of-the-art
+accuracy. One external architecture is still thin baseline coverage,
+and no cross-model significance claim is made.
 
 \subsection{Frozen-gate validation across four datasets}
 \label{sec:validation}
@@ -661,10 +738,11 @@ Beauty (0.00) & 0.0333 & 0.0294 & $-0.0039$ & parity \checkmark \\
 ML1M (0.00)   & 0.0910 & 0.0759 & $-0.0151$ & parity $\times$ \\
 \bottomrule
 \end{tabular}
-\caption{Frozen-gate validation, test NDCG@10 (p2 selector), single
-seed per the frozen protocol. Each dataset is read against its
-pre-registered prediction; no uniform-superiority claim is made or
-supported.}
+\caption{Legacy frozen-gate validation, test NDCG@10 from the archived
+p2-selected runs, one seed per the frozen protocol. The cells are kept
+as a whole-table legacy scale rather than selectively mixed with E0 or
+SASRec values. Each dataset is read against its pre-registered
+prediction; no uniform-superiority claim is made or supported.}
 % artifact: docs/reports/data/2026-07-06-gate1/sprint05_gate1_report.json
 % (per-dataset core/current test p2 ndcg10 and deltas; manifests hash-checked)
 \label{tab:validation}
@@ -698,6 +776,86 @@ corruption rows, score-entropy terms, and reversal ratios at $g=0$.
 %            docs/reports/data/2026-07-11-e01-gzero-production-trace-r12/e01_gzero_trace.json
 %            docs/reports/data/2026-07-11-e01-r12-ownership-scope-amendment/e01_r12_ownership_scope_amendment.json
 %            docs/reports/data/2026-07-10-close10-atg-noise-floor-provenance-limited/close10_atg_provenance_limited_report.json
+
+\subsection{Observed-positive exposure and the controlled-corruption precursor}
+\label{sec:controlled}
+
+RISK-03 applies Eqs.~\eqref{eq:epe}--\eqref{eq:phir} to frozen train
+transitions before any controlled-corruption training. Table~\ref{tab:epe}
+reports the six selected point estimates. Positive EPE means that the
+text proposal assigns more log mass to the observed next positive than
+the frozen core proposal. PNE@10 provides a neighborhood-mass view of
+the same channel; neither quantity is a recommendation metric.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Dataset & bank & EPE & PNE@10 & $\phi_R$ \\
+\midrule
+Beauty & c0   &  0.250996 & 0.001003 & 1.000000 \\
+Beauty & c60  &  0.102031 & 0.000867 & 0.136631 \\
+Beauty & c100 &  0.078456 & 0.000848 & 0.000000 \\
+Steam  & c0   & -0.010702 & 0.001174 & 1.000000 \\
+Steam  & c60  & -0.071506 & 0.001134 & 0.058081 \\
+Steam  & c100 & -0.075256 & 0.001142 & 0.000000 \\
+\bottomrule
+\end{tabular}
+\caption{Train-only observed-next-positive exposure audit. Values are
+frozen artifact point estimates; E7 could not estimate user-resampling
+uncertainty because the selected transition records lack user IDs
+(zero executed bootstrap replicates). The $\phi_R$ column is the frozen
+evidence-retention intervention, not a fitted response to these results.}
+% artifact: docs/reports/data/2026-07-12-r7-evidence-amendment/r6a_evidence_manifest.json
+\label{tab:epe}
+\end{table}
+
+The precursor r6a queue completed the two hosts and six full arms before
+the repaired anchor contract existed. Table~\ref{tab:r6a} places
+validation and test together because validation selected each best
+checkpoint and test metrics were logged during development.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lllrrrr}
+\toprule
+Dataset & arm & $\phi_R$ & val NDCG@10 & $\Delta$val & test NDCG@10 & $\Delta$test \\
+\midrule
+Beauty & host      & --       & 0.022175 & --        & 0.038195 & -- \\
+Beauty & full c0   & 1.000000 & 0.022174 & $-0.000002$ & 0.039851 & $+0.001656$ \\
+Beauty & full c60  & 0.136631 & 0.022212 & $+0.000037$ & 0.039824 & $+0.001629$ \\
+Beauty & full c100 & 0.000000 & 0.022175 & $0.000000$  & 0.038195 & $0.000000$ \\
+\midrule
+Steam & host      & --       & 0.013720 & --        & 0.012234 & -- \\
+Steam & full c0   & 1.000000 & 0.014807 & $+0.001087$ & 0.013752 & $+0.001519$ \\
+Steam & full c60  & 0.058081 & 0.016339 & $+0.002619$ & 0.015107 & $+0.002874$ \\
+Steam & full c100 & 0.000000 & 0.013720 & $0.000000$  & 0.012234 & $0.000000$ \\
+\bottomrule
+\end{tabular}
+\caption{r6a seed-100 single-run observations under the E0 full-tail
+evaluator and validation-NDCG@10 p5 selector. Beauty c0/c60 are
+test-only positive observations: their validation differences are
+approximately zero. Steam c60 moves validation and test in the same
+direction. c100 is an explicit $\phi_R=0$ production fallback sanity
+check, not spontaneous collapse of the user factor.}
+% artifact: docs/reports/data/2026-07-12-r7-evidence-amendment/EPE_PHI_R_METHOD_AMENDMENT.md
+\label{tab:r6a}
+\end{table*}
+
+Under c100, each selected best-summary file is byte-identical to its
+matched host, whereas the checkpoints differ because the full arm
+serializes text-side state. This independently checks production
+fallback under an explicit zero scale but is not a nontrivial efficacy
+point. Steam c60 is the strongest completed directional observation.
+Beauty's c0/c60 differences are especially weak evidence in light of
+their validation parity and development-time test logging. Moreover,
+r6a has no per-run artifact manifests, its run-local logs are empty, and
+all six anchor tasks failed closed before training; it cannot satisfy
+the original same-root RISK-08 contract. A repaired fourteen-task r7
+attempt is therefore required. No r7 metric or exit is included here
+before its immutable RISK-08 artifact exists.
 
 \subsection{Controls and mechanism evidence}
 \label{sec:mechanism}
@@ -881,13 +1039,18 @@ learned proposal. The formal fallback guarantee has a precise scope:
 exact kernel reduction at $g=0$, proposal TV at most $g$, and one-step
 forward transition-row TV at most $(1-\alpha_\sigma)g$. It is not an
 end-to-end performance-downside guarantee. The design is built around
-an empirical inversion we believe is of independent interest: because
+an empirical discovery we believe is of independent interest: because
 kernel proposals are corruption laws, text evidence that predicts
-positives is precisely the evidence a kernel must \emph{not} lean on.
-$\Uds$ prices whether the kernel should admit the evidence before a
-single training run.
+positives can be hazardous when used as corruption mass. Legacy $\Uds$
+provides a train-only rank descriptor, while EPE/PNE@10 audits observed
+next-positive exposure directly. The frozen dataset scale is versioned
+with its evidence generation rather than treated as a universally
+validated risk gate.
 
-\emph{Limitations.} The cross-dataset inversion rests on four points.
+\emph{Limitations.} The cross-dataset inversion rests on four aggregate
+points and is perfect only on the archived measurement scale; the
+corrected common evaluator swaps adjacent Beauty/ATG and reduces strict
+rank agreement to three-of-four while preserving the endpoint contrast.
 Under exchangeability, $1/24$ is only the descriptive fraction for one
 specified order among $4!$ equally likely label orders, not a
 confirmatory p-value. The within-dataset per-user follow-up does not
@@ -906,8 +1069,19 @@ divergence was repaired, and revision-scoped R12 then passed its
 designated in-memory trace; E2 was nevertheless not completed in this
 sprint, and R12 did not test standalone checkpoint replay or metric
 equivalence. We do not claim an end-to-end empirical demonstration of exact reduction or a stronger
-causal attribution. The mechanism evidence comes from
-the first-generation user-factor instantiation whose parameterization
+causal attribution. The controlled-corruption $\phi_R$ values are
+increasing in observed EPE and are therefore evidence-retention scales,
+not evidence that high EPE automatically closes the gate. r6a provides
+one-seed precursor observations only: Steam c60 moves validation and test
+together, Beauty's positive differences are test-only, and explicit-zero
+c100 is a fallback sanity check. Its missing anchor artifacts, empty
+run-local logs, and absent RISK-08 exit prevent an efficacy claim; E7
+also executed zero bootstrap replicates because user IDs were
+unavailable. The common-contract SASRec baseline is limited to one
+architecture and has an unresolved Beauty validation-to-test drop. Test
+metrics were logged during development, so none of these test readouts
+is an untouched final holdout. The mechanism evidence comes from the
+first-generation user-factor instantiation whose parameterization
 differs from the final system (Appendix~\ref{app:gen1}). The $\phi$
 thresholds, while pre-registered and robust across $65\%$ of a
 post-hoc reporting-only sweep, remain a coarse hinge on limited
@@ -925,8 +1099,9 @@ Appendix~\ref{app:results}.
 
 \section{Proofs}
 \label{app:proofs}
-Throughout, fix the user history $h$, the gate inputs $\ut$ and
-$\Uds$, hence $g$ and the proposal $\pu$ of Eq.~\eqref{eq:pu}; $\pu$ is
+Throughout, fix the user history $h$, the gate inputs $\ut$ and the
+declared frozen scale $\sD$, hence $g$ and the proposal $\pu$ of
+Eq.~\eqref{eq:pu}; $\pu$ is
 strictly positive whenever $\pcore$ and (on its support) $\ch$ are.
 Row-vector convention; $\alpha_\sigma=e^{-\sigma}$.
 
@@ -1103,10 +1278,17 @@ of the final system.
 \section{Implementation and infrastructure}
 \label{app:impl}
 Hyperparameters: $\tau_0{=}0.2$, $g_{\max}{=}0.5$, $k{=}2.0$, frozen
-$\phi(0.70,0.10)$; selector: validation NDCG@10 (p5); banks:
+$\phi_U(0.70,0.10)$ for the legacy study; controlled $\phi_R$ values
+Beauty $1/0.136631/0$ and Steam $1/0.058081/0$; selector: validation
+NDCG@10 (p5); banks:
 sentence-t5-xl, frozen and hash-recorded; splits regenerated from raw
-data under a recorded protocol; all validation runs carry manifests
-recording config, seed, bank/null-curve/split/$\Uds$-artifact hashes.
+data under a recorded protocol. Dated contract artifacts record config,
+seed, bank/null-curve/split/evidence hashes. The r6a precursor is an
+explicit exception: its selected summaries are hash-bound, but its
+per-run artifact manifests and nonempty run-local logs are absent, so it
+cannot enter RISK-08. E7 is likewise incomplete: the requested bootstrap
+count was 1000, the executed count was zero, and uncertainty is
+\texttt{not\_estimable} because selected transitions lack user IDs.
 Model selection used validation only; test metrics were logged during
 development. Accordingly, we do not describe the test split as an
 untouched final holdout.

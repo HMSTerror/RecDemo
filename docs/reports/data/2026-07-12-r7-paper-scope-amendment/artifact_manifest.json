@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "r7_p0_6_paper_scope_amendment",
+  "generated_at": "2026-07-12T17:56:28.8753676+08:00",
+  "base_revision": "3ea3fa7c88a6b9890c64a8cae15de18e9dbcef75",
+  "training_source_revision_unchanged": "987eb1957cf74528ef81f2fd673aabb5a25e42f7",
+  "claim_scope": "paper, Chinese mirror, abstract-freeze candidate, runbook, bibliography, and planning evidence only; no r7 performance or RISK-08 result",
+  "files": [
+    {
+      "path": "paper/main_v2.tex",
+      "bytes": 68249,
+      "sha256": "ee5caffb2b1eaaa9a306fec2aa72922747443e78808a923a6a5b91fb02bf9b69"
+    },
+    {
+      "path": "paper/main_v2_zh.md",
+      "bytes": 26488,
+      "sha256": "31e19b64c3a4cb4ba664f4088faaae40c9ae0aa226505dbe23eb1987494a8906"
+    },
+    {
+      "path": "paper/references.bib",
+      "bytes": 7879,
+      "sha256": "22e535cff32aa87f640382440d77151582b44bedf2c71af2f7d3890ab800e8cb"
+    },
+    {
+      "path": "docs/reports/2026-07-09-abstract-freeze-candidate-cn.md",
+      "bytes": 7472,
+      "sha256": "0950fecdea761555d61296bd2f2b382de96427a3bc21bda585294945a46a4b6f"
+    },
+    {
+      "path": "docs/runbooks/2026-07-11-e1-pass-risk04-08-experiment-manual.md",
+      "bytes": 31236,
+      "sha256": "c6ad133cc12298af5fabb9885d0d98fdbf39022092ad83e1256a33a80b3e286c"
+    },
+    {
+      "path": "plan/project-overview.md",
+      "bytes": 1895,
+      "sha256": "c7ad7599cd6f74f0db4336e4201d29fef3d1c32fea9bf261fd6c1ea7eefb291b"
+    },
+    {
+      "path": "plan/outline.md",
+      "bytes": 2214,
+      "sha256": "87f1c2b86552d6fee1e6ed7f1c4b9a3dff735f5f1c5f8bee920f6f18d7043a0c"
+    },
+    {
+      "path": "plan/progress.md",
+      "bytes": 7236,
+      "sha256": "f4637bdcf016cffe87b3cc717aba1acccdb60f445c8ae526136c81fcab2eccf3"
+    },
+    {
+      "path": "plan/evidence-map.md",
+      "bytes": 5480,
+      "sha256": "e01bb442b03cf848c18a1d5d41b79951f73dd4291dd96c8b1cc02da0d772a27a"
+    },
+    {
+      "path": "plan/chapter-blueprints/r7-paper-scope-integration-blueprint.md",
+      "bytes": 4687,
+      "sha256": "f7a5f9394f1b94d18c8f0df320c5f541e771f4a5bb8adf8d3dc6a0bff162bd4e"
+    },
+    {
+      "path": "plan/review/evidence-coverage.md",
+      "bytes": 3350,
+      "sha256": "1c45378abd74da945443cf0544a04f14860186e13a1cc95fb3c41764ac666532"
+    },
+    {
+      "path": "plan/task-packets/2026-07-12-r7-paper-scope-integration.md",
+      "bytes": 2873,
+      "sha256": "8631408c49eb29b5a1aac849c5a05c1e95b5d3f64bf64fab672273c1842ee669"
+    },
+    {
+      "path": "docs/reports/data/2026-07-12-r7-paper-scope-amendment/PAPER_SCOPE_AMENDMENT.md",
+      "bytes": 4825,
+      "sha256": "c50fec0c02fad354342e2628476474c4bbdc0901a6c35d1f3f7f9064402b3fb8"
+    },
+    {
+      "path": "docs/reports/data/2026-07-12-r7-paper-scope-amendment/CLAIM_HIT_INVENTORY.md",
+      "bytes": 2166,
+      "sha256": "59acce7d4549430e45ffd74271ef695d1ca65ff495771812a6290d56764bd927"
+    },
+    {
+      "path": "docs/reports/data/2026-07-12-r7-paper-scope-amendment/VALIDATION_REPORT.md",
+      "bytes": 6329,
+      "sha256": "0cdafac626a307abba00146f42081c20533102e1b546373f039948f4452df404"
+    }
+  ],
+  "fallback_build": {
+    "engine": "tectonic 0.15.0",
+    "mode": "article fallback; aaai27.sty absent",
+    "exit_code": 0,
+    "pdf_sha256": "4918d53673d03146367355a1c18911941f9f129895f49d2e0f9a549a6ec8a612",
+    "log_sha256": "53a06d38de96f1de491fb5fe4598d89c416dd2771c2bec52c9041a0e26617ff3",
+    "bbl_sha256": "a52acbb1f4db883867b2d17305ba58c315488e43c719247845ff583c600a6ec2",
+    "undefined_citations": 0,
+    "undefined_references": 0,
+    "overfull_boxes": 0,
+    "official_aaai_style_validated": false
+  },
+  "live_r7_snapshot": {
+    "controller_pid": 3277670,
+    "liveness": true,
+    "stop_requested": false,
+    "ready": 14,
+    "inactive_pending": 8,
+    "running": 0,
+    "passed": 0,
+    "failed": 0,
+    "record_count": 0,
+    "actual_gpu_hours": 0.0,
+    "risk08_exit": null,
+    "gpu0_external_pid": 2987761,
+    "gpu1_external_pid": 3072363
+  }
+}

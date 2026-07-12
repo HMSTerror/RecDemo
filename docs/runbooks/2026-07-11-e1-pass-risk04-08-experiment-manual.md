@@ -303,3 +303,127 @@ manifest_sha256: 8ae6126352600dba1cf297fb7567ea7200e72023dd172785f0875fc831a2d8e
 | ATG | 3 | 0.010644364170730114 | 0.009061784483492374 | runs/SASRec/ATG/sasrec_best.pt |
 
 每个域目录都包含 artifact_manifest.json、best_summary_sasrec.json、metrics_sasrec.json、sasrec_best.pt 和 stdout.log；四个 task 均 returncode=0。E5 进程已退出，但 11:46:40 回读时 GPU0 仍由非 E5 的 SlowFast PID 2987761 占用，GPU1 由非 E5 PID 3072363 占用；不得将 GPU0 记为“空闲”，也不得将这些任务归入 E5。
+
+---
+
+## 2026-07-12 r7 原子修复与 resident execution amendment
+
+本节取代本手册中任何“给 r6a 追加六个 anchor 即可产生 RISK-08”的旧理解。r6a 的 8 个成功臂没有 per-run `artifact_manifest.json`,run-local 日志为空,6 个 anchor 在训练前 fail closed；`run_risk08_decision()` 又要求 14 个同根 artifact manifests。因此修复后证据必须来自新的 r7 14-task active branch,不能把 r6a 与补跑臂拼接。
+
+### 方法证据版本
+
+三代对象必须在运行记录和论文中分开：
+
+1. legacy `U_ds`：train-only popularity-negative AUC discovery descriptor,对应原四域 `phi_U(U_ds)` 铰链；
+2. RISK-03 EPE/PNE@10：train-only observed-next-positive exposure proxy；不是完整 false-negative rate 或 end metric；
+3. r6a/r7 `phi_R`：dated controlled-corruption evidence-retention/corruption-reliability scale。冻结值为 Beauty `1.0/0.1366311174092942/0.0`、Steam `1.0/0.05808110271503808/0.0`。这些值随冻结 EPE 增加,不得描述为“高 EPE 自动关门”。
+
+证据修正案：
+
+~~~text
+docs/reports/data/2026-07-12-r7-evidence-amendment/EPE_PHI_R_METHOD_AMENDMENT.md
+docs/reports/data/2026-07-12-r7-evidence-amendment/r6a_evidence_manifest.json
+~~~
+
+null curve 继续使用 frozen clean-reference,不按 corrupted bank 重建。manifest 必须声明 clean-bank binding/reference policy；运行时的 provenance 校验只证明引用同一 frozen clean reference,不能把它包装成 corrupted-bank 重新校准。
+
+### Anchor-only 最小修复与七项启动门
+
+唯一生产行为修复是每个 active anchor argv 显式加入：
+
+~~~text
+text_side.gate_dataset_scale_override=1.0
+~~~
+
+该 override 只纠正 anchor-only gate-source 选择,同时防止 `phi=0` 数据集上的 closed-gate 分支把 anchor 静默劫持成 host。`model/text_side.py` 的生产数值逻辑不改。r7 启动前七项检查必须全部有 dated 报告：
+
+1. anchor argv 在 Beauty/Steam、c0/c60/c100 六臂均恰好携带 override `1.0`；
+2. full argv 保留各自冻结 `phi_R`,尤其 c100 仍为 `0.0`；
+3. anchor 最终 proposal 与 `p_core` 不相等；
+4. anchor 最终 proposal 等于 frozen `g_max` anchor mixture；
+5. full c100 最终 proposal 精确返回 `p_core`；
+6. pseudo-item mass 与 host 相同,没有被 anchor override 修改；
+7. source/queue hashes、14 active + 8 inactive 分支、seed/GPU/log/artifact contracts 共同回归通过。
+
+启动前报告记录：local targeted `6/6`,local combined `135` tests、`0` failures、`1` pre-existing skip,remote Linux `135/135`；这些是 contract/implementation 证据,不是性能结果。
+
+### r7 冻结身份
+
+~~~text
+source root:
+/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7
+
+training source revision:
+987eb1957cf74528ef81f2fd673aabb5a25e42f7
+
+queue root:
+/data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7
+
+tmux session:
+aaai27_r7_seed100_987eb19
+
+resident controller entry:
+/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7/scripts/aaai27_r7_resident_queue.py
+~~~
+
+关键身份 hash：
+
+| 对象 | SHA-256 |
+|---|---|
+| logical source manifest | `33d7e35ec11d27bbbffafa186ac8776408ca83ae0a7eaf31e443e14436512dea` |
+| `SOURCE_MANIFEST.json` 文件 | `38e448dc26a11b785363fff076bd389fd3543189e5fedf9de75b65aa92b4b513` |
+| `queue_seed100.json` | `387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e` |
+| `risk0607_protocol.json` | `0ea14f6100beb899597047ce47aa0ebb9771bb532719441a295d75ad50dcccf4` |
+| `r7_finalizer_config.json` | `1796f59f9ed1c4b9a984ae0ed8a8d3d9e8e8164d1ea2bba90166353412c3ab86` |
+
+source root 已整体只读。后续本地论文提交不能改变上述训练 revision、source manifest 或 queue manifest。
+
+### Queue、wrapper 与 fail-closed 合同
+
+- 总任务 `22`:active E1-pass branch `14`,inactive E1-fail audit branch `8`；seed 固定 `100`,GPU allowlist `[0,1]`,`max_attempts=1`,`failure_policy=fail_closed`。
+- 每张卡同时最多一个 r7 child；GPU 上只要存在任意 compute PID 就不得共卡。root 任务不得停止、发信号或 renice。
+- 每个 active task 成功必须同时产出 validation-selected `best_summary_*.json`、`artifact_manifest.json` 与非空真实日志。0 字节日志、缺 artifact、hash mismatch、非有限指标或错误 queue root 都是 immutable failure；不得 retry 或事后补录。
+- inactive E1-fail branch 若出现任何 task record,整个 attempt fail closed。
+- finalizer 只能从同根 14 个 artifact manifests 派生 pilot report,禁止手工传 metrics；原始 RISK-08 exit 至多生成一次。
+- `RISK-08=submission_stop` 后禁止新阈值、新 corruption、第二 seed 或 rescue tuning。
+
+### 当前 resident 状态与只读查询
+
+2026-07-12 最新核验时,controller PID 为 `3277670`,Linux start token `71220858`,SSH 客户端断开后仍存活；状态为 `waiting_external_gpu`。当时两张 L20 都被 root compute PID 占用,r7 为 `14 ready / 8 inactive pending / 0 running / 0 passed / 0 failed`,actual GPU time `0.0`. 这只证明安全等待,不证明训练开始。状态必须每次重新查询,不得沿用该快照推断当前 GPU。
+
+~~~powershell
+ssh zijian@172.18.0.40 `
+  "cd /data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7 && /data/Zijian/goal/PreferGrow/.venv/bin/python3 scripts/aaai27_resident_queue.py status --queue-root /data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7 --json"
+
+ssh zijian@172.18.0.40 `
+  "nvidia-smi --query-gpu=index,name,memory.used,utilization.gpu --format=csv,noheader"
+
+ssh zijian@172.18.0.40 `
+  "nvidia-smi --query-compute-apps=gpu_uuid,pid,used_memory --format=csv,noheader"
+
+ssh zijian@172.18.0.40 `
+  "pgrep -af 'aaai27_r7_resident_queue.py|run_aaai27_pilot_task.py|single_train.py'"
+~~~
+
+P0-5 只能在以下任一真实终态闭环：`14/14 passed + immutable RISK-08 exit`；任一 task 的 immutable fail/interrupted terminal；或用户明确停止且当前 child 自然结束后的 stop terminal。controller 已挂起或 GPU 仍忙都不构成完成。
+
+### c100 与 Beauty 强制措辞
+
+c100 统一写为：
+
+> 在预注册 `phi_R=0` 下,production training path 选出的 best-summary 与 matched host 字节级相同；checkpoint 因 full arm 序列化额外 text-side state 而不同。
+
+禁止出现 `u_tilde` 自动塌缩或 adaptive user-level backoff。c100 是 implementation sanity check,不是非平凡 efficacy 证据。
+
+Beauty c0/c60 的 validation delta 约为零,正差只在 test。任何表或图都必须 val/test 同列,并附：`Model selection used validation only; test metrics were logged during development.` 所有 seed-100 数字只称 single-run observation；禁止 significant、stable、statistically equivalent 或 within noise。
+
+### 截止日机械分支
+
+| 闸点 | 机械动作 |
+|---|---|
+| 2026-07-16 晚：r7 已启动/完成且原 RISK-08 可执行 | 继续 full-submission path；只引用已落盘 artifact |
+| 2026-07-16 晚：GPU 未释放但 CPU/论文侧完成 | 持降级稿等至 7/18；不预写 r7 结论 |
+| 2026-07-18：仍无修复后 anchor evidence | 删除 gate-efficacy 语言；保留 audit + EPE/PNE@10 + exact fallback |
+| `RISK-08=submission_stop` | 删除 predictive-risk claim；禁止任何 rescue experiment |
+
+AAAI-27 硬点：abstract `2026-07-21 AoE`,paper `2026-07-28 AoE`,supplement `2026-07-31 AoE`。

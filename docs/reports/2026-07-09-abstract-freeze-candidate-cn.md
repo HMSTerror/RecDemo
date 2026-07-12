@@ -1,82 +1,66 @@
-# Abstract 冻结候选
+# AAAI-27 Abstract 冻结候选（2026-07-12 dated amendment）
 
-_日期：2026-07-09_
-_用途：把 `paper/main_v2.tex` 中当前英文摘要抽成独立冻结候选稿，明确哪些句子已可冻结，哪些句子仍受 `CLOSE-02` 约束_
+_状态：P0-6 方法范围候选；不是 r7 结果报告。投稿母本仍为 `paper/main_v2.tex`。_
 
----
+## 一句话裁决
 
-## 📝 一句话结论
+当前摘要已经从“单一 `U_ds` 风险门”改为三代证据链：legacy `U_ds` discovery → RISK-03 EPE/PNE@10 direct exposure audit → controlled-corruption `phi_R` evidence-retention intervention。摘要可以冻结方法、理论边界和 r6a 已完成的 single-run observations；r7 的 anchor 结果、RISK-08 结论和任何 gate-efficacy 句在不可变出口生成前均不得写入。
 
-截至 2026-07-09，当前英文摘要的绝大部分句子都已经可以作为 `CLOSE-06` 的冻结候选；唯一仍然带有条件性的，是关于 “两条 closed-gate parity checks 的差距是否可视为 run-to-run noise” 那一句，它必须继续服从 `CLOSE-02` 的 dated artifact。
+## 证据来源与优先级
 
-## 📍 摘要来源
+1. 英文投稿母本：`paper/main_v2.tex` 的 `abstract` 环境。
+2. 方法修正案：`docs/reports/data/2026-07-12-r7-evidence-amendment/EPE_PHI_R_METHOD_AMENDMENT.md`。
+3. 机器可读证据：同目录 `r6a_evidence_manifest.json`。
+4. E0 evaluator 修正：`docs/reports/data/2026-07-10-evaluator-amendment/e0_evaluator_amendment.json`。
+5. E1/R12：`docs/reports/data/2026-07-11-e01-gzero-production-trace-r12/`。
+6. r7 仅限 prelaunch/live-start provenance；若文档与远端实时工件冲突,以远端工件为准。
 
-- 投稿母本：`paper/main_v2.tex`
-- 抽取区间：`\\begin{abstract}` 到 `\\end{abstract}`
-- 冻结边界：`docs/reports/2026-07-04-family-d-claim-freeze-cn.md`
-- 噪声地板约束：`docs/reports/data/2026-07-09-close02-ml1m-noise-floor-sync-note.md`
-
-## 🎯 当前英文摘要候选稿
+## 当前英文摘要候选（必须与投稿母本逐句同步）
 
 ```text
-Discrete preference diffusion recommenders such as PreferGrow corrupt a user's preferred item by fading it toward a proposal distribution and learn to grow the preference back. Personalization in this family acts entirely on the score side: the transition kernel is shared by all users. We personalize the kernel, and in doing so surface a counterintuitive fact: because the proposal is a corruption distribution, text evidence can be too good to use. On four benchmarks, a train-only measure of how well text similarity predicts the next item inversely rank-orders the outcome of text-tilting the kernel in all four cases: the tilt helps where text defines informative hard negatives and fails where text predicts future positives; corruption then becomes false-negative pollution. We operationalize this with a two-factor, history-only gate (a per-user coherence signal calibrated against a length-matched random-history null, damped by a frozen dataset-level utility factor) that interpolates between the host's learned proposal and a frozen text anchor. The design is fallback-safe: the conditioned chain retains Markovianity, detailed balance, and the analytic reversal of the host kernel; it reduces exactly to the host when the gate closes; and it deviates by at most the gate value in total variation. Controls (reliability shuffling, global proposals, ungated anchors) show the mechanism requires an aligned per-user signal, and corruption diagnostics show adaptive backoff as evidence degrades. A pre-registered four-dataset validation of the frozen gate returned a mixed verdict: the opened gate keeps a small positive gain and one closed-gate dataset holds parity, while two datasets miss their parity bands by margins comparable to run-to-run noise, which we report as an open implementation question rather than evidence in either direction. The cross-dataset inversion rests on four points; gains are selective by design---where text utility is high the method's value is safety, not improvement.
+Discrete preference diffusion recommenders such as PreferGrow corrupt a user's preferred item by fading it toward a proposal distribution and learn to grow the preference back. Personalization in this family acts entirely on the score side: the transition kernel is shared by all users. We personalize the kernel, and in doing so surface a counterintuitive fact: because the proposal is a corruption distribution, text evidence can be too good to use. On four benchmarks, a legacy train-only next-item text-utility statistic gives a descriptive inverse ordering of first-generation tilt outcomes. The ordering is perfect on the archived measurement scale but becomes three-of-four under the corrected common evaluator through an adjacent Beauty--ATG swap; we therefore treat it as a discovery signal, not a population law. We measure the proposed mechanism more directly with train-only observed-next-positive exposure (EPE/PNE@10), and use a two-factor, history-only gate g=g_max s_D clip(u_tilde,0,1) to interpolate between the host's learned proposal and a frozen text anchor. The frozen dataset scale s_D is generation-specific: the legacy four-domain hinge and the dated controlled-corruption reliability scale are reported separately. The design is fallback-safe at the kernel level: it reduces exactly to the host at g=0, while TV(p_u,p_core)<=g and one-step transition-row TV is at most (1-alpha_sigma)g; these are not end-to-end performance bounds. After repairing an optimizer-ownership mismatch, a revision-scoped E1 trace passed 2,986 designated comparisons, without testing standalone checkpoint replay or metric equivalence. In a seed-100 controlled-corruption precursor, Steam c60 moved validation and test NDCG@10 in the same direction; Beauty's positive differences were test-only, and c100 recovered the host best summary under an explicit zero dataset scale. Missing anchor artifacts and user-level uncertainty prevent an efficacy claim or a multi-run reliability assessment. The contribution is thus a reliability audit and a kernel-scoped safe construction, not uniform empirical improvement.
 ```
 
-## ✅ 已可冻结的句子块
+排版注：上面的纯文本用 `<=` 便于审阅；LaTeX 母本保留 `\TV`、下标和数学环境写法。
 
-下面这些部分当前已经不依赖新的远端工件：
+## 中文语义镜像
 
-1. **问题设定与宿主介绍**
-   - PreferGrow / discrete preference diffusion / proposal distribution / score-side personalization
-2. **核心发现**
-   - “text evidence can be too good to use”
-   - 四数据集上的 inversion 叙事
-3. **方法定义**
-   - two-factor, history-only gate
-   - fallback-safe 三件套：Markovianity、detailed balance、analytic reversal、exact reduction、TV bound
-4. **机制证据**
-   - controls
-   - corruption diagnostics
-5. **冻结边界句**
-   - `The cross-dataset inversion rests on four points; gains are selective by design---where text utility is high the method's value is safety, not improvement.`
+离散偏好扩散推荐器把用户偏好物品向 proposal distribution 褪色腐蚀,再学习恢复偏好。本文把原本只在 score 侧发生的个性化移到转移核,并发现文本证据作为 corruption proposal 时可能“好到不能直接用”。Legacy train-only 下一物品文本效用统计量在归档测量尺度上与第一代结果呈描述性 4/4 逆序；修正后的共同 evaluator 因 Beauty/ATG 相邻互换而降为 3/4,所以该排序只是 discovery signal。RISK-03 用 EPE/PNE@10 直接测 observed-next-positive exposure,广义门 `g=g_max·s_D·clip(ũ,0,1)` 则把不同代际的冻结数据集尺度明确分开。理论只保证 `g=0` 核级精确归约及 proposal/单步转移行 TV 界。E1/R12 只覆盖指定路径。r6a 中 Steam c60 的 validation/test 同向,Beauty 正差为 test-only,c100 是 explicit zero-scale fallback sanity check。anchor 与用户级不确定性缺失阻止 efficacy 主张或多次运行可靠性判断,因此论文定位是 reliability audit 与 kernel-scoped safe construction。
 
-## ⚠ 唯一仍然受 `CLOSE-02` 约束的句子
+## 已冻结的科学边界
 
-当前摘要里最敏感的句子是：
+- `U_ds` 只能称 legacy train-only discovery descriptor；归档尺度 4/4,修正 evaluator 3/4。
+- `1/24` 只能称 exchangeability 假设下某一指定全序的描述性比例,不是 p 值。
+- EPE/PNE@10 只能称 observed-next-positive exposure proxy；不是完整 false-negative rate 或 end metric。
+- `phi_R` 对冻结点随 EPE 增加,只能称 evidence-retention/corruption-reliability scale；不得写“高 EPE 自动关门”。
+- c100 统一写为：显式 `phi_R=0` 下 selected best-summary 与 matched host 字节级相同；checkpoint 因额外 text-side state 而不同。
+- 禁止把 c100 解释成 `u_tilde` 自动塌缩或 adaptive user-level backoff。
+- Beauty c0/c60 若出现 test 值,必须同列 validation delta（约零）,并披露 selector 只看 validation、test 在开发期被记录。
+- 所有 seed-100 结果只写 `single-run observation/result`；不写显著性、跨种子稳定性、统计等价或噪声范围等升级措辞。
+- DiffuRec 不进入 confirmatory comparison；SASRec 是唯一共同协议外部参照,Beauty validation-to-test drop 保留为 unresolved anomaly。
+- E7 为 `not_estimable`：请求 1000,实际执行 bootstrap 为 0。
 
-> `...while two datasets miss their parity bands by margins comparable to run-to-run noise, which we report as an open implementation question rather than evidence in either direction.`
+## r7 结果占位纪律
 
-这句现在可以保留，原因是：
+截至本修正案生成时,r7 只有 prelaunch 与 detached-wait 工件,没有训练 task record、performance metric 或 RISK-08 exit。摘要不得写“r7 passed”“anchor attribution confirmed”或任何数值。只有同根 14 个 active tasks 全部通过、每臂同时具备非空日志、validation-selected best summary 与 `artifact_manifest.json`,且原始 `RISK-08_EXIT.json` 生成后,才能依据出口机械更新摘要。
 
-- 它仍然属于 `weak-default` 口径
-- 没有提前宣称 “within the measured host noise floor”
-- 与 `paper/main_v2.tex` 当前正文保持一致
+## 机械 Go/No-Go 闸
 
-但它**不能**在没有新的 dated `CLOSE-02` artifact 时升级成更强表述。
+| 时间/事件 | 摘要动作 |
+|---|---|
+| 2026-07-16 晚：r7 已启动/完成且原 RISK-08 合同可执行 | 维持 full-submission 路线,但只写已生成的不可变工件 |
+| 2026-07-16 晚：GPU 未释放但 CPU/论文侧完成 | 保留当前降级候选,等待到 7/18,不预写结果 |
+| 2026-07-18：仍无修复后 anchor evidence | 删除 gate-efficacy 语言,只保留 audit + EPE/PNE@10 + exact fallback |
+| `RISK-08=submission_stop` | 删除 predictive-risk claim；禁止新阈值、新 corruption、第二 seed 与 rescue tuning |
 
-## 🔁 若 `CLOSE-02` 落地后的替换原则
+AAAI-27 硬点仍为：摘要 2026-07-21、全文 2026-07-28、补充材料 2026-07-31（AoE）。
 
-### 维持当前句子
+## 冻结前检查清单
 
-适用于：
-
-- 没有新的 dated close02 artifact
-- 或新 artifact 仍然不足以支持 within-noise
-
-### 条件升级版本
-
-仅当新的 dated close02 artifact 明确支持 ML1M 缺口落在宿主噪声地板内时，才允许把上面那句改成更强版本。具体替换句块已经单独写在：
-
-- `docs/reports/2026-07-09-main-v2-wording-patches-cn.md`
-
-## 📋 OpenReview 冻结前检查项
-
-- [ ] 当前 abstract 仍与 `paper/main_v2.tex` 完全一致
-- [ ] main sentence 与 boundary sentence 仍保持 Family D 冻结口径
-- [ ] 没有出现 forbidden-list phrasing
-- [ ] `CLOSE-02` 若无新工件，摘要保留当前弱口径
-- [ ] `CLOSE-02` 若有新工件，升级只能通过 wording patch doc 执行
-
-## 🔆 结论
-
-对 `CLOSE-06` 来说，摘要现在并不是“整段都在等实验”，而是只有一个噪声归因句子还在等 `CLOSE-02`。这意味着标题和摘要冻结的主要工作，已经从“继续写”转成“守住边界、等唯一条件句是否需要替换”。
+- [ ] 英文候选与 `paper/main_v2.tex` 的摘要逐句一致。
+- [ ] 中文稿没有比英文稿更强的因果、统计或 efficacy 主张。
+- [ ] 4/4 均明确限定为 legacy/archived scale；corrected evaluator 同句给出 3/4。
+- [ ] Beauty val/test 同列；development-time test logging 已披露。
+- [ ] c100 是 explicit zero-scale sanity check,没有 `u_tilde` collapse。
+- [ ] r7 未完成时没有任何 r7 performance/PASS 句。
+- [ ] `submission_stop` 分支没有留下救援调参余地。
