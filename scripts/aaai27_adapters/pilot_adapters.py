@@ -182,6 +182,7 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                         "text_side.ablation_mode=text_anchor_only",
                         "text_side.injection_mode=kernel",
                         "text_side.require_gate_source=True",
+                        "text_side.gate_dataset_scale_override=1.0",
                     ]
                 )
                 tasks.append(
@@ -210,7 +211,11 @@ def build_pilot_manifest(protocol: dict[str, Any]) -> dict[str, Any]:
                         for token in full_argv
                     ]
                     full_argv[full_argv.index("text_side.ablation_mode=text_anchor_only")] = "text_side.ablation_mode=none"
-                    full_argv.append(
+                    full_argv[
+                        full_argv.index(
+                            "text_side.gate_dataset_scale_override=1.0"
+                        )
+                    ] = (
                         "text_side.gate_dataset_scale_override="
                         f"{float(bank['phi_R'])}"
                     )

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import importlib.util
 import sys
 import unittest
 from pathlib import Path, PurePosixPath
+
+import torch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +16,16 @@ for path in (REPO_ROOT, REPO_ROOT / "scripts", REPO_ROOT / "tests"):
 from scripts.aaai27_adapters.pilot_adapters import build_pilot_manifest
 from scripts.aaai27_queue.models import QueueManifest
 from scripts.aaai27_queue.validation import ManifestError, validate_manifest
+
+
+def load_text_side_module():
+    module_path = REPO_ROOT / "model" / "text_side.py"
+    spec = importlib.util.spec_from_file_location("r7_text_side_contract", module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def make_protocol(*, gpu_ids: list[int] | None = None) -> dict[str, object]:
@@ -57,6 +70,111 @@ def make_protocol(*, gpu_ids: list[int] | None = None) -> dict[str, object]:
 
 
 class R6LaunchContractTests(unittest.TestCase):
+    def test_e1_pass_anchor_tasks_bind_one_full_scale_and_no_utility_report(self) -> None:
+        manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
+        anchors = [
+            task
+            for task in manifest["tasks"]
+            if task["branch"] == "e1_pass"
+            and task["arm"].startswith("text_anchor_only_c")
+        ]
+
+        self.assertEqual(6, len(anchors))
+        for task in anchors:
+            scales = [
+                token
+                for token in task["argv"]
+                if token.startswith("text_side.gate_dataset_scale_override=")
+            ]
+            reports = [
+                token
+                for token in task["argv"]
+                if token.startswith("text_side.text_utility_report_path=")
+            ]
+            self.assertEqual(
+                ["text_side.gate_dataset_scale_override=1.0"],
+                scales,
+                task["task_id"],
+            )
+            self.assertEqual([], reports, task["task_id"])
+
+    def test_anchor_adapter_scale_prevents_phi_zero_final_proposal_core_override(self) -> None:
+        manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
+        task = next(
+            task
+            for task in manifest["tasks"]
+            if task["task_id"] == "pilot.e1_pass.Beauty.anchor.c0"
+        )
+        scale_tokens = [
+            token.split("=", 1)[1]
+            for token in task["argv"]
+            if token.startswith("text_side.gate_dataset_scale_override=")
+        ]
+        # Missing adapter scale reproduces the clean-phi-zero path that the
+        # post-mixture closed-gate branch rewrites to p_core.
+        adapter_scale = float(scale_tokens[0]) if scale_tokens else 0.0
+
+        module = load_text_side_module()
+        builder = module.TextSideProposalBuilder(
+            item_embeddings=torch.tensor(
+                [[1.0, 0.0], [0.9, 0.1], [0.0, 1.0], [-1.0, 0.0]],
+                dtype=torch.float32,
+            ),
+            item_completeness=torch.ones(4),
+            item_num=4,
+            is_disliked_item=True,
+            kernel_version="v2",
+            injection_mode="kernel",
+            ablation_mode="text_anchor_only",
+            gate_dataset_scale=adapter_scale,
+            g_max=0.5,
+        )
+        with torch.no_grad():
+            builder.p1.copy_(torch.tensor([1.2, -0.4, 0.7, -1.1, 0.2]))
+        context = builder.encode_history_context(
+            torch.tensor([[0, 1, 2, 4]], dtype=torch.long)
+        )
+
+        self.assertFalse(
+            torch.equal(context["proposal"], context["p_core"]),
+            "anchor final proposal was silently overwritten by p_core",
+        )
+        self.assertTrue(
+            torch.allclose(
+                context["proposal"], context["anchor_proposal"], atol=1e-7
+            )
+        )
+        self.assertTrue(
+            torch.allclose(
+                context["g"],
+                torch.full_like(context["g"], builder.g_max),
+                atol=1e-7,
+            )
+        )
+        self.assertEqual(["1.0"], scale_tokens)
+
+    def test_e1_pass_full_tasks_retain_exactly_one_frozen_scale(self) -> None:
+        protocol = make_protocol(gpu_ids=[0, 1])
+        manifest = build_pilot_manifest(protocol)
+        full_tasks = [
+            task
+            for task in manifest["tasks"]
+            if task["branch"] == "e1_pass"
+            and task["arm"].startswith("risk_gated_full_c")
+        ]
+
+        self.assertEqual(6, len(full_tasks))
+        for task in full_tasks:
+            level = task["arm"].rsplit("c", 1)[-1]
+            expected = float(protocol["datasets"][task["dataset"]]["banks"][level]["phi_R"])
+            scales = [
+                token.split("=", 1)[1]
+                for token in task["argv"]
+                if token.startswith("text_side.gate_dataset_scale_override=")
+            ]
+            self.assertEqual([str(expected)], scales, task["task_id"])
+            self.assertEqual(str(expected), task["env"]["AAAI_GATE_DATASET_SCALE"])
+
     def test_pilot_manifest_copies_explicit_gpu1_allowlist(self) -> None:
         manifest = build_pilot_manifest(make_protocol(gpu_ids=[1]))
 
