@@ -1,9 +1,35 @@
 # RecDemo clean server migration design
 
 Date: 2026-07-12
-Status: user-approved design
+Status: deferred by user; preserved for later review; do not execute
 Scope: l20 /data/Zijian/goal/RecDemo
-Approved approach: full archive copy plus live-path in-place replacement
+Preserved approach: full archive copy plus live-path in-place replacement
+
+## 0. Deferral decision
+
+On 2026-07-12 the user explicitly stopped this migration and requested that
+it be reconsidered only after the project and its experiments are complete.
+This document is retained as a proposed future migration design, not as active
+authorization to create, copy, rename, synchronize, clean, or delete any
+server directory.
+
+At the time of deferral:
+
+- no /data/Zijian/goal/RecDemo_Past directory had been created;
+- no RecDemo_Next_20260712 staging directory had been created;
+- no archive copy, rsync replacement, cleanup, or rollback had been run;
+- no server file had been changed by this migration task;
+- no controller, tmux session, GPU process, experiment, or queue had been
+  stopped or modified;
+- no implementation plan for this migration had been authorized or executed.
+
+The migration may resume only after a new explicit user instruction. A resumed
+attempt must treat all process IDs, queue states, disk values, source revisions,
+file counts, directory sizes, hashes, and active-path dependencies in this
+document as historical observations. It must repeat the full read-only audit,
+confirm that all project experiments are complete, verify that RecDemo_Past
+still does not conflict with an existing path, present any resulting design
+changes, and obtain fresh approval before performing server writes.
 
 ## 1. Objective
 
