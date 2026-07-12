@@ -248,6 +248,52 @@ class R6LaunchContractTests(unittest.TestCase):
             self.assertEqual([str(expected)], scales, task["task_id"])
             self.assertEqual(str(expected), task["env"]["AAAI_GATE_DATASET_SCALE"])
 
+    def test_e1_pass_full_c100_tasks_return_exact_core_proposal(self) -> None:
+        manifest = build_pilot_manifest(make_protocol(gpu_ids=[0, 1]))
+        c100_tasks = [
+            task
+            for task in manifest["tasks"]
+            if task["branch"] == "e1_pass"
+            and task["arm"] == "risk_gated_full_c100"
+        ]
+
+        self.assertEqual({"Beauty", "Steam"}, {task["dataset"] for task in c100_tasks})
+        module = load_text_side_module()
+        for task in c100_tasks:
+            scales = [
+                token.split("=", 1)[1]
+                for token in task["argv"]
+                if token.startswith("text_side.gate_dataset_scale_override=")
+            ]
+            self.assertEqual(["0.0"], scales, task["task_id"])
+            self.assertIn("text_side.ablation_mode=none", task["argv"])
+
+            builder = module.TextSideProposalBuilder(
+                item_embeddings=torch.tensor(
+                    [[1.0, 0.0], [0.9, 0.1], [0.0, 1.0], [-1.0, 0.0]],
+                    dtype=torch.float32,
+                ),
+                item_completeness=torch.ones(4),
+                item_num=4,
+                is_disliked_item=True,
+                kernel_version="v2",
+                injection_mode="kernel",
+                ablation_mode="none",
+                gate_dataset_scale=float(scales[0]),
+                g_max=0.5,
+            )
+            with torch.no_grad():
+                builder.p1.copy_(torch.tensor([1.2, -0.4, 0.7, -1.1, 0.2]))
+            context = builder.encode_history_context(
+                torch.tensor([[0, 1, 2, 4]], dtype=torch.long)
+            )
+
+            self.assertTrue(torch.equal(context["g"], torch.zeros_like(context["g"])))
+            self.assertTrue(
+                torch.equal(context["proposal"], context["p_core"]),
+                f"{task['task_id']} did not return the exact core proposal",
+            )
+
     def test_pilot_manifest_copies_explicit_gpu1_allowlist(self) -> None:
         manifest = build_pilot_manifest(make_protocol(gpu_ids=[1]))
 
