@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "report_name": "AAAI-27 r7 atomic prelaunch manifest",
+  "created_at": "2026-07-12T16:55:29+08:00",
+  "status": "prelaunch_pass_no_training_started",
+  "source": {
+    "root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7",
+    "revision": "987eb1957cf74528ef81f2fd673aabb5a25e42f7",
+    "controlled_file_count": 45,
+    "source_manifest_sha256": "33d7e35ec11d27bbbffafa186ac8776408ca83ae0a7eaf31e443e14436512dea",
+    "source_manifest_file_sha256": "38e448dc26a11b785363fff076bd389fd3543189e5fedf9de75b65aa92b4b513",
+    "resident_patch_archive_sha256": "b4783e1248616a158b892d7c38e22c0c08e6b1e0dbef8b8b1e27f63d52278ac5",
+    "resident_controller_sha256": "d659de9dd80622f6b132b73b3ea05cb8e0771316bb621348c23e422e91afcde4",
+    "read_only": true
+  },
+  "queue": {
+    "root": "/data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7",
+    "queue_id": "aaai27-risk0607-2026-07-12-987eb19-r7",
+    "queue_manifest_sha256": "387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e",
+    "queue_manifest_meta_file_sha256": "a81332f4acd2bca0c39277a0f2ae9229f343003f2375cbd6945ae239e88c9862",
+    "protocol_file_sha256": "0ea14f6100beb899597047ce47aa0ebb9771bb532719441a295d75ad50dcccf4",
+    "finalizer_config_file_sha256": "1796f59f9ed1c4b9a984ae0ed8a8d3d9e8e8164d1ea2bba90166353412c3ab86",
+    "input_hashes_file_sha256": "2a924e154b3babf8104e91e3995ce2519430b3f4835a724ecd153fae6a9d1855",
+    "task_count": 22,
+    "active_e1_pass_task_count": 14,
+    "inactive_e1_fail_task_count": 8,
+    "gpu_ids": [0, 1],
+    "seed": 100,
+    "record_count": 0,
+    "running_task_count": 0,
+    "passed_task_count": 0,
+    "failed_task_count": 0,
+    "stop_requested": false,
+    "runs_directory_absent": true,
+    "state_directory_absent": true
+  },
+  "task_contract_checks": {
+    "task_count": true,
+    "active_count": true,
+    "inactive_count": true,
+    "gpu_allowlist": true,
+    "seed100": true,
+    "one_attempt_fail_closed": true,
+    "isolated_cwd": true,
+    "unique_run_dirs": true,
+    "wrapper_absolute": true,
+    "double_artifact": true,
+    "anchor_six_override_one": true,
+    "full_six_frozen_phi": true,
+    "host_learned_v2": true,
+    "null_clean_reference": true,
+    "revision_unique": true
+  },
+  "frozen_bindings": {
+    "e1_marker_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+    "risk05_bundle_sha256": "0644b990d3f3f3bdd6848101f06cc50cf5aed0808bfe56e0f5197f8ab6fbb617",
+    "risk05_preregistration_file_sha256": "d08e7988a4e25c0236b725274d34af21d933fb16f8e18f5e542bdc0fe1f62537",
+    "risk_preflight_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+    "beauty_null_curve_sha256": "7d7bb94850ddef882ae037724261b21cc2e0bba623d8e9651510297a96d0948b",
+    "steam_null_curve_sha256": "fb52fde65111f94a295d023c6915803b238d7d28e021ab8616a8c2ed4c90be47",
+    "ledger_snapshot_sha256": "3af009a0af9db376a39225ca4678c8b25305fa7c375ed87e64288c1ff102ee89"
+  },
+  "frozen_r6a_after_audit": {
+    "model/text_side.py": "1975ec327c0d978e65764288690141c525de7de0257b28b1a036173c12fdda41",
+    "scripts/aaai27_adapters/pilot_adapters.py": "c52654e3bd77a90f98ebd05ded19258eacc3a1bc9ff4beac6f9ac38cda980257",
+    "scripts/aaai27_adapters/risk_report.py": "50e64e455865ceb3893e94a558adda156bc1301df8eb86fe188df3dbd5a45e84",
+    "scripts/aaai27_adapters/risk04_08.py": "84ef807495379ea4e2aa5831543710437e15b5d703a9e288b652041ed9b5a81e"
+  },
+  "verification": {
+    "local_targeted_tests": "6 tests, 0 failures",
+    "local_combined_tests": "135 tests, 0 failures, 1 pre-existing skip",
+    "remote_combined_tests": "135 tests, 0 failures",
+    "generic_validate": "valid",
+    "e1_pass_dry_run": "14 selected; no process spawned",
+    "finalizer_config": "validated",
+    "noop_smoke_sha256": "8a2bb8511bbbc29a3bdaec89b9ec03d279df631a7780bf09de66033548e320a9",
+    "noop_smoke_training_started": false
+  },
+  "gpu_snapshot": {
+    "captured_at": "2026-07-12T16:55:29+08:00",
+    "gpu0_compute_pids": [2987761],
+    "gpu1_compute_pids": [3072363],
+    "gpu0_owner": "root",
+    "gpu1_owner": "root",
+    "r7_training_pids": [],
+    "root_jobs_touched": false
+  },
+  "no_rescue": true,
+  "claim_scope": "prelaunch contract and provenance only; no r7 performance result exists"
+}
