@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-07-13T21:21:40+08:00",
+  "status": "resident_waiting_r7",
+  "source": {
+    "revision": "e70d9481cca57617c04e7fdbc7fc7f9dc83b1b3c",
+    "root": "/data/Zijian/goal/RecDemo_aaai27_continuation_e70d948",
+    "archive_sha256": "fc4d822836f1089d43542729ae1d152c57407b055292fb573217ac0acc96dd5f",
+    "manifest_sha256": "5ebc98f961863c03f5ab9d86aebe9cdeff87b72cdd5a89aabd450de2c39f0553"
+  },
+  "upstream_r7": {
+    "root": "/data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7",
+    "manifest_sha256": "387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e",
+    "passed": 8,
+    "running": 1,
+    "risk08_exit": null
+  },
+  "continuation": {
+    "root": "/data/Zijian/goal/aaai27_queue/2026-07-13-method-pass-continuation-e70d948",
+    "manifest_sha256": "79010b193eecad7dee59d2f6d86c764f7169f55b7bd08ba70f1e7999f2e8ec5e",
+    "task_slots": 37,
+    "gate": "waiting_r7",
+    "counts": {
+      "blocked_upstream": 37
+    },
+    "task_records": 0,
+    "scientific_starts": 0,
+    "training_started": false,
+    "backup_performed": false
+  },
+  "controller": {
+    "session": "aaai27_continuation_e70d948",
+    "pid": 4102610,
+    "poll_seconds": 10,
+    "alive_after_two_polls": true
+  },
+  "authorized_adapters": [
+    "prefergrow/Beauty",
+    "prefergrow/Steam",
+    "sasrec"
+  ],
+  "blocked_adapters": [
+    "prefergrow/ML1M",
+    "prefergrow/ATG",
+    "risk14",
+    "caser",
+    "grurec",
+    "diffrec"
+  ],
+  "maintenance": {
+    "planned_shutdown": "2026-07-17T00:00:00+08:00",
+    "launch_cutoff": "2026-07-16T12:00:00+08:00",
+    "buffer_hours": 3.0
+  }
+}
