@@ -58,6 +58,26 @@ def _validate_relative_artifact(path: str, task_id: str) -> None:
         raise ManifestError(f"{task_id}: success artifact must be a safe relative path")
 
 
+def _validate_continuation_markers(task: TaskSpec) -> None:
+    if task.phase != "continuation":
+        return
+    for marker in task.required_markers:
+        relative = PurePosixPath(marker)
+        if (
+            relative.is_absolute()
+            or ".." in relative.parts
+            or str(relative) in {"", "."}
+            or not marker.startswith("protocol/adapters/")
+        ):
+            raise ManifestError(f"{task.task_id}: unsafe required marker")
+    if task.model in {"Caser", "GRURec", "DiffRec"}:
+        expected = (f"protocol/adapters/{task.model.casefold()}/PASS.json",)
+        if task.required_markers != expected:
+            raise ManifestError(
+                f"{task.task_id}: guarded model lacks adapter marker"
+            )
+
+
 def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
     if task.schema_version != SCHEMA_VERSION:
         raise ManifestError(f"{task.task_id}: unsupported schema_version")
@@ -140,6 +160,7 @@ def _validate_task(task: TaskSpec, manifest: QueueManifest) -> None:
         raise ManifestError(f"{task.task_id}: success_artifacts cannot be empty")
     for artifact in task.success_artifacts:
         _validate_relative_artifact(artifact, task.task_id)
+    _validate_continuation_markers(task)
 
 
 def _expected_pilot(branch: str, include_full: bool) -> set[tuple[str, str]]:
