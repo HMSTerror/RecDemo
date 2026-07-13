@@ -33,6 +33,7 @@ class DatasetContract:
     null_curve_path: str
     null_curve_sha256: str
     phi_r: float
+    adapter_authorized: bool = True
 
 
 @dataclass(frozen=True)
@@ -300,7 +301,9 @@ def _risk13_task(
             evidence_conditioned=evidence_conditioned,
         ),
         dependencies=[METHOD_GATE_ID],
-        required_markers=["protocol/adapters/prefergrow/PASS.json"],
+        required_markers=[
+            f"protocol/adapters/prefergrow/{dataset}/PASS.json"
+        ],
         success_artifacts=[summary_relative, artifact_relative],
         gpu_hours_low=0.25 if dataset == "Beauty" else 1.0,
         gpu_hours_high=high,

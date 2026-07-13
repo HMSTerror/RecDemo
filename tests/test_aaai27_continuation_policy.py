@@ -21,7 +21,7 @@ def _task(**overrides: object) -> TaskSpec:
         "phase": "continuation",
         "branch": "method_pass",
         "dependencies": ["continuation.method_pass_gate"],
-        "required_markers": ["protocol/adapters/prefergrow/PASS.json"],
+        "required_markers": ["protocol/adapters/prefergrow/ML1M/PASS.json"],
     }
     payload.update(overrides)
     raw = make_task(**payload)
@@ -43,8 +43,8 @@ def _context(root: Path, **overrides: object) -> EligibilityContext:
     return EligibilityContext(**payload)
 
 
-def _write_adapter_marker(root: Path, model: str = "prefergrow") -> None:
-    path = root / "protocol" / "adapters" / model / "PASS.json"
+def _write_adapter_marker(root: Path, model: str = "prefergrow/ML1M") -> None:
+    path = root / "protocol" / "adapters" / Path(model) / "PASS.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps({"schema_version": 1, "status": "pass"}) + "\n",
@@ -69,7 +69,7 @@ def test_missing_adapter_marker_is_blocked_adapter(tmp_path: Path) -> None:
     decision = classify_task(_task(), _context(tmp_path))
     assert decision.ready is False
     assert decision.status == "blocked_adapter"
-    assert "prefergrow/PASS.json" in str(decision.reason)
+    assert "prefergrow/ML1M/PASS.json" in str(decision.reason)
 
 
 def test_short_task_before_latest_safe_start_is_ready(tmp_path: Path) -> None:

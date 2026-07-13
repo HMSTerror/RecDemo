@@ -90,7 +90,9 @@ def test_risk13_uses_real_wrapped_prefergrow_training_argv() -> None:
     assert "training.data=ML1M" in training
     assert f"work_dir={task.run_dir}" in training
     assert "graph.type=adaptive" in training
-    assert task.required_markers == ("protocol/adapters/prefergrow/PASS.json",)
+    assert task.required_markers == (
+        "protocol/adapters/prefergrow/ML1M/PASS.json",
+    )
 
 
 def test_risk13_full_binds_final_v2_text_assets() -> None:

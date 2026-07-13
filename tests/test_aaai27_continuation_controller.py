@@ -67,9 +67,10 @@ def _controller(
 
 
 def _write_prefergrow_marker(root: Path) -> None:
-    marker = root / "protocol" / "adapters" / "prefergrow" / "PASS.json"
-    marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.write_text(json.dumps({"status": "pass"}) + "\n", encoding="utf-8")
+    for dataset in ("Steam", "ML1M", "Beauty", "ATG"):
+        marker = root / "protocol" / "adapters" / "prefergrow" / dataset / "PASS.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"status": "pass"}) + "\n", encoding="utf-8")
 
 
 def test_waiting_r7_starts_zero_tasks(tmp_path: Path) -> None:

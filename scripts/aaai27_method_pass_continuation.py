@@ -192,13 +192,28 @@ def prepare_queue(protocol_path: Path) -> dict[str, Any]:
     atomic_create_json(root / "protocol" / "maintenance_window.json", maintenance_raw)
 
     prefergrow_audit = _source_adapter_audit(source_root, manifest)
-    prefergrow_marker = _adapter_marker(
-        "prefergrow", manifest_sha256, prefergrow_audit
-    )
-    atomic_create_json(
-        root / "protocol" / "adapters" / "prefergrow" / "PASS.json",
-        prefergrow_marker,
-    )
+    for dataset, contract in inputs.datasets.items():
+        if not contract.adapter_authorized:
+            continue
+        dataset_audit = {
+            **prefergrow_audit,
+            "dataset": dataset,
+            "config_sha256": contract.config_sha256,
+            "split_sha256": contract.split_sha256,
+            "bank_sha256": contract.bank_sha256,
+            "embedding_sha256": contract.embedding_sha256,
+            "null_curve_sha256": contract.null_curve_sha256,
+            "phi_r": contract.phi_r,
+        }
+        atomic_create_json(
+            root
+            / "protocol"
+            / "adapters"
+            / "prefergrow"
+            / dataset
+            / "PASS.json",
+            _adapter_marker("prefergrow", manifest_sha256, dataset_audit),
+        )
     sasrec_audit = audit_e5_root(Path(inputs.e5_root))
     atomic_create_json(
         root / "protocol" / "adapters" / "sasrec" / "e5_reuse_audit.json",
@@ -241,14 +256,40 @@ def _load_prepared(root: Path) -> PreparedQueue:
     source_manifest_path = Path(str(protocol["source_manifest_path"])).resolve(strict=True)
     if sha256_file(source_manifest_path) != manifest.source_manifest_sha256:
         raise ContinuationCliError("prepared source manifest SHA-256 mismatch")
-    for adapter in ("prefergrow", "sasrec"):
-        marker = load_json(root / "protocol" / "adapters" / adapter / "PASS.json")
+    sasrec_marker = load_json(
+        root / "protocol" / "adapters" / "sasrec" / "PASS.json"
+    )
+    if (
+        sasrec_marker.get("status") != "pass"
+        or sasrec_marker.get("adapter") != "sasrec"
+        or sasrec_marker.get("queue_manifest_sha256") != sha256_file(manifest_path)
+    ):
+        raise ContinuationCliError("invalid prepared adapter marker: sasrec")
+    inputs = _parse_inputs(protocol["inputs"])
+    for dataset, contract in inputs.datasets.items():
+        marker_path = (
+            root
+            / "protocol"
+            / "adapters"
+            / "prefergrow"
+            / dataset
+            / "PASS.json"
+        )
+        if not contract.adapter_authorized:
+            if marker_path.exists():
+                raise ContinuationCliError(
+                    f"unauthorized PreferGrow dataset has a marker: {dataset}"
+                )
+            continue
+        marker = load_json(marker_path)
         if (
             marker.get("status") != "pass"
-            or marker.get("adapter") != adapter
+            or marker.get("adapter") != "prefergrow"
             or marker.get("queue_manifest_sha256") != sha256_file(manifest_path)
         ):
-            raise ContinuationCliError(f"invalid prepared adapter marker: {adapter}")
+            raise ContinuationCliError(
+                f"invalid prepared PreferGrow marker: {dataset}"
+            )
     return PreparedQueue(root, manifest_path, manifest, upstream, maintenance)
 
 

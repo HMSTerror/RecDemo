@@ -96,7 +96,15 @@ def test_prepare_writes_manifest_bindings_and_ready_adapter_markers(tmp_path: Pa
     assert (root / "queue" / "queue_seed100_continuation.json").is_file()
     assert (root / "protocol" / "upstream_binding.json").is_file()
     assert (root / "protocol" / "maintenance_window.json").is_file()
-    assert (root / "protocol" / "adapters" / "prefergrow" / "PASS.json").is_file()
+    for dataset in ("Steam", "ML1M", "Beauty", "ATG"):
+        assert (
+            root
+            / "protocol"
+            / "adapters"
+            / "prefergrow"
+            / dataset
+            / "PASS.json"
+        ).is_file()
     assert (root / "protocol" / "adapters" / "sasrec" / "PASS.json").is_file()
     assert not (root / "protocol" / "adapters" / "caser" / "PASS.json").exists()
 
