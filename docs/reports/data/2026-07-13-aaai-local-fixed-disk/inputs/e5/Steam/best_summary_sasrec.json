@@ -1,0 +1,311 @@
+{
+  "best_epoch": 10,
+  "dataset": "Steam",
+  "history": [
+    {
+      "epoch": 1,
+      "is_best": true,
+      "mean_train_loss": 7.847680202979983,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.01724124327301979,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.004675928968936205,
+          "HR@10": 0.0353265181183815,
+          "HR@20": 0.061142053455114365,
+          "HR@5": 0.020368443801999092,
+          "HR@50": 0.11957892030477524,
+          "NDCG@1": 0.004675928968936205,
+          "NDCG@10": 0.01724124327301979,
+          "NDCG@20": 0.023723719641566277,
+          "NDCG@5": 0.012464652769267559,
+          "NDCG@50": 0.035196054726839066
+        }
+      }
+    },
+    {
+      "epoch": 2,
+      "is_best": true,
+      "mean_train_loss": 7.570322175769223,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.019966820254921913,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.005789828021079302,
+          "HR@10": 0.04088377580046654,
+          "HR@20": 0.07048167288303375,
+          "HR@5": 0.0228655356913805,
+          "HR@50": 0.13645878434181213,
+          "NDCG@1": 0.005789828021079302,
+          "NDCG@10": 0.019966820254921913,
+          "NDCG@20": 0.027397727593779564,
+          "NDCG@5": 0.014206196181476116,
+          "NDCG@50": 0.04036817327141762
+        }
+      }
+    },
+    {
+      "epoch": 3,
+      "is_best": true,
+      "mean_train_loss": 7.471796404691881,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.02470949850976467,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.007809535600244999,
+          "HR@10": 0.04918293654918671,
+          "HR@20": 0.08195115625858307,
+          "HR@5": 0.028594160452485085,
+          "HR@50": 0.15223698318004608,
+          "NDCG@1": 0.007809535600244999,
+          "NDCG@10": 0.02470949850976467,
+          "NDCG@20": 0.03292529657483101,
+          "NDCG@5": 0.018089432269334793,
+          "NDCG@50": 0.04674772918224335
+        }
+      }
+    },
+    {
+      "epoch": 4,
+      "is_best": true,
+      "mean_train_loss": 7.390311638966921,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.02869349718093872,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.010098537430167198,
+          "HR@10": 0.05547463148832321,
+          "HR@20": 0.09104596078395844,
+          "HR@5": 0.03314768522977829,
+          "HR@50": 0.16805189847946167,
+          "NDCG@1": 0.010098537430167198,
+          "NDCG@10": 0.02869349718093872,
+          "NDCG@20": 0.03762500733137131,
+          "NDCG@5": 0.021527975797653198,
+          "NDCG@50": 0.052811119705438614
+        }
+      }
+    },
+    {
+      "epoch": 5,
+      "is_best": true,
+      "mean_train_loss": 7.316265465742809,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.03328213468194008,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.01263235229998827,
+          "HR@10": 0.06288022547960281,
+          "HR@20": 0.10065487772226334,
+          "HR@5": 0.038876309990882874,
+          "HR@50": 0.18014566600322723,
+          "NDCG@1": 0.01263235229998827,
+          "NDCG@10": 0.03328213468194008,
+          "NDCG@20": 0.04274909943342209,
+          "NDCG@5": 0.025613896548748016,
+          "NDCG@50": 0.05843495577573776
+        }
+      }
+    },
+    {
+      "epoch": 6,
+      "is_best": true,
+      "mean_train_loss": 7.250349391994545,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.03674031421542168,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.014774465933442116,
+          "HR@10": 0.06739702820777893,
+          "HR@20": 0.10634677857160568,
+          "HR@5": 0.04283003881573677,
+          "HR@50": 0.18925270438194275,
+          "NDCG@1": 0.014774465933442116,
+          "NDCG@10": 0.03674031421542168,
+          "NDCG@20": 0.04651770740747452,
+          "NDCG@5": 0.028872208669781685,
+          "NDCG@50": 0.06285738199949265
+        }
+      }
+    },
+    {
+      "epoch": 7,
+      "is_best": true,
+      "mean_train_loss": 7.194983338149084,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.03883378952741623,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.015570108778774738,
+          "HR@10": 0.07153436541557312,
+          "HR@20": 0.112271249294281,
+          "HR@5": 0.04548626020550728,
+          "HR@50": 0.19469979405403137,
+          "NDCG@1": 0.015570108778774738,
+          "NDCG@10": 0.03883378952741623,
+          "NDCG@20": 0.049038875848054886,
+          "NDCG@5": 0.030482353642582893,
+          "NDCG@50": 0.06530717760324478
+        }
+      }
+    },
+    {
+      "epoch": 8,
+      "is_best": true,
+      "mean_train_loss": 7.146999939681952,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.0402383916079998,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.01634126901626587,
+          "HR@10": 0.0737866461277008,
+          "HR@20": 0.11442560702562332,
+          "HR@5": 0.04722443222999573,
+          "HR@50": 0.19795581698417664,
+          "NDCG@1": 0.01634126901626587,
+          "NDCG@10": 0.0402383916079998,
+          "NDCG@20": 0.050436899065971375,
+          "NDCG@5": 0.031741827726364136,
+          "NDCG@50": 0.06690064817667007
+        }
+      }
+    },
+    {
+      "epoch": 9,
+      "is_best": true,
+      "mean_train_loss": 7.1061857649231746,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.04262550547719002,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.017271559685468674,
+          "HR@10": 0.07804638892412186,
+          "HR@20": 0.11972580850124359,
+          "HR@5": 0.04939102753996849,
+          "HR@50": 0.20372115075588226,
+          "NDCG@1": 0.017271559685468674,
+          "NDCG@10": 0.04262550547719002,
+          "NDCG@20": 0.05308567360043526,
+          "NDCG@5": 0.033430926501750946,
+          "NDCG@50": 0.06964831054210663
+        }
+      }
+    },
+    {
+      "epoch": 10,
+      "is_best": true,
+      "mean_train_loss": 7.07056140800883,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.04356967657804489,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 81695,
+        "expected_rows": 81695,
+        "metrics": {
+          "HR@1": 0.017773425206542015,
+          "HR@10": 0.0790134072303772,
+          "HR@20": 0.12118244916200638,
+          "HR@5": 0.051422975957393646,
+          "HR@50": 0.20576535165309906,
+          "NDCG@1": 0.017773425206542015,
+          "NDCG@10": 0.04356967657804489,
+          "NDCG@20": 0.05415232852101326,
+          "NDCG@5": 0.034702759236097336,
+          "NDCG@50": 0.07080987095832825
+        }
+      }
+    }
+  ],
+  "method": "SASRec",
+  "schema_version": 1,
+  "seed": 100,
+  "selector": {
+    "metric": "NDCG@10",
+    "value": 0.04356967657804489,
+    "version": "validation-ndcg10-rowweighted-v1"
+  },
+  "test": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 80651,
+    "expected_rows": 80651,
+    "metrics": {
+      "HR@1": 0.02042132057249546,
+      "HR@10": 0.08219365030527115,
+      "HR@20": 0.12293709814548492,
+      "HR@5": 0.05474203824996948,
+      "HR@50": 0.209420844912529,
+      "NDCG@1": 0.02042132057249546,
+      "NDCG@10": 0.0464162640273571,
+      "NDCG@20": 0.056632768362760544,
+      "NDCG@5": 0.03763558715581894,
+      "NDCG@50": 0.07368841022253036
+    }
+  },
+  "test_disclosure": "test metrics were logged during development; model selection used validation only; not an untouched final holdout",
+  "validation": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 81695,
+    "expected_rows": 81695,
+    "metrics": {
+      "HR@1": 0.017773425206542015,
+      "HR@10": 0.0790134072303772,
+      "HR@20": 0.12118244916200638,
+      "HR@5": 0.051422975957393646,
+      "HR@50": 0.20576535165309906,
+      "NDCG@1": 0.017773425206542015,
+      "NDCG@10": 0.04356967657804489,
+      "NDCG@20": 0.05415232852101326,
+      "NDCG@5": 0.034702759236097336,
+      "NDCG@50": 0.07080987095832825
+    }
+  }
+}

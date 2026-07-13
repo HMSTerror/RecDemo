@@ -1,0 +1,207 @@
+{
+  "best_epoch": 4,
+  "dataset": "Beauty",
+  "history": [
+    {
+      "epoch": 1,
+      "is_best": true,
+      "mean_train_loss": 9.411488587515695,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.009103406220674515,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.006261180620640516,
+          "HR@10": 0.013416815549135208,
+          "HR@20": 0.022361360490322113,
+          "HR@5": 0.00894454400986433,
+          "HR@50": 0.042486581951379776,
+          "NDCG@1": 0.006261180620640516,
+          "NDCG@10": 0.009103406220674515,
+          "NDCG@20": 0.011307016015052795,
+          "NDCG@5": 0.007677323184907436,
+          "NDCG@50": 0.015308137983083725
+        }
+      }
+    },
+    {
+      "epoch": 2,
+      "is_best": false,
+      "mean_train_loss": 8.754496901375907,
+      "patience_left": 1,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.00884321704506874,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.00044722718303091824,
+          "HR@10": 0.021466905251145363,
+          "HR@20": 0.03220035880804062,
+          "HR@5": 0.011627906933426857,
+          "HR@50": 0.055903397500514984,
+          "NDCG@1": 0.00044722718303091824,
+          "NDCG@10": 0.00884321704506874,
+          "NDCG@20": 0.011527505703270435,
+          "NDCG@5": 0.00564174959436059,
+          "NDCG@50": 0.016290681436657906
+        }
+      }
+    },
+    {
+      "epoch": 3,
+      "is_best": true,
+      "mean_train_loss": 8.499692235674177,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.010768376290798187,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.0013416815781965852,
+          "HR@10": 0.023703040555119514,
+          "HR@20": 0.03488372266292572,
+          "HR@5": 0.01610017940402031,
+          "HR@50": 0.058586761355400085,
+          "NDCG@1": 0.0013416815781965852,
+          "NDCG@10": 0.010768376290798187,
+          "NDCG@20": 0.013540293090045452,
+          "NDCG@5": 0.008295159786939621,
+          "NDCG@50": 0.01821068674325943
+        }
+      }
+    },
+    {
+      "epoch": 4,
+      "is_best": true,
+      "mean_train_loss": 8.29520446232387,
+      "patience_left": 2,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.011382710188627243,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.0026833631563931704,
+          "HR@10": 0.023255813866853714,
+          "HR@20": 0.03488372266292572,
+          "HR@5": 0.013416815549135208,
+          "HR@50": 0.056350626051425934,
+          "NDCG@1": 0.0026833631563931704,
+          "NDCG@10": 0.011382710188627243,
+          "NDCG@20": 0.014290453866124153,
+          "NDCG@5": 0.008258859626948833,
+          "NDCG@50": 0.018425794318318367
+        }
+      }
+    },
+    {
+      "epoch": 5,
+      "is_best": false,
+      "mean_train_loss": 8.071445424216135,
+      "patience_left": 1,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.010496022179722786,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.0026833631563931704,
+          "HR@10": 0.020572450011968613,
+          "HR@20": 0.03443649411201477,
+          "HR@5": 0.013416815549135208,
+          "HR@50": 0.058586761355400085,
+          "NDCG@1": 0.0026833631563931704,
+          "NDCG@10": 0.010496022179722786,
+          "NDCG@20": 0.013961561024188995,
+          "NDCG@5": 0.008211707696318626,
+          "NDCG@50": 0.018639186397194862
+        }
+      }
+    },
+    {
+      "epoch": 6,
+      "is_best": false,
+      "mean_train_loss": 7.815684332166399,
+      "patience_left": 0,
+      "selector_metric": "NDCG@10",
+      "selector_value": 0.011147013865411282,
+      "validation": {
+        "aggregation": "row-weighted",
+        "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+        "evaluated_rows": 2236,
+        "expected_rows": 2236,
+        "metrics": {
+          "HR@1": 0.003577817464247346,
+          "HR@10": 0.021466905251145363,
+          "HR@20": 0.03175313025712967,
+          "HR@5": 0.013864043168723583,
+          "HR@50": 0.058586761355400085,
+          "NDCG@1": 0.003577817464247346,
+          "NDCG@10": 0.011147013865411282,
+          "NDCG@20": 0.013775061815977097,
+          "NDCG@5": 0.008656280115246773,
+          "NDCG@50": 0.01899837702512741
+        }
+      }
+    }
+  ],
+  "method": "SASRec",
+  "schema_version": 1,
+  "seed": 100,
+  "selector": {
+    "metric": "NDCG@10",
+    "value": 0.011382710188627243,
+    "version": "validation-ndcg10-rowweighted-v1"
+  },
+  "test": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 2237,
+    "expected_rows": 2237,
+    "metrics": {
+      "HR@1": 0.00044702726881951094,
+      "HR@10": 0.005811354611068964,
+      "HR@20": 0.013410817831754684,
+      "HR@5": 0.0035762181505560875,
+      "HR@50": 0.0272686630487442,
+      "NDCG@1": 0.00044702726881951094,
+      "NDCG@10": 0.0026797675527632236,
+      "NDCG@20": 0.004617482889443636,
+      "NDCG@5": 0.0019575930200517178,
+      "NDCG@50": 0.007327915634959936
+    }
+  },
+  "test_disclosure": "test metrics were logged during development; model selection used validation only; not an untouched final holdout",
+  "validation": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 2236,
+    "expected_rows": 2236,
+    "metrics": {
+      "HR@1": 0.0026833631563931704,
+      "HR@10": 0.023255813866853714,
+      "HR@20": 0.03488372266292572,
+      "HR@5": 0.013416815549135208,
+      "HR@50": 0.056350626051425934,
+      "NDCG@1": 0.0026833631563931704,
+      "NDCG@10": 0.011382710188627243,
+      "NDCG@20": 0.014290453866124153,
+      "NDCG@5": 0.008258859626948833,
+      "NDCG@50": 0.018425794318318367
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "files": {
+    "scripts/build_e05_sasrec_manifest.py": "a96a5f6bbaacd1b0643018f6d70c00767ee3134679466da46487af0a697cf4a0",
+    "scripts/run_e05_sasrec_queue.py": "ff69aae67ab761fd94ecaf0c12d6aa1e5e7a0aa7e5826343db16eb90078a32d1",
+    "scripts/run_sasrec.py": "257d99cae58bb057e86285d82a94e2f60074c2c0cc9db19b4614a264861cdcd6"
+  },
+  "sha256": "ee4a4b2ee18fa384219f6ff3082a829b519655fff36cfe9d70c65f7773a8d2d9"
+}

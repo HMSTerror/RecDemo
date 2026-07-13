@@ -1,0 +1,9 @@
+{
+  "artifact_sha256": "2bd089509b038af89af41a4a8407ec52b99f9a768e203950b34e87a410edb07c",
+  "e1_outcome": "pass",
+  "no_training_started": true,
+  "queue_id": "aaai27-risk0607-2026-07-12-987eb19-r7",
+  "queue_manifest_sha256": "387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e",
+  "schema_version": 1,
+  "task_count": 22
+}

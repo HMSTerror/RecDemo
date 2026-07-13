@@ -1,0 +1,39 @@
+{
+  "test": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 85405,
+    "expected_rows": 85405,
+    "metrics": {
+      "HR@1": 0.046578068286180496,
+      "HR@10": 0.22484631836414337,
+      "HR@20": 0.33468765020370483,
+      "HR@5": 0.14502663910388947,
+      "HR@50": 0.5193724036216736,
+      "NDCG@1": 0.046578068286180496,
+      "NDCG@10": 0.1216772273182869,
+      "NDCG@20": 0.14930951595306396,
+      "NDCG@5": 0.09605047851800919,
+      "NDCG@50": 0.18591327965259552
+    }
+  },
+  "test_disclosure": "test metrics were logged during development; model selection used validation only; not an untouched final holdout",
+  "validation": {
+    "aggregation": "row-weighted",
+    "candidate_policy": "all-real-catalog-items-0-through-M-minus-1",
+    "evaluated_rows": 98622,
+    "expected_rows": 98622,
+    "metrics": {
+      "HR@1": 0.054774798452854156,
+      "HR@10": 0.2490924894809723,
+      "HR@20": 0.35924032330513,
+      "HR@5": 0.1649429202079773,
+      "HR@50": 0.537273645401001,
+      "NDCG@1": 0.054774798452854156,
+      "NDCG@10": 0.13765114545822144,
+      "NDCG@20": 0.16541548073291779,
+      "NDCG@5": 0.11062724888324738,
+      "NDCG@50": 0.20075182616710663
+    }
+  }
+}

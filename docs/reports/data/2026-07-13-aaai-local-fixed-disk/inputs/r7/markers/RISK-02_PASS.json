@@ -1,0 +1,17 @@
+{
+  "downstream_launch_authorized": true,
+  "first_divergence": null,
+  "fp32_tolerance": 1e-06,
+  "outcome": "pass",
+  "random_seed": 100,
+  "risk_id": "RISK-02",
+  "schema_version": 1,
+  "source_revision": "0338cc219f9ee983b8e9464b4df85f34471c7d6f",
+  "trace_sha256": "faa6cd65c4465c93b0794e6efa8e2a7a8ccf9ca5196b243c9ba59c948d1758b2",
+  "trace_steps": [
+    0,
+    1,
+    100,
+    1000
+  ]
+}

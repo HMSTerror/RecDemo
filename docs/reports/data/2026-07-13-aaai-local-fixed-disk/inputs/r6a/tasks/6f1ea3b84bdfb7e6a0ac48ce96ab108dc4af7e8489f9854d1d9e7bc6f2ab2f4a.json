@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "ended_at": "2026-07-11T16:21:07.994551+00:00",
+  "exit_code": 1,
+  "gpu_id": 1,
+  "gpu_seconds": 10.022461824002676,
+  "pid": 2941496,
+  "process_start_time": "65213082",
+  "reason": "exit_code=1",
+  "started_at": "2026-07-11T16:20:57.972064+00:00",
+  "status": "failed",
+  "task_id": "pilot.e1_pass.Steam.anchor.c60"
+}

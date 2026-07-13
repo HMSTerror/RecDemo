@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "ended_at": "2026-07-11T16:10:36.875409+00:00",
+  "exit_code": 1,
+  "gpu_id": 1,
+  "gpu_seconds": 10.01954404299613,
+  "pid": 2938420,
+  "process_start_time": "65149970",
+  "reason": "exit_code=1",
+  "started_at": "2026-07-11T16:10:26.855828+00:00",
+  "status": "failed",
+  "task_id": "pilot.e1_pass.Beauty.anchor.c0"
+}

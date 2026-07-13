@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "ended_at": null,
+  "exit_code": null,
+  "gpu_id": 0,
+  "gpu_seconds": 0.0,
+  "pid": 4058815,
+  "process_start_time": "80949467",
+  "reason": null,
+  "started_at": "2026-07-13T12:03:41.826124+00:00",
+  "status": "running",
+  "task_id": "pilot.e1_pass.Steam.anchor.c0"
+}

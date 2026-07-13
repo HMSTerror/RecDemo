@@ -1,0 +1,113 @@
+{
+  "code_revision": "987eb1957cf74528ef81f2fd673aabb5a25e42f7",
+  "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
+  "created_at": "2026-07-12T16:47:07+08:00",
+  "datasets": {
+    "Beauty": {
+      "banks": {
+        "0": {
+          "bank_sha256": "f537cbca97b391de6b3e258a08f0ce9cdd782f25ba646b31abfb97a8e850154a",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Beauty/level-000/embeddings.pt",
+          "embedding_sha256": "8c775d5a2d6eaba6904def231af0ca6058507e3b547159f4a60bf465b9546f2e",
+          "phi_R": 1.0
+        },
+        "100": {
+          "bank_sha256": "f8ead782815000099cee33804126a7ae5affc3f7eddebc70a04362b26ddbef59",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Beauty/level-100/embeddings.pt",
+          "embedding_sha256": "3de58f7d54f1f5ffe134da07f6c02138b020f5444169d7526432cd7c4ac635d2",
+          "phi_R": 0.0
+        },
+        "60": {
+          "bank_sha256": "6cb0081aff05440008f398e6106290f4a721aaeacb8a0e0c59666b74d411432d",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Beauty/level-060/embeddings.pt",
+          "embedding_sha256": "b597c077470baa49188bf59d5f9d2c387def8a3dbdf2905af564a994c999519a",
+          "phi_R": 0.1366311174092942
+        }
+      },
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/agreement_null_curves.json",
+      "null_curve_sha256": "7d7bb94850ddef882ae037724261b21cc2e0bba623d8e9651510297a96d0948b",
+      "phi_R": {
+        "0": 1.0,
+        "100": 0.0,
+        "60": 0.1366311174092942
+      },
+      "split_sha256": "1846913539503820968e1e91a97655444be65541225836d429ecbccff61db0e2",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/text_bank.csv"
+    },
+    "Steam": {
+      "banks": {
+        "0": {
+          "bank_sha256": "82f6d026c2645f747e8b2d5bb0f6a15b4e9a3a3d16e56479f2fe6410cfdf3fec",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Steam/level-000/embeddings.pt",
+          "embedding_sha256": "f6758fc36263a91d63d61cc9f914d1c10f7e4eab6410eb4c104f5b58861094f9",
+          "phi_R": 1.0
+        },
+        "100": {
+          "bank_sha256": "8ab196e664036ac81fc0e4049229ebe11501e810b574339abc674e12602d7116",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Steam/level-100/embeddings.pt",
+          "embedding_sha256": "1f011af11a5de5bcd0af274924c6049bca959fc5e4ad139d0971640da504e617",
+          "phi_R": 0.0
+        },
+        "60": {
+          "bank_sha256": "37f4894bab5b45cbdf732ea74d565399697493a49bb2c7e1f9af776c8bf6739c",
+          "embedding_path": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final/banks/Steam/level-060/embeddings.pt",
+          "embedding_sha256": "e88e62962593f33435f1088224a8ed17f67e5888bb0ab446f876bc90664450e8",
+          "phi_R": 0.05808110271503808
+        }
+      },
+      "config_sha256": "183b7e2a16e0318e95c60aeb931a6cc566f34f51bfc6fea10443366fde693a92",
+      "dataset_dir": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam",
+      "null_curve_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/agreement_null_curves.json",
+      "null_curve_sha256": "fb52fde65111f94a295d023c6915803b238d7d28e021ab8616a8c2ed4c90be47",
+      "phi_R": {
+        "0": 1.0,
+        "100": 0.0,
+        "60": 0.05808110271503808
+      },
+      "split_sha256": "2e00a619b8c2becedc301a926dae926f0b13d67636c568f4986906560a27c849",
+      "text_bank_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/text_bank.csv"
+    }
+  },
+  "e1_marker_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+  "e1_outcome": "pass",
+  "estimated_gpu_hours": {
+    "high": 4.0,
+    "low": 1.0,
+    "output_gib": 1.0
+  },
+  "gpu_ids": [
+    0,
+    1
+  ],
+  "ledger_path": "/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7/issues/2026-07-12_14-41-00-aaai27-r7-atomic-repair.csv",
+  "ledger_sha256": "3af009a0af9db376a39225ca4678c8b25305fa7c375ed87e64288c1ff102ee89",
+  "no_training_started": true,
+  "python_bin": "/data/Zijian/goal/PreferGrow/.venv/bin/python3",
+  "queue_id": "aaai27-risk0607-2026-07-12-987eb19-r7",
+  "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+  "risk04_root": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_332efb8_gatepass_final",
+  "risk05_preregistration_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+  "run_root": "/data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7",
+  "single_train": "/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7/single_train.py",
+  "source_manifest_sha256": "33d7e35ec11d27bbbffafa186ac8776408ca83ae0a7eaf31e443e14436512dea",
+  "source_root": "/data/Zijian/goal/RecDemo_aaai27_risk0607_987eb19_r7",
+  "training_overrides": [
+    "model.hidden_size=256",
+    "model.cond_dim=256",
+    "training.batch_size=256",
+    "training.n_iters=2000000",
+    "training.eval_freq=1000",
+    "training.snapshot_freq=1000",
+    "training.snapshot_freq_for_preemption=1000",
+    "training.snapshot_sampling=True",
+    "training.early_stop_patience=5",
+    "training.early_stop_min_step=5000",
+    "training.early_stop_metric=ndcg10",
+    "training.early_stop_strength=p5",
+    "training.early_stop_min_delta=0.0",
+    "+training.write_snapshot_checkpoint=False",
+    "+training.write_best_checkpoint=True"
+  ]
+}

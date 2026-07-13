@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "ended_at": "2026-07-11T17:49:16.757610+00:00",
+  "exit_code": 0,
+  "gpu_id": 1,
+  "gpu_seconds": 5288.730333285988,
+  "pid": 2941546,
+  "process_start_time": "65214087",
+  "reason": null,
+  "started_at": "2026-07-11T16:21:08.027071+00:00",
+  "status": "passed",
+  "task_id": "pilot.e1_pass.Steam.full.c0"
+}

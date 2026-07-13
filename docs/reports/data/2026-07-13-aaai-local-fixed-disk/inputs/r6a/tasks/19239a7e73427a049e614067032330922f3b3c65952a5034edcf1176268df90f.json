@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "ended_at": "2026-07-11T16:14:07.252213+00:00",
+  "exit_code": 0,
+  "gpu_id": 1,
+  "gpu_seconds": 190.2525701370323,
+  "pid": 2938575,
+  "process_start_time": "65152984",
+  "reason": null,
+  "started_at": "2026-07-11T16:10:56.999516+00:00",
+  "status": "passed",
+  "task_id": "pilot.e1_pass.Beauty.full.c0"
+}

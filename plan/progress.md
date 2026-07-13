@@ -1,5 +1,35 @@
 # Progress
 
+## 2026-07-13 AAAI local fixed-disk
+
+- Stage: S2 method evidence amendment, S3 experiment/result contracts, and S5 submission-risk review.
+- Status: local fixed-disk package verified; manuscript integration and r7 terminal evidence remain separate gates.
+- Workspace: `E:/PreferGrow-r7-continuation`, branch `codex/aaai-local-fixed-disk`.
+- Server boundary: r7 and the resident continuation controller are read-only inputs; no server
+  training, marker creation, backup, or queue mutation is authorized by this local task.
+- Current packet: `plan/task-packets/2026-07-13-aaai-local-fixed-disk.md`.
+- Required gates: frozen-input inventory; method/evaluator/SASRec memos; fail-closed ingestion tests;
+  Gate-2 bilingual claim review; table/figure contracts; spec review; quality review; capability-use
+  audit.
+
+### Current outputs
+
+- L0/L1/L2: method amendment, evaluator arbitration, and SASRec audit drafted.
+- L3: fail-closed r7 paper evidence builder implemented with a recorded RED and 5/5 focused GREEN tests.
+- L4/L5: bilingual Gate-2 memo and claim-evidence map drafted.
+- L6/L7: table/figure source contracts, manuscript and reproducibility checklists, and handoff drafted.
+- r7 status: frozen local snapshot is nonterminal; no performance table was emitted.
+
+### Capability-use audit (current task)
+
+- Required skills: using-git-worktrees, using-research-writing, paper-orchestration, experiment-results-planning, writing-core, statistical-analysis, test-driven-development, verification-before-completion.
+- Actually used: all required skills; fast-context semantic search was additionally used to locate production schemas and validators.
+- Inputs consumed: Gate0/Gate1/E0/E1/E7, r6a, r7 queue/protocol/source snapshot, E5 results/source, production queue/wrapper/RISK-08 code.
+- Inputs excluded: checkpoints, partial r7 performance, DiffuRec confirmatory data, unauthorized E7 regeneration, and all GPU mutations.
+- Verification: focused builder suite 5/5; continuation/queue regression 87 passed and 1 Windows-inapplicable skip; 52 JSON and 5 CSV files parsed; encoding scan and authored-path `git diff --check` passed. Immutable source snapshots are byte-preserved and excluded from whitespace normalization.
+- Input inventory: 70 immutable inputs, inventory SHA-256 `d0a5dfc9075b37c9268ab4aa8ff195234c2bf32ddfcab063412cad048c591291`.
+- Remaining gate: r7 14/14 terminal evidence before any performance table; subsequent manuscript integration and AAAI template compilation.
+
 ## 2026-07-10 AAAI-27 evidence-risk rescue design freeze
 
 - Stage: S0 scope plus S3 experiment design and S5 submission-risk review.

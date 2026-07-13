@@ -1,5 +1,18 @@
 # Gate-2 amendment outline
 
+## 2026-07-13 local fixed-disk deliverable order
+
+1. Freeze and cite the EPE/PNE@10/`phi_R` evidence chain.
+2. Arbitrate legacy Table 1 against the corrected E0 evaluator without selective replacement.
+3. Audit E5 SASRec implementation, data construction, evaluator, selector, and Beauty anomaly.
+4. Implement a read-only, fail-closed r7 paper-evidence builder with no hand-entered metrics.
+5. Issue a dated bilingual Gate-2 amendment that supersedes stale E1/r6a wording.
+6. Build claim--evidence traceability and explicit allowed/forbidden wording.
+7. Lock table schemas and figure data manifests; generate only figures backed by real inputs.
+8. Produce a handoff and capability-use audit.
+
+The historical 2026-07-10 outline follows and remains part of the audit trail.
+
 1. Revise the English abstract and mirrored Chinese overview.
 2. Restrict all TV-bound language to proposal and one-step transition-row kernels.
 3. Treat `1/24` as a descriptive exchangeability calculation, not a confirmatory p-value.

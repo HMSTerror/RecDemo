@@ -1,0 +1,7 @@
+dataset,corruption_level,phi_R,source_status,allowed_use
+Beauty,c0,1.0,preregistered_artifact,method_and_risk_response_figure
+Beauty,c60,0.1366311174092942,preregistered_artifact,method_and_risk_response_figure
+Beauty,c100,0.0,preregistered_artifact,explicit_phi_R_0_sanity_check
+Steam,c0,1.0,preregistered_artifact,method_and_risk_response_figure
+Steam,c60,0.05808110271503808,preregistered_artifact,method_and_risk_response_figure
+Steam,c100,0.0,preregistered_artifact,explicit_phi_R_0_sanity_check

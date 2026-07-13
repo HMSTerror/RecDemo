@@ -1,0 +1,28 @@
+{
+  "artifact_sha256": "02ceb6e0f472d48b8208a696b63e4ddbfdcfd1320e4b6d185186804362841161",
+  "bindings": {
+    "e1_marker_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+    "e1_outcome": "pass",
+    "e1_source_revision": "0338cc219f9ee983b8e9464b4df85f34471c7d6f",
+    "no_rescue": true,
+    "no_test_metric": true,
+    "preflight_report_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+    "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+    "single_seed_observation": true
+  },
+  "e1_marker_sha256": "040afa9328e05ba6fcfb36b26ae561657236a0d0a033e97e9ceb7c9a40a2924c",
+  "e1_outcome": "pass",
+  "e1_source_revision": "0338cc219f9ee983b8e9464b4df85f34471c7d6f",
+  "generated_at": "2026-07-11T14:25:00+08:00",
+  "no_rescue": true,
+  "no_test_metric": true,
+  "outcome": "pass",
+  "pilot_authorized": true,
+  "preflight_report_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+  "preflight_sha256": "f047f5afba8338a43bd8d59505da2678146405c0001b6f94d3ef796425736f76",
+  "preregistration_sha256": "5ff65d1f926c0f493f5b0ed5cae9297a6ab33a89998296d53cc7d3e9151edf65",
+  "risk04_bundle_sha256": "443fe9813ff07b9aa451c2fb3d499bef0859d4eb24048db2f223dda29c62db6d",
+  "risk_id": "RISK-05",
+  "schema_version": 1,
+  "single_seed_observation": true
+}

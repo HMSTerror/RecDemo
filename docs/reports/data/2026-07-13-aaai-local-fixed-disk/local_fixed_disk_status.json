@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "dated_package": "2026-07-13-aaai-local-fixed-disk",
+  "branch": "codex/aaai-local-fixed-disk",
+  "state": "local_fixed_disk_verified",
+  "server_mutated": false,
+  "r7_snapshot": {
+    "snapshot_is_terminal_evidence": false,
+    "manifest_task_count": 22,
+    "active_task_count": 14,
+    "copied_record_count": 10,
+    "passed_record_count": 8,
+    "running_record_count": 2,
+    "risk08_exit": null,
+    "paper_performance_table_emitted": false
+  },
+  "builder": {
+    "path": "scripts/build_r7_paper_evidence.py",
+    "focused_tests": 5,
+    "focused_tests_passed": 5,
+    "full_regression_pending": false,
+    "focused_test_result": "5 passed",
+    "regression_test_result": "87 passed, 1 skipped"
+  },
+  "input_inventory": {
+    "row_count": 70,
+    "sha256": "d0a5dfc9075b37c9268ab4aa8ff195234c2bf32ddfcab063412cad048c591291"
+  },
+  "verification": {
+    "json_files_parsed": 52,
+    "csv_files_parsed": 5,
+    "encoding_scan_passed": true,
+    "authored_paths_diff_check_passed": true,
+    "immutable_input_snapshots_excluded_from_whitespace_check": true
+  },
+  "remaining_release_gate": [
+    "r7 14/14 terminal evidence before any performance table",
+    "manuscript integration and AAAI template compilation after Gate-2 review"
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "adaptive_backoff": false,
+  "artifact_sha256": "2324d56f6f93003f2b3d2e6c61bc134f6953e05079840da898af71753995d6d2",
+  "code_revision": "ef84761e2c06af02bc6077e367b2a2d34956a568",
+  "datasets": {
+    "Beauty": {
+      "banks": {
+        "0": {
+          "bank_manifest_path": "banks/Beauty/level-000/bank_manifest.json",
+          "bank_sha256": "f537cbca97b391de6b3e258a08f0ce9cdd782f25ba646b31abfb97a8e850154a",
+          "embedding_path": "banks/Beauty/level-000/embeddings.pt",
+          "embedding_sha256": "8c775d5a2d6eaba6904def231af0ca6058507e3b547159f4a60bf465b9546f2e",
+          "level": 0,
+          "relative_dir": "banks/Beauty/level-000",
+          "row_norm_max_abs_diff": 0.0,
+          "selected_count": 0,
+          "strata_count": 10
+        },
+        "100": {
+          "bank_manifest_path": "banks/Beauty/level-100/bank_manifest.json",
+          "bank_sha256": "f8ead782815000099cee33804126a7ae5affc3f7eddebc70a04362b26ddbef59",
+          "embedding_path": "banks/Beauty/level-100/embeddings.pt",
+          "embedding_sha256": "3de58f7d54f1f5ffe134da07f6c02138b020f5444169d7526432cd7c4ac635d2",
+          "level": 100,
+          "relative_dir": "banks/Beauty/level-100",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 12101,
+          "strata_count": 10
+        },
+        "20": {
+          "bank_manifest_path": "banks/Beauty/level-020/bank_manifest.json",
+          "bank_sha256": "adfb4b671fac1069e940a504ed8ce57de7d9f6c9ddf8ce5b6058a26232a60716",
+          "embedding_path": "banks/Beauty/level-020/embeddings.pt",
+          "embedding_sha256": "9db1bbdb903f695709619abf181f3ceab96397e23eddd21f525ceeb3d21e660d",
+          "level": 20,
+          "relative_dir": "banks/Beauty/level-020",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 2420,
+          "strata_count": 10
+        },
+        "40": {
+          "bank_manifest_path": "banks/Beauty/level-040/bank_manifest.json",
+          "bank_sha256": "28df3b51fd17bbd736072ee7b3a7d0a8bdcf9df5f76c22660643f0e0f09427d5",
+          "embedding_path": "banks/Beauty/level-040/embeddings.pt",
+          "embedding_sha256": "7dae8f9bfe317c9692bc2cf9677a05fee39bde1b5a872d480068f54e78588002",
+          "level": 40,
+          "relative_dir": "banks/Beauty/level-040",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 4840,
+          "strata_count": 10
+        },
+        "60": {
+          "bank_manifest_path": "banks/Beauty/level-060/bank_manifest.json",
+          "bank_sha256": "6cb0081aff05440008f398e6106290f4a721aaeacb8a0e0c59666b74d411432d",
+          "embedding_path": "banks/Beauty/level-060/embeddings.pt",
+          "embedding_sha256": "b597c077470baa49188bf59d5f9d2c387def8a3dbdf2905af564a994c999519a",
+          "level": 60,
+          "relative_dir": "banks/Beauty/level-060",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 7261,
+          "strata_count": 10
+        },
+        "80": {
+          "bank_manifest_path": "banks/Beauty/level-080/bank_manifest.json",
+          "bank_sha256": "20058a11ad2021ecc5a2400c094c9dc0d7059026d739c8d2b8b9e34ff284ba43",
+          "embedding_path": "banks/Beauty/level-080/embeddings.pt",
+          "embedding_sha256": "bdc7a735bddfbb2cc8051244838a19792d6d52913b3e7ed39b0f2a3638e1e5d5",
+          "level": 80,
+          "relative_dir": "banks/Beauty/level-080",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 9681,
+          "strata_count": 10
+        }
+      },
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/sentence_t5_xl_item_emb.pt",
+      "source_hashes": {
+        "clean_embeddings_sha256": "5821b90a2c12e696180d0c251af8ef6b6a1310251717c4ea5fa6f334a22cee54",
+        "split_sha256": "1846913539503820968e1e91a97655444be65541225836d429ecbccff61db0e2",
+        "train_transitions_sha256": "1846913539503820968e1e91a97655444be65541225836d429ecbccff61db0e2"
+      },
+      "split_sha256": "1846913539503820968e1e91a97655444be65541225836d429ecbccff61db0e2",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Beauty/train_data.df"
+    },
+    "Steam": {
+      "banks": {
+        "0": {
+          "bank_manifest_path": "banks/Steam/level-000/bank_manifest.json",
+          "bank_sha256": "82f6d026c2645f747e8b2d5bb0f6a15b4e9a3a3d16e56479f2fe6410cfdf3fec",
+          "embedding_path": "banks/Steam/level-000/embeddings.pt",
+          "embedding_sha256": "f6758fc36263a91d63d61cc9f914d1c10f7e4eab6410eb4c104f5b58861094f9",
+          "level": 0,
+          "relative_dir": "banks/Steam/level-000",
+          "row_norm_max_abs_diff": 0.0,
+          "selected_count": 0,
+          "strata_count": 10
+        },
+        "100": {
+          "bank_manifest_path": "banks/Steam/level-100/bank_manifest.json",
+          "bank_sha256": "8ab196e664036ac81fc0e4049229ebe11501e810b574339abc674e12602d7116",
+          "embedding_path": "banks/Steam/level-100/embeddings.pt",
+          "embedding_sha256": "1f011af11a5de5bcd0af274924c6049bca959fc5e4ad139d0971640da504e617",
+          "level": 100,
+          "relative_dir": "banks/Steam/level-100",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 9265,
+          "strata_count": 10
+        },
+        "20": {
+          "bank_manifest_path": "banks/Steam/level-020/bank_manifest.json",
+          "bank_sha256": "36d37b55c39614231b8c5f6555804a1aac7789c628cf140fe7a47bc4b9e468cc",
+          "embedding_path": "banks/Steam/level-020/embeddings.pt",
+          "embedding_sha256": "d2b3de1d8e0d959cfe991d8c2ceb1cae4d1b590f3f98614a0f2f4ddac2a125c0",
+          "level": 20,
+          "relative_dir": "banks/Steam/level-020",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 1853,
+          "strata_count": 10
+        },
+        "40": {
+          "bank_manifest_path": "banks/Steam/level-040/bank_manifest.json",
+          "bank_sha256": "cf05165613b08b7d7c73de5a20a3c718ea021f7ea59c1ee6a21532e0e059b4a4",
+          "embedding_path": "banks/Steam/level-040/embeddings.pt",
+          "embedding_sha256": "4cf23a95d063c17d0d24b4ccfd63e46c74639f7ef1545503ed6629932c44a80b",
+          "level": 40,
+          "relative_dir": "banks/Steam/level-040",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 3706,
+          "strata_count": 10
+        },
+        "60": {
+          "bank_manifest_path": "banks/Steam/level-060/bank_manifest.json",
+          "bank_sha256": "37f4894bab5b45cbdf732ea74d565399697493a49bb2c7e1f9af776c8bf6739c",
+          "embedding_path": "banks/Steam/level-060/embeddings.pt",
+          "embedding_sha256": "e88e62962593f33435f1088224a8ed17f67e5888bb0ab446f876bc90664450e8",
+          "level": 60,
+          "relative_dir": "banks/Steam/level-060",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 5559,
+          "strata_count": 10
+        },
+        "80": {
+          "bank_manifest_path": "banks/Steam/level-080/bank_manifest.json",
+          "bank_sha256": "28010773a3c61a3e6339e509abaee566fadc72ff198accdea0b6a78cfe50f719",
+          "embedding_path": "banks/Steam/level-080/embeddings.pt",
+          "embedding_sha256": "dbdd59d6716d36f926c599f0257464ee3b611d79417d93130a190fc465e07334",
+          "level": 80,
+          "relative_dir": "banks/Steam/level-080",
+          "row_norm_max_abs_diff": 2.384185791015625e-07,
+          "selected_count": 7412,
+          "strata_count": 10
+        }
+      },
+      "clean_embeddings_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/sentence_t5_xl_item_emb.pt",
+      "source_hashes": {
+        "clean_embeddings_sha256": "95b056fd35ff745d59ac37f599e824855aaa06fe84c143ba196ec0fdff3faa3f",
+        "split_sha256": "2e00a619b8c2becedc301a926dae926f0b13d67636c568f4986906560a27c849",
+        "train_transitions_sha256": "2e00a619b8c2becedc301a926dae926f0b13d67636c568f4986906560a27c849"
+      },
+      "split_sha256": "2e00a619b8c2becedc301a926dae926f0b13d67636c568f4986906560a27c849",
+      "train_transitions_path": "/data/Zijian/goal/RecDemo/dataset/paper_raw_v1/Steam/train_data.df"
+    }
+  },
+  "gate_finalization": {
+    "method": "reuse_verified_banks;metadata-only-severe-gate-finalization",
+    "no_bank_rewrite": true,
+    "no_training_started": true,
+    "preflight_report_path": "/data/Zijian/goal/RecDemoRuns/aaai27_host_core_v2_2026-07-11_332efb8/preflight_report/risk_preflight_report.json",
+    "preflight_report_sha256": "2bce4f8a4e7498188536568d6340f9fc4b445218c93d72357fa0e67ee1375c2d",
+    "source_pending_bundle": "/data/Zijian/goal/RecDemoRuns/aaai27_risk04_assets_2026-07-11_ef84761_r2",
+    "source_pending_bundle_sha256": "dc2f728d0808f57117bc9b5c28f29fa103925e892df2fce185e98d1c2b181bcf"
+  },
+  "generated_at": "2026-07-11T14:20:00+08:00",
+  "protocol": {
+    "algorithm": "popularity-stratified item-embedding permutation with row-norm preservation",
+    "corruption_levels": [
+      0,
+      20,
+      40,
+      60,
+      80,
+      100
+    ],
+    "corruption_seed": 100,
+    "datasets": [
+      "Beauty",
+      "Steam"
+    ],
+    "no_training_started": true,
+    "pseudo_item_policy": "real-item rows only; padding and pseudo-item rows are excluded",
+    "split": "train-only",
+    "strata_count": 10
+  },
+  "report_name": "AAAI-RISK-04 dated popularity-stratified corruption bank bundle",
+  "risk_id": "RISK-04",
+  "schema_version": 1,
+  "severe_gate": {
+    "adaptive_backoff": false,
+    "clean_mean_gate": 0.11730639802643009,
+    "corruption_level": 60,
+    "dataset": "Steam",
+    "relative_clean_drop": 0.2682614492637301,
+    "status": "pass",
+    "steam_c60_mean_gate": 0.08583761368395199,
+    "threshold_relative_clean_drop": 0.2,
+    "training_start_authorized": true
+  },
+  "training_start_authorized": true
+}

@@ -1,0 +1,5 @@
+dataset,best_epoch,validation_hr10,validation_ndcg10,test_hr10,test_ndcg10,evaluated_rows,interpretation
+Steam,10,0.079013,0.043570,0.082194,0.046416,80651,single-run adapted common-contract baseline
+ML1M,10,0.249092,0.137651,0.224846,0.121677,85405,single-run adapted common-contract baseline
+Beauty,4,0.023256,0.011383,0.005811,0.002680,2237,report validation and test together
+ATG,3,0.019062,0.010644,0.018023,0.009062,1942,single-run adapted common-contract baseline
