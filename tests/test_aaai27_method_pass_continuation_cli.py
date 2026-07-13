@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 from dataclasses import asdict, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -17,6 +19,23 @@ from tests.test_audit_e05_sasrec_reuse import _fixture as build_e5_fixture
 
 
 UTC8 = timezone(timedelta(hours=8))
+
+
+def test_cli_supports_the_documented_direct_script_entrypoint() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(repo_root / "scripts" / "aaai27_method_pass_continuation.py"),
+            "--help",
+        ],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "method-pass continuation" in result.stdout
 
 
 def _sha256(path: Path) -> str:
