@@ -233,37 +233,44 @@ class QueueController:
         records[terminal.task_id] = terminal
         self._supervised_task_ids.discard(terminal.task_id)
 
-    def tick(self, runtime: RuntimeAdapter) -> None:
+    def observe(self, runtime: RuntimeAdapter) -> None:
         records = self.load_records()
         for finished in runtime.observe_finished():
             self._finish_task(finished, records)
 
         self._reconcile(self._supervised_task_ids)
+
+    def start_one(self, runtime: RuntimeAdapter, task: TaskSpec) -> bool:
+        child = runtime.start_task(task, self.manifest.gpu_ids)
+        if child is None:
+            return False
+        if child.task_id != task.task_id:
+            raise RuntimeError(
+                f"runtime started unexpected task {child.task_id!r} for {task.task_id!r}"
+            )
+        at = self._now()
+        running = TaskRecord(
+            task_id=task.task_id,
+            status="running",
+            attempt=1,
+            pid=child.pid,
+            process_start_time=child.process_start_time,
+            gpu_id=child.gpu_id,
+            started_at=at,
+            ended_at=None,
+            exit_code=None,
+            gpu_seconds=0.0,
+            reason=None,
+        )
+        self.save_record(running)
+        self._supervised_task_ids.add(task.task_id)
+        self._append_transition(running, at, gpu_id=child.gpu_id)
+        return True
+
+    def tick(self, runtime: RuntimeAdapter) -> None:
+        self.observe(runtime)
         if self.stop_path.exists():
             return
 
         for task in self.ready_tasks():
-            child = runtime.start_task(task, self.manifest.gpu_ids)
-            if child is None:
-                continue
-            if child.task_id != task.task_id:
-                raise RuntimeError(
-                    f"runtime started unexpected task {child.task_id!r} for {task.task_id!r}"
-                )
-            at = self._now()
-            running = TaskRecord(
-                task_id=task.task_id,
-                status="running",
-                attempt=1,
-                pid=child.pid,
-                process_start_time=child.process_start_time,
-                gpu_id=child.gpu_id,
-                started_at=at,
-                ended_at=None,
-                exit_code=None,
-                gpu_seconds=0.0,
-                reason=None,
-            )
-            self.save_record(running)
-            self._supervised_task_ids.add(task.task_id)
-            self._append_transition(running, at, gpu_id=child.gpu_id)
+            self.start_one(runtime, task)

@@ -347,6 +347,9 @@ class QueueRuntimeTests(unittest.TestCase):
                 monotonic=lambda: next(times),
             )
             runtime.start_task(task, (0,))
+            runtime._task_log_path(task.task_id).write_text(
+                "finished\n", encoding="utf-8"
+            )
             process.exit_code = 0
 
             finished = runtime.observe_finished()
@@ -355,6 +358,34 @@ class QueueRuntimeTests(unittest.TestCase):
             self.assertEqual(15.5, finished[0].gpu_seconds)
             self.assertTrue(finished[0].artifacts_valid)
             self.assertTrue(locks.handles[str(root / "state" / "gpu0.lock")].closed)
+
+    def test_zero_byte_log_fails_artifact_validation(self) -> None:
+        process = FakeProcess(202)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            task = self.runtime_task(
+                root,
+                task_id="gpu.empty-log",
+                success_artifacts=["artifacts/done.json"],
+            )
+            artifact = root / "artifacts" / "done.json"
+            artifact.parent.mkdir()
+            artifact.write_text("{}\n", encoding="utf-8")
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+            runtime.start_task(task, (0,))
+            process.exit_code = 0
+
+            finished = runtime.observe_finished()
+
+            self.assertFalse(finished[0].artifacts_valid)
+            self.assertIn("empty_log", finished[0].reason)
 
     @unittest.skipUnless(sys.platform.startswith("linux"), "Linux flock integration")
     def test_linux_flock_rejects_second_holder(self) -> None:

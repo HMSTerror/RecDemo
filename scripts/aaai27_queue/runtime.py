@@ -297,17 +297,29 @@ class QueueRuntime:
             elapsed = max(0.0, self.monotonic() - running.started_monotonic)
             gpu_seconds = elapsed if running.gpu_id is not None else 0.0
             missing: list[str] = []
+            empty: list[str] = []
             if exit_code == 0:
                 for relative in running.task.success_artifacts:
                     artifact = require_within(self.queue_root / relative, self.queue_root)
                     if not artifact.is_file():
                         missing.append(relative)
-            artifacts_valid = exit_code == 0 and not missing
+                    elif artifact.stat().st_size <= 0:
+                        empty.append(relative)
+            log_path = self._task_log_path(running.task.task_id)
+            empty_log = (
+                exit_code == 0
+                and (not log_path.is_file() or log_path.stat().st_size <= 0)
+            )
+            artifacts_valid = exit_code == 0 and not missing and not empty and not empty_log
             reason = None
             if exit_code != 0:
                 reason = f"exit_code={exit_code}"
             elif missing:
                 reason = f"missing_artifacts={','.join(missing)}"
+            elif empty:
+                reason = f"empty_artifacts={','.join(empty)}"
+            elif empty_log:
+                reason = f"empty_log={log_path.relative_to(self.queue_root).as_posix()}"
             running.spawned.log_handle.close()
             if running.lock_handle is not None:
                 running.lock_handle.close()
