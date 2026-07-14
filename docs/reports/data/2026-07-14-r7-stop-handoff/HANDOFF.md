@@ -110,4 +110,3 @@ Full pointwise prediction 的当前结果为通过：Beauty c0/c60/c100 与 Stea
 - `docs/superpowers/specs/2026-07-14-continuation-gpu-sharing-design.md`
 - `paper/main_v2.tex`
 - `paper/main_v2_zh.md`
-
