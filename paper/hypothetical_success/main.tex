@@ -1,0 +1,228 @@
+% HYPOTHETICAL SUCCESS SCENARIO -- NOT AN EVIDENCE-BACKED SUBMISSION
+\documentclass[letterpaper]{article}
+\IfFileExists{../aaai27.sty}{\usepackage{../aaai27}}{\usepackage[margin=.75in]{geometry}\usepackage{times}}
+\usepackage{amsmath,amssymb,amsthm,booktabs,graphicx,url,xcolor}
+\newcommand{\blankcell}{--}
+\newcommand{\scenario}{\textcolor{red}{\textbf{HYPOTHETICAL SUCCESS SCENARIO --- RESULT CELLS INTENTIONALLY BLANK}}}
+\newcommand{\pcore}{p_{\mathrm{core}}}
+\newcommand{\pu}{p_u}
+\newcommand{\ch}{c_h}
+\newcommand{\ut}{\widetilde u}
+\newcommand{\Uds}{U_{\mathrm{ds}}}
+\newcommand{\TV}{\mathrm{TV}}
+\newtheorem{proposition}{Proposition}
+\title{When Stronger Evidence Hurts: Fallback-Safe Corruption Kernels for Discrete Diffusion Recommendation}
+\author{Anonymous Authors}
+\date{}
+
+\begin{document}
+\maketitle
+\begin{center}\scenario\end{center}
+
+\begin{abstract}
+Discrete diffusion recommenders corrupt an observed preference toward a proposal distribution and learn to reverse that process. Existing systems personalize the denoiser or guidance signal while sharing the corruption proposal across users. We study a reliability problem that arises when external text evidence is injected into this proposal: evidence that accurately predicts future positives can make a corruption law worse by assigning those positives more corruption mass. We separate a train-only cross-domain discovery statistic, an observed next-positive exposure measurement, and a preregistered corruption-risk intervention. The resulting history-conditioned proposal interpolates between the host proposal and a frozen text anchor, with an exact host reduction when the gate is zero and a one-step transition-row total-variation bound otherwise. This scenario manuscript assumes that the preregistered four-domain, corruption-response, attribution, uncertainty, baseline, and efficiency experiments all satisfy their success criteria. Numerical cells are intentionally blank until real dated artifacts authorize replacement.
+\end{abstract}
+
+\section{Introduction}
+Discrete diffusion recommendation replaces a single next-item prediction with a forward corruption process and a learned reverse process. In preference-fading models, the proposal distribution is not a peripheral sampler: it determines where preference mass moves, the stationary reference measure, the score-entropy weighting, and the analytic reverse ratio. Yet the proposal is normally global even when the score model is personalized.
+
+Side information appears to offer an immediate remedy. A user's history can define a text anchor over plausible alternatives, seemingly allowing the forward kernel to corrupt toward semantically relevant items. The difficulty is that a proposal is a corruption law. If text similarity assigns high probability to the user's actual next item, the same evidence that improves prediction can pollute corruption with future positives. This reverses the usual intuition that more predictive evidence should always receive a larger weight.
+
+We organize the evidence into three layers. First, $\Uds$ is a train-only discovery statistic measuring how often text similarity ranks an observed next item above popularity-matched negatives. Second, EPE measures the log change in proposal exposure assigned to the observed next item. Third, a condition-level factor $\phi_R$ is frozen before each controlled corruption run. This separation prevents an aggregate discovery pattern from being presented as if it were the production gate itself.
+
+Our method conditions the forward proposal rather than the encoder, loss, or reverse guidance. A history-only user factor and the preregistered condition factor control a convex interpolation between the learned host proposal and a frozen text anchor. At zero gate, the proposal and every derived kernel object reduce to the host construction. At nonzero gate, the proposal and a single forward transition row remain within explicit TV radii. We make no deterministic bound on trained NDCG.
+
+The assumed-success evidence package is designed to answer four questions. Does exposure risk predict when text-conditioned corruption helps? Does the proposed gate recover the host under destroyed evidence? Are the user factor and aligned anchor necessary? Does the mechanism remain competitive against original-paper-aligned sequential and diffusion baselines under one evaluator and selector? The manuscript reserves complete tables for these questions but reports no hypothetical number as fact.
+
+\paragraph{Contributions.}
+We formulate positive-exposure risk in corruption proposals; introduce a train-only discovery, measurement, and intervention pipeline; derive an exact host fallback and one-step TV bound; and define an atomic evaluation protocol spanning four domains, controlled corruption, attribution, external baselines, uncertainty, and efficiency.
+
+\section{Related Work}
+\paragraph{Sequential recommendation.}
+SASRec, Caser, GRURec, and BERT4Rec represent attention-, convolution-, recurrence-, and bidirectional-mask-based sequential recommenders. They provide architecture-diverse non-diffusion anchors. Our comparison adapts each to the same frozen row split, full real catalog, validation selector, and corrected evaluator rather than comparing incompatible published numbers.
+
+\paragraph{Diffusion recommendation.}
+DiffRec is the original-paper-aligned diffusion comparator in the confirmatory block. DreamRec, PreferDiff, and DDSR are optional local comparators only when their official implementations pass the same mapping and evaluator audit. DiffuRec is not used in the confirmatory table because it was an exploratory anchor and is not the target DiffRec family.
+
+\paragraph{Adaptive corruption and reliability.}
+Adaptive masking and confidence-ordered decoding modify schedules or generation order using model-internal confidence. Reliability-aware recommendation typically weights representations, losses, or predictions. Our intervention instead modifies the forward proposal and is defined so that closing the gate restores the host kernel exactly.
+
+\paragraph{False-negative mitigation.}
+Negative-sampling work avoids treating likely positives as negatives. In a preference-fading kernel, the transition law itself plays the role of a structured negative sampler. EPE measures this mechanism at the proposal level without claiming to enumerate every unobserved positive.
+
+\section{Method}
+Let the real-item vocabulary be $\Omega$ and let $\star$ denote the host pseudo-item. The host learns a proposal $\pcore$ and uses the rank-one kernel
+\begin{equation}
+P_{\sigma,p}=\alpha_\sigma I+(1-\alpha_\sigma)\mathbf{1}p^\top.
+\end{equation}
+For a history $h$, frozen item embeddings define
+\begin{equation}
+\ch(i)\propto\exp(\langle \bar e_h,e_i\rangle/\tau).
+\end{equation}
+The user factor $\ut$ standardizes history coherence against a length-matched random-history null and is clipped to $[0,1]$.
+
+The discovery statistic uses only training transitions:
+\begin{equation}
+\Uds=\Pr\big[s(h,y)>s(h,n)\big],
+\end{equation}
+where $y$ is the observed next item and $n$ is a popularity-matched training negative. The mechanism measurement is
+\begin{equation}
+\mathrm{EPE}(h,y)=\log(q_{\rm text}(y\mid h)+10^{-12})-\log(q_{\rm core}(y)+10^{-12}).
+\end{equation}
+For a preregistered corruption condition $R$, the gate is
+\begin{equation}
+g(h,R)=g_{\max}\phi_R\operatorname{clip}(\ut,0,1).
+\end{equation}
+The real-item mass is mixed while the pseudo-item coordinate remains the host value:
+\begin{equation}
+\pu(\star)=\pcore(\star),\qquad
+\pu^{\Omega}=(1-g)\widetilde\pcore^{\Omega}+g\ch.
+\end{equation}
+
+\begin{proposition}[Exact fallback]
+If $g=0$, then $\pu=\pcore$ and every proposal-derived forward, score-entropy, sampling, and analytic-reverse kernel object equals its host counterpart on the designated implementation path.
+\end{proposition}
+
+\begin{proposition}[Kernel-scoped deviation]
+For fixed history and condition,
+\begin{equation}
+\TV(\pu,\pcore)\le g,
+\qquad
+\TV(P_{\sigma,\pu}(i,\cdot),P_{\sigma,\pcore}(i,\cdot))\le(1-\alpha_\sigma)g.
+\end{equation}
+These inequalities do not bound an independently trained score model or an end-to-end ranking metric.
+\end{proposition}
+
+\section{Experimental Protocol}
+We use Steam, ML1M, Amazon Beauty, and Amazon Toys and Games under frozen train/validation/test frames. Every local method uses the same item mapping, full real catalog, row-weighted HR@10 and NDCG@10 evaluator, and validation NDCG@10 checkpoint selector. New runs begin at seed 100; repeated seeds, when completed, are aggregated without discarding unfavorable runs. Test metrics may be logged during development, and test is not described as an untouched final holdout.
+
+The core baseline block contains SASRec, Caser, GRURec, DiffRec, a matched PreferGrow host, and our method. BERT4Rec is an extended sequential baseline. DreamRec, PreferDiff, and DDSR enter a separate optional block only after official-code protocol audits. Starting any baseline requires all four datasets or an explicit incomplete-row disclosure.
+
+\section{Results Under the Assumed-Success Scenario}
+\begin{center}\scenario\end{center}
+All cells below are blank by design. The surrounding prose states the logical comparison that would be made after real artifacts are available; it is not an empirical claim.
+
+\subsection{Main comparison}
+Under the assumed-success scenario, the completed table would establish that the proposed method remains competitive with diverse sequential and diffusion baselines while improving over its matched PreferGrow host on the preregistered primary criterion.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{l*{8}{c}}
+\toprule
+& \multicolumn{2}{c}{Steam} & \multicolumn{2}{c}{ML1M} & \multicolumn{2}{c}{Beauty} & \multicolumn{2}{c}{ATG}\\
+Method & HR@10 & NDCG@10 & HR@10 & NDCG@10 & HR@10 & NDCG@10 & HR@10 & NDCG@10\\
+\midrule
+SASRec & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Caser & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+GRURec & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+BERT4Rec & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+DiffRec & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+PreferGrow host & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Ours & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Main common-contract comparison. Every cell requires a dated artifact; blank cells are not zero.}
+\end{table*}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+Optional official-code baseline & HR@10 & NDCG@10\\
+\midrule
+DreamRec & \blankcell & \blankcell\\
+PreferDiff & \blankcell & \blankcell\\
+DDSR & \blankcell & \blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Optional locally audited context, repeated separately for each domain. Rows remain ineligible until official-code common-contract audits pass.}
+\end{table}
+
+\subsection{Controlled corruption response}
+The assumed-success pattern is monotone in measured risk: corruption increases next-positive exposure, the preregistered $\phi_R$ decreases, the gated method retains useful clean-condition behavior, and the fully destroyed condition returns the host proposal through explicit $\phi_R=0$. The c100 row is interpreted as a fallback sanity check, not learned adaptive collapse.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{llcccccc}
+\toprule
+Dataset & Arm & Val HR@10 & Val NDCG@10 & Test HR@10 & Test NDCG@10 & EPE & Mean gate\\
+\midrule
+Beauty & Host & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Beauty & Anchor c0/c60/c100 & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Beauty & Full c0/c60/c100 & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Steam & Host & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Steam & Anchor c0/c60/c100 & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Steam & Full c0/c60/c100 & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Atomic corruption-response matrix. Each grouped row expands to the three preregistered levels in the final artifact-backed table.}
+\end{table*}
+
+\subsection{Attribution and ablation}
+Under the assumed-success interpretation, anchor-only isolates the raw corruption pressure, shuffled-user removes alignment, global-p removes user adaptation, and the full method demonstrates that aligned user reliability is load-bearing.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Arm & Steam & ML1M & Beauty & ATG\\
+\midrule
+Host & \blankcell&\blankcell&\blankcell&\blankcell\\
+Text anchor only & \blankcell&\blankcell&\blankcell&\blankcell\\
+No user factor & \blankcell&\blankcell&\blankcell&\blankcell\\
+Shuffled user factor & \blankcell&\blankcell&\blankcell&\blankcell\\
+Global proposal control & \blankcell&\blankcell&\blankcell&\blankcell\\
+Full risk-gated proposal & \blankcell&\blankcell&\blankcell&\blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Ablation NDCG@10. Four-domain cells are filled only if every arm shares the common contract; otherwise the table is explicitly scoped to the completed domains.}
+\end{table}
+
+\subsection{Uncertainty and generalization}
+The successful evidence package would include matched repeated seeds and user-resampling intervals where estimable. Seed variation and user bootstrap answer different questions and are reported separately.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Dataset & Host mean$\pm$std & Ours mean$\pm$std & Paired $\Delta$ & 95\% interval\\
+\midrule
+Steam & \blankcell&\blankcell&\blankcell&\blankcell\\
+ML1M & \blankcell&\blankcell&\blankcell&\blankcell\\
+Beauty & \blankcell&\blankcell&\blankcell&\blankcell\\
+ATG & \blankcell&\blankcell&\blankcell&\blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Repeated-run and uncertainty summary. No interval is populated from a configuration value or from records lacking user identity.}
+\end{table}
+
+\subsection{Efficiency}
+The assumed-success deployment result would show that proposal conditioning adds bounded memory and latency overhead while retaining the host architecture and avoiding a trainable text encoder.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Trainable params & Peak GiB & Train ex/s & Eval ex/s & Sample ms/user\\
+\midrule
+PreferGrow host & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+Ours & \blankcell&\blankcell&\blankcell&\blankcell&\blankcell\\
+\bottomrule
+\end{tabular}
+\caption{Isolated-L20 efficiency with identical batch size, precision, warm-up, timed batches, and repeats.}
+\end{table}
+
+\section{Discussion}
+If the blank tables are eventually populated by successful frozen runs, the combined evidence would support a narrow causal chain: controlled evidence corruption increases observed positive exposure; the preregistered condition factor reduces proposal tilt; aligned history reliability improves the useful regime; and explicit zero gating recovers the host kernel. It would not prove that every form of side information should be gated, that EPE observes every latent positive, or that a one-step TV bound guarantees NDCG.
+
+The method's scientific value would lie in treating external evidence as a potential corruption risk rather than an unconditionally helpful feature. This perspective is transferable to any corruption or negative-mining mechanism whose proposal can concentrate mass on future positives. The exact fallback construction is narrower: it relies on a host proposal that can be retained as an explicit interpolation endpoint.
+
+\paragraph{Limitations.}
+Even under the assumed-success scenario, four domains do not establish a population law; repeated seeds do not remove development-time test inspection; the text bank is frozen and unimodal; $\phi_R$ is condition-level rather than a learned causal estimator; EPE measures observed next-positive exposure rather than complete false-negative probability; and the theoretical bound remains kernel-scoped. Optional diffusion baselines are not locally comparable until their official-code audits pass.
+
+\section{Conclusion}
+We presented a fallback-safe way to condition a discrete diffusion corruption proposal on external evidence. The method separates train-only discovery, exposure measurement, and preregistered intervention, and it retains an exact host endpoint. This scenario draft shows the complete argument and experiment layout that would be justified if all frozen experiments succeed. It deliberately leaves numerical results blank so that scientific language cannot outrun evidence.
+
+\bibliographystyle{plain}
+\bibliography{../references}
+\end{document}

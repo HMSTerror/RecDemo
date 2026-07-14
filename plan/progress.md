@@ -1,5 +1,22 @@
 # Progress
 
+## 2026-07-14 hypothetical-success paper
+
+- Stage: S3 experiment/table planning, S4 full scenario drafting, S5 evidence-bound review.
+- Status: English LaTeX and Chinese companion drafted under `paper/hypothetical_success/`.
+- Baseline block: SASRec, Caser, GRURec, DiffRec, BERT4Rec, matched PreferGrow, Ours; optional DreamRec/PreferDiff/DDSR; DiffuRec excluded.
+- Data boundary: all result cells blank; no scenario value enters the active manuscript or evidence ledger.
+
+### Capability-use audit
+
+- Required skills: using-research-writing, paper-orchestration, experiment-results-planning, latex-output, verification-before-completion.
+- Skills actually used: all required skills; fast-context located the frozen baseline policy.
+- Inputs consumed: evidence-risk rescue baseline policy, local experiment protocol, active method/theory structure, and the user-approved all-success premise.
+- Inputs not used: partial r7 metrics, historical DiffuRec results, published baseline numbers, mock numeric data, and unavailable official-code results.
+- Artifacts produced: isolated English/Chinese scenario manuscripts, blank-table contract, task packet, spec review, and quality review.
+- Verification run: LaTeX environment counts matched; nine Chinese sections present; six core, one extended, and three optional baseline identities verified; 56 main-table result cells are blank; DiffuRec confirmatory-row and fabricated-success-language scans passed; authored-path diff check passed.
+- Remaining risk: this is intentionally not an evidence-backed submission; every result cell and success sentence requires real artifact authorization before reuse.
+
 ## 2026-07-14 AAAI manuscript local integration
 
 - Stage: S2 method amendment, S3 tables/figures, S4 manuscript integration, S5 submission review.
