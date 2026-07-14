@@ -1,5 +1,15 @@
 # Progress
 
+## 2026-07-14 r7 stop handoff and mechanism verdict
+
+- Server snapshot: `2026-07-14T22:06:23+08:00`; r7 has 14 active records, with 12 passed, 2 running, 0 failed, no RISK-08 exit, and no terminal marker.
+- User stop: continuation controller PID `603730` was stopped; `STOP_AFTER_CURRENT` is present; controller state is `stopped/user_requested`; continuation scientific record count is zero.
+- Runtime implementation: guarded two-process-per-GPU continuation scheduling is committed at `8f7632c`; Linux verification reports 99 tests and 12 subtests passed. The deployed bundle remains inert because the controller is stopped.
+- Scientific verdict: full pointwise predictions currently satisfy their frozen directional/parity rules, but three completed-artifact mechanism checks are irreversibly below contract: anchor ordering, EPE-anchor Spearman association, and worst-anchor improvement.
+- Expected frozen exit: `submission_stop` if the final two artifacts validate; no continuation or rescue experiment is authorized.
+- Paper consequence: preserve exact fallback, one-step kernel TV scope, prospective falsification, and audit protocol; remove confirmed EPE-predictive-risk and gate-efficacy claims.
+- Handoff artifacts: `docs/reports/data/2026-07-14-r7-stop-handoff/`.
+
 ## 2026-07-14 hypothetical-success paper
 
 - Stage: S3 experiment/table planning, S4 full scenario drafting, S5 evidence-bound review.

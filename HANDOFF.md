@@ -1,5 +1,17 @@
 # AAAI 本地固定盘交接（2026-07-13）
 
+## 2026-07-14 服务器停机与科学裁决补充
+
+用户已要求暂停后续工作。continuation controller 已于 `2026-07-14T22:03:23+08:00` 停止，标准 `STOP_AFTER_CURRENT` 标记已落地，continuation 科学任务记录数为 `0`。不要自动删除该标记或重启 continuation；恢复必须获得用户新的明确授权。r7 与 root ACTRec 未被停止，r7 在 `2026-07-14T22:06:23+08:00` 为 `12 passed / 2 running / 0 failed`，RISK-08 与 terminal 均尚未生成。
+
+现有完成工件已经足以否定预注册机制现象的整体通过：anchor ordering 失败、EPE-anchor Spearman 失败、worst-anchor improvement 失败。最后两条 Steam full 臂只能改变 full pointwise prediction，不能翻转前三项。因此，若剩余工件通过 provenance 校验，冻结 finalizer 预期输出 `submission_stop`，而非 `risk_gated_method`。论文仍可转为 fallback-safe kernel 与 prospective reliability audit，但不得继续声称 EPE 风险代理或 gate efficacy 已被验证。
+
+详细状态、精确数字、恢复边界与下一模型提示词见：
+
+- `docs/reports/data/2026-07-14-r7-stop-handoff/HANDOFF.md`
+- `docs/reports/data/2026-07-14-r7-stop-handoff/status.json`
+- `docs/reports/data/2026-07-14-r7-stop-handoff/NEXT_MODEL_PROMPT.md`
+
 ## 2026-07-14 manuscript integration addendum
 
 - English/Chinese active manuscripts now distinguish U_ds discovery, EPE measurement, and preregistered phi_R intervention.
@@ -20,8 +32,8 @@
 - Branch：`codex/aaai-local-fixed-disk`
 - Dated package：`docs/reports/data/2026-07-13-aaai-local-fixed-disk/`
 - 冻结输入 inventory：`input_sha256.csv`
-- 服务器 continuation revision：`e70d9481cca57617c04e7fdbc7fc7f9dc83b1b3c`
-- 服务器 r7/continuation controller 不属于本分支写权限范围。
+- 冻结 continuation manifest 的 source revision：`e70d9481cca57617c04e7fdbc7fc7f9dc83b1b3c`
+- 2026-07-13 固定盘任务原本不含服务器写权限；2026-07-14 用户另行授权的共享调度部署与停止事实，以本文件最上方补充和 dated handoff 为准。
 - `inputs/r7/source/scripts/run_aaai27_pilot_task.py` 对应服务器原始路径；早期快照还保留一份位于 `source/scripts/aaai27_adapters/` 的同内容副本，二者均由 inventory 记录，审计时以原始路径副本为准。
 
 ## 已落地内容
@@ -56,7 +68,7 @@ python scripts/build_r7_paper_evidence.py \
 4. 若出口为 `audit_only` 或 `submission_stop`，保留负结果，切换 audit-only 稿件，不启动 rescue tuning。
 5. 依据 `AAAI_MANUSCRIPT_INTEGRATION_CHECKLIST.md` 一次性修改中英文稿。
 
-## 尚缺实验
+## 尚缺实验（历史计划；当前未授权执行）
 
 - P0：r7 14-task 原子终态与 RISK-08 出口。
 - P0：E2 ATG attribution，前提是真实 continuation entrypoint 与 frozen contract 已验证。

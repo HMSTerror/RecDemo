@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "snapshot_at": "2026-07-14T22:06:23+08:00",
+  "branch": "codex/aaai-local-fixed-disk",
+  "local_revision": "8f7632c",
+  "r7": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-12-risk0607-987eb19-r7",
+    "manifest_sha256": "387636c8c5dc5b09bb9c509db26b0f335ecac3ed1525e3c4bee3289612bb966e",
+    "record_count": 14,
+    "passed": 12,
+    "running": 2,
+    "failed": 0,
+    "risk08_exit": null,
+    "terminal": false,
+    "running_tasks": [
+      {
+        "task_id": "pilot.e1_pass.Steam.full.c60",
+        "wrapper_pid": 496402,
+        "gpu_id": 0,
+        "current_best_step": 24000,
+        "current_best_validation_ndcg10": 0.013284196283968227,
+        "current_best_test_ndcg10": 0.012230524537654101,
+        "metrics_are_terminal": false
+      },
+      {
+        "task_id": "pilot.e1_pass.Steam.full.c100",
+        "wrapper_pid": 419879,
+        "gpu_id": 1,
+        "current_best_step": 30000,
+        "current_best_validation_ndcg10": 0.013826622591373175,
+        "current_best_test_ndcg10": 0.012649277987867002,
+        "metrics_are_terminal": false
+      }
+    ]
+  },
+  "continuation": {
+    "queue_root": "/data/Zijian/goal/aaai27_queue/2026-07-13-method-pass-continuation-e70d948",
+    "manifest_sha256": "79010b193eecad7dee59d2f6d86c764f7169f55b7bd08ba70f1e7999f2e8ec5e",
+    "controller_status": "stopped",
+    "controller_pid": 603730,
+    "stopped_at": "2026-07-14T22:03:23+08:00",
+    "stop_reason": "user_requested",
+    "stop_after_current_present": true,
+    "scientific_record_count": 0,
+    "restart_authorized": false
+  },
+  "frozen_mechanism_checks": {
+    "anchor_response_ordering_passed": false,
+    "beauty_max_opposite_reversal": 0.002034093451605719,
+    "steam_max_opposite_reversal": 0.01797613115374947,
+    "ordering_tolerance": 0.002,
+    "spearman_association_passed": false,
+    "spearman_rho": 0.14285714285714285,
+    "spearman_threshold_max": -0.5,
+    "worst_anchor_improvement_passed": false,
+    "worst_anchor_improvement": 0.0005171962231124635,
+    "worst_anchor_improvement_required": 0.002,
+    "full_predictions_current_best_passed": true,
+    "expected_exit_if_remaining_artifacts_validate": "submission_stop"
+  },
+  "deployment": {
+    "guarded_sharing_revision": "8f7632c",
+    "bundle": "/data/Zijian/goal/RecDemo_aaai27_continuation_8f7632c_b1",
+    "source_manifest_sha256": "504b03388b00579ceb0f40a65a74b6417f25e0172b2c04132cda4aaa6c129b93",
+    "windows_tests": "98 passed, 1 skipped",
+    "linux_tests": "99 passed, 12 subtests passed",
+    "controller_running": false
+  },
+  "resource_snapshot": {
+    "gpu0_free_mib": 34837,
+    "gpu1_free_mib": 34813,
+    "gpu0_utilization_percent": 100,
+    "gpu1_utilization_percent": 100,
+    "data_free_gib_rounded": 54,
+    "disk_hard_stop_gib": 40
+  }
+}
