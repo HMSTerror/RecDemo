@@ -1,0 +1,23 @@
+{
+  "interpretation": "preregistered intervention; not performance",
+  "outputs": [
+    "paper\\figures\\phi_r_response.pdf",
+    "paper\\figures\\phi_r_response.png"
+  ],
+  "row_count": 6,
+  "schema_version": 1,
+  "source": "docs\\reports\\data\\2026-07-13-aaai-local-fixed-disk\\risk_response_source.csv",
+  "source_sha256": "970fa9655a409801fe59a87dabc3f41e157feb29ac169f1df67356c8808cbf7a",
+  "values": {
+    "Beauty": {
+      "c0": 1.0,
+      "c100": 0.0,
+      "c60": 0.1366311174092942
+    },
+    "Steam": {
+      "c0": 1.0,
+      "c100": 0.0,
+      "c60": 0.05808110271503808
+    }
+  }
+}

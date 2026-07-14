@@ -1,0 +1,27 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  node distance=4mm and 5mm,
+  box/.style={draw,rounded corners,align=center,minimum height=7mm,inner sep=3pt},
+  frozen/.style={box,fill=blue!8,draw=blue!55!black},
+  host/.style={box,fill=gray!12,draw=black!65},
+  gate/.style={box,fill=orange!13,draw=orange!70!black},
+  out/.style={box,fill=green!10,draw=green!50!black},
+  arr/.style={-{Latex[length=2mm]},thick}
+]
+\node[frozen] (train) {train-only evidence\\$U_{ds}$ discovery / EPE audit};
+\node[frozen,right=of train] (risk) {preregistered condition\\factor $\phi_R$};
+\node[host,below=7mm of train] (core) {learned host proposal\\$p_{\rm core}$};
+\node[frozen,right=of core] (anchor) {frozen text anchor\\$c_h$};
+\node[frozen,below=of core] (hist) {history-only null-calibrated\\coherence $\widetilde u$};
+\node[gate,right=of hist] (g) {$g=g_{\max}\phi_R\,\mathrm{clip}(\widetilde u,0,1)$};
+\node[out,right=7mm of g] (mix) {$p_u=(1-g)p_{\rm core}+g c_h$\\pseudo-item mass unchanged};
+\node[out,below=of mix] (kernel) {forward corruption / score entropy\\sampling / analytic reverse};
+\draw[arr] (train)--(risk);
+\draw[arr] (risk)--(g);
+\draw[arr] (hist)--(g);
+\draw[arr] (core)--(mix);
+\draw[arr] (anchor)--(mix);
+\draw[arr] (g)--(mix);
+\draw[arr] (mix)--(kernel);
+\node[draw=red!65!black,dashed,fit=(mix)(kernel),inner sep=3pt,label={[red!65!black]below:$g=0$: exact host kernel; nonzero $g$: one-step TV scope}] {};
+\end{tikzpicture}

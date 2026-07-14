@@ -1,5 +1,32 @@
 # Progress
 
+## 2026-07-14 AAAI manuscript local integration
+
+- Stage: S2 method amendment, S3 tables/figures, S4 manuscript integration, S5 submission review.
+- Status: in progress under the user-approved L9--L16 design.
+- Design: `docs/superpowers/specs/2026-07-14-aaai-manuscript-local-integration-design.md`.
+- Plan: `docs/superpowers/plans/2026-07-14-aaai-manuscript-local-integration.md`.
+- Task packet: `plan/task-packets/2026-07-14-aaai-manuscript-local-integration.md`.
+- Server boundary: live r7 remains read-only and nonterminal; no partial metric enters the manuscript.
+
+### L9--L16 implementation status
+
+- L9/L10/L11: English/Chinese method, evaluator wording, and four-domain SASRec integrated.
+- L12/L15: three external terminal-exit modules and supplement reproducibility record created.
+- L13: AAAI entrypoint/build instructions created; official style and TeX engine are absent locally, so camera-format compilation remains blocked.
+- L14: editable method/risk TikZ diagrams and frozen phi_R PDF/PNG generated; r7 performance figure remains blocked.
+- L16: read-only synchronizer implemented with RED/GREEN static safety tests; nonterminal snapshots are supported. Terminal Windows snapshots remain fail-closed pending clean-null external-provenance path mapping.
+
+### Capability-use audit
+
+- Required skills: brainstorming, using-research-writing, paper-orchestration, writing-plans, executing-plans, latex-output, figures-diagram, venue-templates, TDD, verification-before-completion.
+- Skills actually used: all required skills; fast-context was used to locate manuscript claims and insertion points.
+- Inputs consumed: dated Gate-2 amendment, claim map, evaluator arbitration, SASRec CSV/audit, phi_R source CSV, R12 scope, current manuscripts and queue builder.
+- Inputs not used: partial live r7 metrics, DiffuRec confirmatory artifacts, E7 regeneration, official AAAI style files (absent), and TeX compilation engines (absent).
+- Artifacts produced: synchronized manuscript edits, SASRec table, TikZ figures, phi_R plot and provenance JSON, conditional exits, supplement, build note, read-only synchronizer, tests, spec/quality reviews.
+- Verification run: RED/GREEN recorded for phi_R figure, source-root snapshot binding, and synchronizer; final combined suite 96 passed with 1 Windows-inapplicable flock skip; Python/PowerShell parsing, 22-citation resolution, LaTeX environment/input checks, forbidden-claim scan, and authored-path diff check passed.
+- Remaining risk: terminal r7 evidence, official AAAI compilation/page count, single-seed evidence, and terminal clean-null path mapping.
+
 ## 2026-07-13 AAAI local fixed-disk
 
 - Stage: S2 method evidence amendment, S3 experiment/result contracts, and S5 submission-risk review.

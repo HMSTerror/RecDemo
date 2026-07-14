@@ -149,6 +149,7 @@ def build_paper_evidence(
     output_dir: Path | str,
     *,
     allow_not_ready: bool = False,
+    source_queue_root: Path | str | None = None,
 ) -> dict[str, Any]:
     root = Path(queue_root).resolve(strict=True)
     output = Path(output_dir)
@@ -171,8 +172,14 @@ def build_paper_evidence(
     except (OSError, TypeError, ValueError) as exc:
         raise EvidenceBuildError("invalid queue manifest") from exc
     active, inactive = _validate_manifest_contract(manifest)
-    if Path(manifest.run_root).resolve(strict=False) != root:
-        raise EvidenceBuildError("manifest run_root does not match queue root")
+    if source_queue_root is None:
+        expected_run_root_display = str(root)
+        run_root_matches = Path(manifest.run_root).resolve(strict=False) == root
+    else:
+        expected_run_root_display = str(source_queue_root).replace("\\", "/").rstrip("/")
+        run_root_matches = str(manifest.run_root).replace("\\", "/").rstrip("/") == expected_run_root_display
+    if not run_root_matches:
+        raise EvidenceBuildError("manifest run_root does not match bound source queue root")
     inactive_records = [task.task_id for task in inactive if _record_path(root, task.task_id).exists()]
     if inactive_records:
         raise EvidenceBuildError(f"inactive branch has task records: {inactive_records}")
@@ -191,6 +198,7 @@ def build_paper_evidence(
         "schema_version": 1,
         "state": "not_ready",
         "queue_root": str(root),
+        "source_queue_root": expected_run_root_display,
         "queue_manifest_sha256": actual_hash,
         "expected_active_tasks": EXPECTED_ACTIVE_TASKS,
         "passed_active_tasks": passed,
@@ -286,6 +294,7 @@ def main() -> int:
     parser.add_argument("--expected-manifest-sha256", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--allow-not-ready", action="store_true")
+    parser.add_argument("--source-queue-root", type=Path)
     args = parser.parse_args()
     try:
         status = build_paper_evidence(
@@ -293,6 +302,7 @@ def main() -> int:
             args.expected_manifest_sha256,
             args.output_dir,
             allow_not_ready=args.allow_not_ready,
+            source_queue_root=args.source_queue_root,
         )
     except EvidenceBuildError as exc:
         parser.error(str(exc))

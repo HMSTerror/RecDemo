@@ -1,0 +1,47 @@
+\section{Supplementary Reproducibility Record}
+
+\paragraph{Data and evaluator.}
+All methods consume the frozen \texttt{paper\_raw\_v1} row contract.
+The corrected evaluator covers 80,651 Steam, 85,405 ML1M, 2,237 Beauty,
+and 1,942 ATG test rows. The dated E0 amendment retains legacy values
+and applies the corrected ruler to every method rather than replacing
+selected cells.
+
+\paragraph{Evidence layers.}
+$U_{ds}$ is a train-only discovery statistic computed from 4,000
+training transitions and 100 popularity negatives per transition. EPE
+is the observed next-positive exposure proxy
+$\log(q_{\rm text}(y\mid h)+10^{-12})-
+\log(q_{\rm core}(y)+10^{-12})$. The atomic pilot freezes
+$\phi_R=1.0/0.136631/0.0$ for Beauty and
+$1.0/0.058081/0.0$ for Steam under c0/c60/c100. These quantities have
+different evidential roles.
+
+\paragraph{Implementation trace.}
+The historical E1 step-0 mismatch was preserved. After repair, the
+designated R12 trace at revision \texttt{0338cc2} performed 2,986
+comparisons with zero failures. This trace is scoped to its designated
+Beauty path and does not certify every dataset, checkpoint, or auxiliary
+injection mode.
+
+\paragraph{External baseline.}
+The adapted SASRec implementation reads the frozen frames, changes only
+padding orientation, uses full-softmax training and full-real-catalog
+evaluation, and selects by validation NDCG@10. It is a common-contract
+baseline rather than an official-protocol reproduction. All four
+domains are reported atomically, including Beauty's validation-to-test
+decline.
+
+\paragraph{Uncertainty and test use.}
+All new training reported in this cycle uses seed 100 and is described
+as a single-run observation. Frozen transition records lack user IDs,
+so E7 ran zero bootstrap replicates and user-level uncertainty is not
+estimable. Model selection used validation only; test metrics were
+logged during development, so test is not described as an untouched
+final holdout.
+
+\paragraph{Artifact release.}
+The local evidence package inventories 70 immutable inputs by SHA-256.
+Atomic r7 performance is released only after 14/14 active tasks,
+nonempty task and training logs, valid artifact manifests, consistent
+RISK-08/TERMINAL markers, and a \texttt{risk\_gated\_method} exit.

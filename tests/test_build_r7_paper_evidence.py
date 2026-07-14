@@ -146,6 +146,27 @@ def test_nonterminal_snapshot_emits_status_only(tmp_path: Path) -> None:
     assert not (output / "r7_paper_evidence.json").exists()
 
 
+def test_read_only_snapshot_may_bind_original_remote_run_root(tmp_path: Path) -> None:
+    root, _ = _layout(tmp_path)
+    manifest_path = root / "queue" / "queue_seed100.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    remote_root = "/data/example/frozen-r7"
+    manifest["run_root"] = remote_root
+    _write_json(manifest_path, manifest)
+    queue_hash = sha256_file(manifest_path)
+
+    status = build_paper_evidence(
+        root,
+        queue_hash,
+        tmp_path / "out",
+        allow_not_ready=True,
+        source_queue_root=remote_root,
+    )
+
+    assert status["state"] == "not_ready"
+    assert status["source_queue_root"] == remote_root
+
+
 def test_authorized_terminal_emits_complete_atomic_table(tmp_path: Path) -> None:
     root, queue_hash = _layout(tmp_path, terminal_exit="risk_gated_method")
     output = tmp_path / "out"

@@ -1,0 +1,16 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  panel/.style={draw,rounded corners,minimum width=.43\linewidth,minimum height=24mm,align=center,inner sep=4pt},
+  arr/.style={-{Latex[length=2mm]},thick}
+]
+\node[panel,fill=blue!7] (low) {\textbf{Lower observed exposure risk}\\
+text structures plausible alternatives\\$\Downarrow$\\
+anchor mass behaves as hard-negative structure\\
+condition factor may remain open};
+\node[panel,fill=orange!9,right=7mm of low] (high) {\textbf{Higher observed exposure risk}\\
+text assigns mass to observed next positives\\$\Downarrow$\\
+corruption increases positive exposure\\
+preregistered $\phi_R$ closes the proposal tilt};
+\draw[arr] (low)--node[above]{increasing $U_{ds}$/EPE evidence}(high);
+\node[below=5mm of $(low)!0.5!(high)$,align=center] {Discovery ($U_{ds}$) $\neq$ measurement (EPE) $\neq$ intervention ($\phi_R$).\\The figure states a mechanism hypothesis, not an NDCG guarantee.};
+\end{tikzpicture}

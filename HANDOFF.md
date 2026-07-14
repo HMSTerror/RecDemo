@@ -1,5 +1,15 @@
 # AAAI 本地固定盘交接（2026-07-13）
 
+## 2026-07-14 manuscript integration addendum
+
+- English/Chinese active manuscripts now distinguish U_ds discovery, EPE measurement, and preregistered phi_R intervention.
+- Strict 4/4 wording was removed; Steam/ML1M endpoints and the Beauty/ATG adjacent swap are reported.
+- Adapted common-contract SASRec is integrated across all four domains with Beauty validation/test side by side.
+- Editable TikZ method/risk diagrams and a deterministic phi_R PDF/PNG are under `paper/figures/`.
+- Three RISK-08 conditional result modules remain external to the compiled manuscript.
+- `paper/AAAI_BUILD.md` records that the official author kit and local TeX engine are absent.
+- `scripts/sync_and_build_r7_paper_evidence.ps1` is remote-read-only and works for nonterminal status snapshots. Terminal Windows release is still fail-closed because the production validator expects the original Linux clean-null path; add immutable external-provenance copying/path mapping before relying on terminal local release.
+
 ## 一句话状态
 
 本地方法、evaluator 与 SASRec 证据已形成 dated 草案；r7 论文结果仍由 14-task 原子终态闸门阻塞，当前任何部分臂都不得进入主表。
