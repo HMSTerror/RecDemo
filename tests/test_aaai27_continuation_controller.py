@@ -9,7 +9,7 @@ from scripts.aaai27_continuation.controller import (
     MaintenanceWindow,
 )
 from scripts.aaai27_continuation.manifest import build_continuation_manifest
-from scripts.aaai27_queue.models import QueueManifest
+from scripts.aaai27_queue.models import QueueManifest, TaskRecord
 from scripts.aaai27_queue.runtime import FinishedChild, StartedChild
 from tests.test_aaai27_continuation_manifest import _inputs
 from tests.test_aaai27_continuation_upstream import _build_r7_fixture
@@ -41,6 +41,7 @@ def _controller(
     exit_value: str | None,
     passed: int,
     now: datetime | None = None,
+    gpu_slots_per_card: int = 1,
 ) -> ContinuationController:
     binding = _build_r7_fixture(
         tmp_path / "upstream",
@@ -63,6 +64,7 @@ def _controller(
         now=lambda: now or datetime(2026, 7, 15, 12, 0, tzinfo=UTC8),
         free_disk_gib=lambda: 67.0,
         live_process=lambda pid, token: True,
+        gpu_slots_per_card=gpu_slots_per_card,
     )
 
 
@@ -92,6 +94,79 @@ def test_method_pass_starts_only_contract_gate_first(tmp_path: Path) -> None:
     record = controller.load_records()["continuation.method_pass_gate"]
     assert record.status == "running"
     assert record.gpu_id is None
+
+
+def test_two_slots_per_card_offers_four_gpu_tasks_after_contract_gate(tmp_path: Path) -> None:
+    controller = _controller(
+        tmp_path,
+        exit_value="risk_gated_method",
+        passed=14,
+        gpu_slots_per_card=2,
+    )
+    _write_prefergrow_marker(controller.queue_root)
+    runtime = FakeRuntime()
+    controller.tick(runtime)
+    runtime.finished.append(
+        FinishedChild(
+            task_id="continuation.method_pass_gate",
+            exit_code=0,
+            gpu_seconds=0.0,
+            artifacts_valid=True,
+            reason=None,
+        )
+    )
+
+    controller.tick(runtime)
+
+    gpu_starts = [task_id for task_id in runtime.started if task_id != "continuation.method_pass_gate"]
+    assert len(gpu_starts) == 4
+
+
+def test_running_task_high_estimate_remains_reserved_in_gpu_budget(tmp_path: Path) -> None:
+    controller = _controller(
+        tmp_path,
+        exit_value="risk_gated_method",
+        passed=14,
+        gpu_slots_per_card=2,
+    )
+    controller.manifest = QueueManifest.from_dict(
+        {
+            **controller.manifest.to_dict(),
+            "gpu_budget_hours": 10.0,
+        }
+    )
+    records = {
+        "continuation.method_pass_gate": TaskRecord(
+            task_id="continuation.method_pass_gate",
+            status="passed",
+            attempt=1,
+            pid=1,
+            process_start_time="1",
+            gpu_id=None,
+            started_at="start",
+            ended_at="end",
+            exit_code=0,
+            gpu_seconds=0.0,
+            reason=None,
+        ),
+        "continuation.RISK-13.ML1M.host.seed100": TaskRecord(
+            task_id="continuation.RISK-13.ML1M.host.seed100",
+            status="running",
+            attempt=1,
+            pid=2,
+            process_start_time="2",
+            gpu_id=0,
+            started_at="start",
+            ended_at=None,
+            exit_code=None,
+            gpu_seconds=0.0,
+            reason=None,
+        ),
+    }
+
+    assert all(
+        task.gpu_slots == 0 for task in controller._scheduler_candidates(records)
+    )
 
 
 def test_preserve_only_exit_starts_zero_tasks(tmp_path: Path) -> None:

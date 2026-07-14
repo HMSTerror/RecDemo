@@ -18,6 +18,7 @@ from aaai27_queue.runtime import (
     LinuxFlockBackend,
     ProcessSupervisor,
     QueueRuntime,
+    probe_gpu_free_memory_mib,
     probe_gpu_pids,
 )
 from aaai27_queue_testdata import make_task
@@ -85,6 +86,18 @@ class QueueRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(GpuBusyError, "driver error"):
             probe_gpu_pids(0, runner=runner)
 
+    def test_gpu_memory_probe_parses_one_integer(self) -> None:
+        runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "34837\n", ""))
+
+        self.assertEqual(34837, probe_gpu_free_memory_mib(0, runner=runner))
+        self.assertIn("--id=0", runner.call_args.args[0])
+
+    def test_gpu_memory_probe_is_fail_closed_on_unknown_output(self) -> None:
+        runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, "N/A\n", ""))
+
+        with self.assertRaisesRegex(GpuBusyError, "memory probe"):
+            probe_gpu_free_memory_mib(0, runner=runner)
+
     def test_supervisor_uses_argv_no_shell_new_session_and_env_allowlist(self) -> None:
         popen = mock.Mock(return_value=FakeProcess(77))
         supervisor = ProcessSupervisor(popen=popen, inherited_env={"PATH": "safe", "SECRET_TOKEN": "hidden"})
@@ -116,6 +129,136 @@ class QueueRuntimeTests(unittest.TestCase):
 
         self.assertIsNone(runtime.start_task(task, (0,)))
         popen.assert_not_called()
+
+    def test_shared_gpu_allows_one_local_task_beside_one_external_process(self) -> None:
+        process = FakeProcess(301)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: {900},
+                gpu_memory_probe=lambda gpu_id: 30000,
+                process_descendants=lambda pid: set(),
+                max_processes_per_gpu=2,
+                min_free_memory_mib=8192,
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+
+            first = runtime.start_task(self.runtime_task(root, task_id="gpu.shared-first"), (0,))
+            third_total = runtime.start_task(self.runtime_task(root, task_id="gpu.shared-third"), (0,))
+
+            self.assertEqual(0, first.gpu_id)
+            self.assertIsNone(third_total)
+            self.assertEqual(1, popen.call_count)
+            runtime._running[301].spawned.log_handle.close()
+
+    def test_local_gpu_descendant_is_not_double_counted(self) -> None:
+        processes = [FakeProcess(401), FakeProcess(402)]
+        popen = mock.Mock(side_effect=processes)
+        gpu_rows = iter((set(), set(), {1401}, {1401}))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: next(gpu_rows),
+                gpu_memory_probe=lambda gpu_id: 30000,
+                process_descendants=lambda pid: {1401} if pid == 401 else set(),
+                max_processes_per_gpu=2,
+                min_free_memory_mib=8192,
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+
+            first = runtime.start_task(self.runtime_task(root, task_id="gpu.wrapper-one"), (0,))
+            second = runtime.start_task(self.runtime_task(root, task_id="gpu.wrapper-two"), (0,))
+
+            self.assertEqual(0, first.gpu_id)
+            self.assertEqual(0, second.gpu_id)
+            self.assertEqual(2, popen.call_count)
+            for running in runtime._running.values():
+                running.spawned.log_handle.close()
+
+    def test_shared_gpu_blocks_when_free_memory_is_below_reserve(self) -> None:
+        popen = mock.Mock()
+        runtime = QueueRuntime(
+            queue_root=Path("/tmp/queue"),
+            supervisor=ProcessSupervisor(popen=popen),
+            lock_backend=FakeLockBackend(),
+            gpu_probe=lambda gpu_id: {900},
+            gpu_memory_probe=lambda gpu_id: 8191,
+            process_descendants=lambda pid: set(),
+            max_processes_per_gpu=2,
+            min_free_memory_mib=8192,
+        )
+
+        self.assertIsNone(runtime.start_task(TaskSpec.from_dict(make_task(task_id="gpu.low-memory")), (0,)))
+        popen.assert_not_called()
+
+    def test_full_first_gpu_does_not_block_second_gpu(self) -> None:
+        process = FakeProcess(501)
+        popen = mock.Mock(return_value=process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            runtime = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: {801, 802} if gpu_id == 0 else {803},
+                gpu_memory_probe=lambda gpu_id: 30000,
+                process_descendants=lambda pid: set(),
+                max_processes_per_gpu=2,
+                min_free_memory_mib=8192,
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+
+            started = runtime.start_task(self.runtime_task(root, task_id="gpu.second-card"), (0, 1))
+
+            self.assertEqual(1, started.gpu_id)
+            runtime._running[501].spawned.log_handle.close()
+
+    def test_efficiency_task_requires_an_empty_gpu_and_blocks_sharing(self) -> None:
+        processes = [FakeProcess(601), FakeProcess(602)]
+        popen = mock.Mock(side_effect=processes)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            occupied = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: {999},
+                gpu_memory_probe=lambda gpu_id: 30000,
+                process_descendants=lambda pid: set(),
+                max_processes_per_gpu=2,
+                min_free_memory_mib=8192,
+            )
+            efficiency = self.runtime_task(
+                root,
+                task_id="gpu.efficiency",
+                kind="efficiency",
+            )
+            self.assertIsNone(occupied.start_task(efficiency, (0,)))
+
+            empty = QueueRuntime(
+                queue_root=root,
+                supervisor=ProcessSupervisor(popen=popen),
+                lock_backend=FakeLockBackend(),
+                gpu_probe=lambda gpu_id: set(),
+                gpu_memory_probe=lambda gpu_id: 30000,
+                process_descendants=lambda pid: set(),
+                max_processes_per_gpu=2,
+                min_free_memory_mib=8192,
+                process_start_token=lambda pid: f"token-{pid}",
+            )
+            exclusive = empty.start_task(efficiency, (0,))
+            normal = empty.start_task(self.runtime_task(root, task_id="gpu.normal"), (0,))
+
+            self.assertEqual(0, exclusive.gpu_id)
+            self.assertIsNone(normal)
+            empty._running[601].spawned.log_handle.close()
 
     def test_runtime_creates_contained_task_cwd_before_spawn(self) -> None:
         process = FakeProcess(97)

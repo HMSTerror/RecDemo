@@ -47,6 +47,10 @@ from scripts.aaai27_queue.validation import validate_manifest
 from scripts.audit_e05_sasrec_reuse import audit_e5_root
 
 
+CONTINUATION_MAX_PROCESSES_PER_GPU = 2
+CONTINUATION_MIN_FREE_GPU_MEMORY_MIB = 8192
+
+
 QUEUE_NAME = "queue_seed100_continuation.json"
 
 
@@ -322,6 +326,18 @@ def _controller(
         now=now,
         free_disk_gib=lambda: shutil.disk_usage(prepared.root).free / (1024**3),
         live_process=linux_process_matches,
+        gpu_slots_per_card=CONTINUATION_MAX_PROCESSES_PER_GPU,
+        min_free_gpu_memory_mib=CONTINUATION_MIN_FREE_GPU_MEMORY_MIB,
+    )
+
+
+def _queue_runtime(root: Path, lock_backend: LinuxFlockBackend) -> QueueRuntime:
+    return QueueRuntime(
+        queue_root=root,
+        supervisor=ProcessSupervisor(),
+        lock_backend=lock_backend,
+        max_processes_per_gpu=CONTINUATION_MAX_PROCESSES_PER_GPU,
+        min_free_memory_mib=CONTINUATION_MIN_FREE_GPU_MEMORY_MIB,
     )
 
 
@@ -375,11 +391,7 @@ def run_queue(root: Path, *, once: bool, poll_seconds: float) -> dict[str, Any]:
                 "queue_manifest_sha256": sha256_file(prepared.manifest_path),
             },
         )
-        runtime = QueueRuntime(
-            queue_root=prepared.root,
-            supervisor=ProcessSupervisor(),
-            lock_backend=lock_backend,
-        )
+        runtime = _queue_runtime(prepared.root, lock_backend)
         controller = _controller(prepared)
         ticks = 0
         while True:

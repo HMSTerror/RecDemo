@@ -112,6 +112,35 @@ class QueueSchedulerTests(unittest.TestCase):
         self.assertEqual([], choose_ready_tasks(manifest, records, GateSnapshot("pass", "audit_only"), 0.0, 80.0, set()))
         self.assertEqual([], choose_ready_tasks(manifest, records, method, 0.0, 80.0, {0, 1}))
 
+    def test_explicit_gpu_slot_budget_can_offer_four_candidates(self) -> None:
+        candidates = [
+            make_task(
+                task_id=f"method.slot-{index}",
+                ledger_id="RISK-13",
+                phase="continuation",
+                branch="method_pass",
+                priority=index,
+            )
+            for index in range(5)
+        ]
+        manifest = manifest_with(*candidates)
+        records = passed_pilot_records(manifest)
+        method = GateSnapshot("pass", "risk_gated_method")
+
+        legacy = choose_ready_tasks(manifest, records, method, 0.0, 80.0, set())
+        shared = choose_ready_tasks(
+            manifest,
+            records,
+            method,
+            0.0,
+            80.0,
+            {0, 1},
+            available_gpu_slots=4,
+        )
+
+        self.assertEqual(1, len([task for task in legacy if task.gpu_slots == 1]))
+        self.assertEqual(4, len([task for task in shared if task.gpu_slots == 1]))
+
     def test_group_status_requires_every_member_to_pass(self) -> None:
         tasks = tuple(
             QueueManifest.from_dict(

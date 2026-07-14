@@ -55,13 +55,21 @@ class ContinuationController:
         now: Callable[[], datetime],
         free_disk_gib: Callable[[], float],
         live_process: Callable[[int, str], bool],
+        gpu_slots_per_card: int = 1,
+        min_free_gpu_memory_mib: int = 0,
     ) -> None:
+        if gpu_slots_per_card <= 0:
+            raise ValueError("gpu_slots_per_card must be positive")
+        if min_free_gpu_memory_mib < 0:
+            raise ValueError("min_free_gpu_memory_mib must be nonnegative")
         self.queue_root = Path(queue_root).resolve(strict=False)
         self.manifest = manifest
         self.upstream_binding = upstream_binding
         self.maintenance = maintenance
         self._now = now
         self._free_disk_gib = free_disk_gib
+        self.gpu_slots_per_card = gpu_slots_per_card
+        self.min_free_gpu_memory_mib = min_free_gpu_memory_mib
         self._base = QueueController(
             self.queue_root,
             manifest,
@@ -76,20 +84,32 @@ class ContinuationController:
     def _snapshot(self) -> UpstreamSnapshot:
         return verify_r7_upstream(self.upstream_binding)
 
+    def _committed_gpu_hours(self, records: dict[str, TaskRecord]) -> float:
+        actual = sum(record.gpu_seconds for record in records.values()) / 3600.0
+        tasks = {task.task_id: task for task in self.manifest.tasks}
+        running_reserve = sum(
+            tasks[record.task_id].gpu_hours_high
+            for record in records.values()
+            if record.status == "running"
+            and record.task_id in tasks
+            and tasks[record.task_id].gpu_slots > 0
+        )
+        return actual + running_reserve
+
     def _context(self, records: dict[str, TaskRecord]) -> EligibilityContext:
         passed = frozenset(
             task_id
             for task_id, record in records.items()
             if record.status == "passed"
         )
-        actual_gpu_hours = sum(record.gpu_seconds for record in records.values()) / 3600.0
+        committed_gpu_hours = self._committed_gpu_hours(records)
         return EligibilityContext(
             now=self._now(),
             planned_shutdown=self.maintenance.planned_shutdown,
             maintenance_buffer_hours=self.maintenance.buffer_hours,
             queue_root=self.queue_root,
             free_disk_gib=self._free_disk_gib(),
-            actual_gpu_hours=actual_gpu_hours,
+            actual_gpu_hours=committed_gpu_hours,
             gpu_budget_hours=self.manifest.gpu_budget_hours,
             passed_task_ids=passed,
         )
@@ -124,7 +144,7 @@ class ContinuationController:
         self,
         records: dict[str, TaskRecord],
     ) -> list[TaskSpec]:
-        actual_gpu_hours = sum(record.gpu_seconds for record in records.values()) / 3600.0
+        committed_gpu_hours = self._committed_gpu_hours(records)
         busy_gpu_ids = {
             record.gpu_id
             for record in records.values()
@@ -134,9 +154,14 @@ class ContinuationController:
             self.manifest,
             records,
             GateSnapshot(e1_outcome="pass", risk08_exit="risk_gated_method"),
-            actual_gpu_hours,
+            committed_gpu_hours,
             self._free_disk_gib(),
             busy_gpu_ids,
+            available_gpu_slots=(
+                len(self.manifest.gpu_ids) * self.gpu_slots_per_card
+                if self.gpu_slots_per_card > 1
+                else None
+            ),
         )
 
     def tick(self, runtime: RuntimeAdapter) -> None:
@@ -175,4 +200,6 @@ class ContinuationController:
             "planned_shutdown": self.maintenance.planned_shutdown.isoformat(),
             "launch_cutoff": self.maintenance.launch_cutoff.isoformat(),
             "maintenance_buffer_hours": self.maintenance.buffer_hours,
+            "gpu_slots_per_card": self.gpu_slots_per_card,
+            "min_free_gpu_memory_mib": self.min_free_gpu_memory_mib,
         }

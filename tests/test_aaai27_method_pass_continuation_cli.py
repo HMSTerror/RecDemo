@@ -4,6 +4,7 @@ import hashlib
 import json
 import subprocess
 import sys
+from unittest import mock
 from dataclasses import asdict, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -13,6 +14,7 @@ from scripts.aaai27_method_pass_continuation import (
     status_queue,
     validate_queue,
 )
+import scripts.aaai27_method_pass_continuation as continuation_cli
 from tests.test_aaai27_continuation_manifest import _inputs
 from tests.test_aaai27_continuation_upstream import _build_r7_fixture
 from tests.test_audit_e05_sasrec_reuse import _fixture as build_e5_fixture
@@ -146,6 +148,8 @@ def test_validate_and_status_are_read_only_while_r7_waits(tmp_path: Path) -> Non
     assert validated["status"] == "valid"
     assert status["gate"] == "waiting_r7"
     assert status["counts"]["blocked_upstream"] == 37
+    assert status["gpu_slots_per_card"] == 2
+    assert status["min_free_gpu_memory_mib"] == 8192
     assert before == after
 
 
@@ -159,3 +163,13 @@ def test_prepare_refuses_existing_nonempty_root(tmp_path: Path) -> None:
         assert "nonempty" in str(exc)
     else:
         raise AssertionError("prepare_queue overwrote an existing nonempty root")
+
+
+def test_continuation_runtime_uses_two_slots_and_eight_gib_reserve(tmp_path: Path) -> None:
+    lock_backend = object()
+    with mock.patch.object(continuation_cli, "QueueRuntime") as runtime_class:
+        continuation_cli._queue_runtime(tmp_path, lock_backend)
+
+    kwargs = runtime_class.call_args.kwargs
+    assert kwargs["max_processes_per_gpu"] == 2
+    assert kwargs["min_free_memory_mib"] == 8192

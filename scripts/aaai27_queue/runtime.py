@@ -94,12 +94,79 @@ def probe_gpu_pids(
     return {int(row) for row in rows}
 
 
+def probe_gpu_free_memory_mib(
+    gpu_id: int,
+    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> int:
+    command = [
+        "nvidia-smi",
+        f"--id={gpu_id}",
+        "--query-gpu=memory.free",
+        "--format=csv,noheader,nounits",
+    ]
+    result = runner(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise GpuBusyError(
+            f"GPU memory probe failed for {gpu_id}: {(result.stderr or '').strip()}"
+        )
+    rows = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if len(rows) != 1 or re.fullmatch(r"[0-9]+", rows[0]) is None:
+        raise GpuBusyError(
+            f"GPU memory probe returned unrecognized rows for {gpu_id}: {rows!r}"
+        )
+    return int(rows[0])
+
+
 def linux_process_start_token(pid: int) -> str:
     stat_path = Path("/proc") / str(pid) / "stat"
     fields = stat_path.read_text(encoding="utf-8").split()
     if len(fields) < 22:
         raise RuntimeError(f"cannot read Linux process start token for PID {pid}")
     return fields[21]
+
+
+def linux_descendant_pids(root_pid: int) -> set[int]:
+    if root_pid <= 0:
+        raise GpuBusyError(f"invalid process root for descendant probe: {root_pid}")
+    children: dict[int, set[int]] = {}
+    try:
+        candidates = list(Path("/proc").iterdir())
+    except OSError as exc:
+        raise GpuBusyError(f"cannot enumerate /proc for GPU ownership: {exc}") from exc
+    for candidate in candidates:
+        if not candidate.name.isdigit():
+            continue
+        try:
+            raw = (candidate / "stat").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise GpuBusyError(
+                f"cannot read process tree for GPU ownership: {candidate.name}: {exc}"
+            ) from exc
+        close = raw.rfind(")")
+        suffix = raw[close + 2 :].split() if close >= 0 else []
+        if len(suffix) < 2 or not suffix[1].isdigit():
+            raise GpuBusyError(
+                f"cannot parse process tree for GPU ownership: {candidate.name}"
+            )
+        pid = int(candidate.name)
+        parent = int(suffix[1])
+        children.setdefault(parent, set()).add(pid)
+
+    descendants: set[int] = set()
+    pending = list(children.get(root_pid, set()))
+    while pending:
+        pid = pending.pop()
+        if pid in descendants:
+            continue
+        descendants.add(pid)
+        pending.extend(children.get(pid, set()))
+    return descendants
+
+
+def _requires_exclusive_gpu(task: TaskSpec) -> bool:
+    return task.kind in {"efficiency", "efficiency_gpu", "profile"}
 
 
 class LinuxFlockHandle:
@@ -193,16 +260,73 @@ class QueueRuntime:
         supervisor: ProcessSupervisor,
         lock_backend: LockBackend,
         gpu_probe: Callable[[int], set[int]] = probe_gpu_pids,
+        gpu_memory_probe: Callable[[int], int] = probe_gpu_free_memory_mib,
+        process_descendants: Callable[[int], set[int]] = linux_descendant_pids,
+        max_processes_per_gpu: int = 1,
+        min_free_memory_mib: int = 0,
         process_start_token: Callable[[int], str] = linux_process_start_token,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
+        if max_processes_per_gpu <= 0:
+            raise ValueError("max_processes_per_gpu must be positive")
+        if min_free_memory_mib < 0:
+            raise ValueError("min_free_memory_mib must be nonnegative")
         self.queue_root = queue_root
         self.supervisor = supervisor
         self.lock_backend = lock_backend
         self.gpu_probe = gpu_probe
+        self.gpu_memory_probe = gpu_memory_probe
+        self.process_descendants = process_descendants
+        self.max_processes_per_gpu = max_processes_per_gpu
+        self.min_free_memory_mib = min_free_memory_mib
         self.process_start_token = process_start_token
         self.monotonic = monotonic
         self._running: dict[int, _RunningProcess] = {}
+
+    def _running_on_gpu(self, gpu_id: int) -> list[_RunningProcess]:
+        return [running for running in self._running.values() if running.gpu_id == gpu_id]
+
+    def _used_gpu_slots(self, gpu_id: int) -> tuple[int, list[_RunningProcess]]:
+        local = self._running_on_gpu(gpu_id)
+        gpu_pids = self.gpu_probe(gpu_id)
+        local_gpu_pids: set[int] = set()
+        if local and gpu_pids:
+            for running in local:
+                root_pid = running.spawned.process.pid
+                local_gpu_pids.add(root_pid)
+                try:
+                    local_gpu_pids.update(self.process_descendants(root_pid))
+                except GpuBusyError:
+                    raise
+                except Exception as exc:
+                    raise GpuBusyError(
+                        f"GPU process-tree probe failed for {gpu_id}: {exc}"
+                    ) from exc
+        external_gpu_pids = gpu_pids - local_gpu_pids
+        return len(local) + len(external_gpu_pids), local
+
+    def _can_start_on_gpu(self, task: TaskSpec, gpu_id: int) -> bool:
+        used_slots, local = self._used_gpu_slots(gpu_id)
+        if any(_requires_exclusive_gpu(running.task) for running in local):
+            return False
+        if _requires_exclusive_gpu(task):
+            if used_slots != 0:
+                return False
+        elif used_slots >= self.max_processes_per_gpu:
+            return False
+        if self.min_free_memory_mib > 0:
+            free_memory = self.gpu_memory_probe(gpu_id)
+            if free_memory < self.min_free_memory_mib:
+                return False
+        return True
+
+    def _gpu_lock_paths(self, gpu_id: int) -> list[Path]:
+        if self.max_processes_per_gpu == 1:
+            return [self.queue_root / "state" / f"gpu{gpu_id}.lock"]
+        return [
+            self.queue_root / "state" / f"gpu{gpu_id}.slot{slot}.lock"
+            for slot in range(self.max_processes_per_gpu)
+        ]
 
     def _task_log_path(self, task_id: str) -> Path:
         safe_id = re.sub(r"[^A-Za-z0-9_.-]+", "_", task_id)
@@ -266,26 +390,25 @@ class QueueRuntime:
                 return None
             return self._start(task, gpu_id=None, lock_handle=None)
 
-        locally_used = {running.gpu_id for running in self._running.values() if running.gpu_id is not None}
         for gpu_id in allowed_gpu_ids:
-            if gpu_id in locally_used:
+            if not self._can_start_on_gpu(task, gpu_id):
                 continue
-            lock_path = self.queue_root / "state" / f"gpu{gpu_id}.lock"
-            lock_handle = self.lock_backend.try_acquire(lock_path)
-            if lock_handle is None:
-                continue
-            try:
-                if self.gpu_probe(gpu_id):
-                    lock_handle.close()
+            for lock_path in self._gpu_lock_paths(gpu_id):
+                lock_handle = self.lock_backend.try_acquire(lock_path)
+                if lock_handle is None:
                     continue
-                return self._start(task, gpu_id=gpu_id, lock_handle=lock_handle)
-            except BaseException:
-                if not getattr(lock_handle, "closed", False):
-                    try:
+                try:
+                    if not self._can_start_on_gpu(task, gpu_id):
                         lock_handle.close()
-                    except BaseException:
-                        pass
-                raise
+                        break
+                    return self._start(task, gpu_id=gpu_id, lock_handle=lock_handle)
+                except BaseException:
+                    if not getattr(lock_handle, "closed", False):
+                        try:
+                            lock_handle.close()
+                        except BaseException:
+                            pass
+                    raise
         return None
 
     def observe_finished(self) -> list[FinishedChild]:

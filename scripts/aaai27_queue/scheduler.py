@@ -32,6 +32,8 @@ def choose_ready_tasks(
     actual_gpu_hours: float,
     free_disk_gib: float,
     busy_gpu_ids: set[int],
+    *,
+    available_gpu_slots: int | None = None,
 ) -> list[TaskSpec]:
     branch = select_active_branch(gates)
     if branch == "terminal_stop" or free_disk_gib < manifest.min_free_disk_gib:
@@ -49,7 +51,11 @@ def choose_ready_tasks(
             continue
         candidates.append(task)
 
-    remaining_gpu_slots = len(set(manifest.gpu_ids) - busy_gpu_ids)
+    remaining_gpu_slots = (
+        len(set(manifest.gpu_ids) - busy_gpu_ids)
+        if available_gpu_slots is None
+        else max(0, available_gpu_slots)
+    )
     reserved_gpu_hours = actual_gpu_hours
     selected: list[TaskSpec] = []
     for task in sorted(candidates, key=lambda item: (item.priority, item.task_id)):
